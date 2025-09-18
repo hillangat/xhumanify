@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { get } from '@aws-amplify/api';
+import { get, post } from '@aws-amplify/api';
 import { signIn, signOut, getCurrentUser } from '@aws-amplify/auth';
 import { fetchAuthSession } from '@aws-amplify/core';
 import './App.css'; // Optional: for styling
 
 const App: React.FC = () => {
-  const [iamResponse, setIamResponse] = useState<string | null>(null);
+  // Remove unused setIamResponse
+  const [postText, setPostText] = useState<string>('');
   const [cognitoResponse, setCognitoResponse] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -48,41 +49,10 @@ const App: React.FC = () => {
     try {
       await signOut();
       setIsAuthenticated(false);
-      setIamResponse(null);
       setCognitoResponse(null);
     } catch (err) {
       console.error('Sign-out error:', err);
       setError('Failed to sign out.');
-    }
-  };
-
-  // Function to call the IAM-authenticated /ai endpoint
-  const fetchIAMData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const session = await fetchAuthSession();
-      const jwtToken = session.tokens?.idToken?.toString();
-      if (!jwtToken) {
-        throw new Error('No ID token found in session');
-      }
-      const restOperation = get({
-        apiName: 'myRestApi',
-        path: '/ai',
-        options: {
-          headers: {
-            Authorization: `Bearer ${jwtToken}`,
-          },
-        },
-      });
-      const { body } = await restOperation.response;
-      const response = await body.json();
-      setIamResponse(JSON.stringify(response, null, 2));
-    } catch (err) {
-      console.error('Error fetching IAM data:', err);
-      setError('Failed to fetch IAM data. Please ensure you are signed in.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -98,7 +68,7 @@ const App: React.FC = () => {
       }
       const restOperation = get({
         apiName: 'myRestApi',
-        path: '/cognito-auth-path',
+        path: '/cognito-auth-path/ai',
         options: {
           headers: {
             Authorization: `Bearer ${jwtToken}`,
@@ -111,6 +81,30 @@ const App: React.FC = () => {
     } catch (err) {
       console.error('Error fetching Cognito data:', err);
       setError('Failed to fetch Cognito data. Please ensure you are signed in.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const postCognitoData = async (data: any) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const restOperation = post({
+        apiName: 'myRestApi',
+        path: '/cognito-auth-path',
+        options: {
+          body: data,
+        },
+      });
+      const { body } = await restOperation.response;
+      const response = await body.json();
+      setCognitoResponse(JSON.stringify(response, null, 2));
+      console.log('POST call succeeded');
+      console.log(response);
+    } catch (e: any) {
+      console.log('POST call failed: ', e?.response?.body ? JSON.parse(e.response.body) : e);
+      setError('Failed to POST Cognito data. Please ensure you are signed in.');
     } finally {
       setLoading(false);
     }
@@ -156,24 +150,28 @@ const App: React.FC = () => {
           <button onClick={handleSignOut} disabled={loading}>
             Sign Out
           </button>
-
-          <div>
-            <h2>IAM Authenticated API (/ai)</h2>
-            <button onClick={fetchIAMData} disabled={loading}>
-              {loading ? 'Loading...' : 'Call IAM API'}
-            </button>
-            {iamResponse && (
-              <pre style={{ textAlign: 'left', background: '#f4f4f4', padding: '10px' }}>
-                {iamResponse}
-              </pre>
-            )}
-          </div>
-
           <div>
             <h2>Cognito Authenticated API (/cognito-auth-path)</h2>
             <button onClick={fetchCognitoData} disabled={loading}>
               {loading ? 'Loading...' : 'Call Cognito API'}
             </button>
+            <div style={{ margin: '20px 0' }}>
+              <h3>Post to Cognito Endpoint</h3>
+              <textarea
+                value={postText}
+                onChange={(e) => setPostText(e.target.value)}
+                placeholder="Enter text to post..."
+                rows={4}
+                style={{ width: '100%', padding: '10px', fontSize: '16px' }}
+              />
+              <button
+                onClick={() => postCognitoData({ text: postText })}
+                disabled={loading || !postText.trim()}
+                style={{ marginTop: '10px' }}
+              >
+                {loading ? 'Posting...' : 'Post to Cognito API'}
+              </button>
+            </div>
             {cognitoResponse && (
               <pre style={{ textAlign: 'left', background: '#f4f4f4', padding: '10px' }}>
                 {cognitoResponse}
