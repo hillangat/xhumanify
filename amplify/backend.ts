@@ -71,6 +71,16 @@ booksPath.addMethod("GET", lambdaIntegration, {
   authorizer: cognitoAuth,
 });
 
+booksPath.addMethod("POST", lambdaIntegration, {
+  authorizationType: AuthorizationType.COGNITO,
+  authorizer: cognitoAuth,
+});
+
+booksPath.addMethod("PUT", lambdaIntegration, {
+  authorizationType: AuthorizationType.COGNITO,
+  authorizer: cognitoAuth,
+});
+
 // create a new IAM policy to allow Invoke access to the API
 const apiRestPolicy = new Policy(apiStack, "RestApiPolicy", {
   statements: [

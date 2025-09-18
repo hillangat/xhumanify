@@ -71,7 +71,7 @@ const App: React.FC = () => {
         path: '/cognito-auth-path',
         options: {
           headers: {
-            Authorization: `Bearer ${jwtToken}`,
+            Authorization: jwtToken,
           },
         },
       });
@@ -90,11 +90,19 @@ const App: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
+      const session = await fetchAuthSession();
+      const jwtToken = session.tokens?.idToken?.toString();
+      if (!jwtToken) {
+        throw new Error('No ID token found in session');
+      }
       const restOperation = post({
         apiName: 'myRestApi',
-        path: '/ai',
+        path: '/cognito-auth-path',
         options: {
           body: data,
+          headers: {
+            Authorization: jwtToken,
+          },
         },
       });
       const { body } = await restOperation.response;
