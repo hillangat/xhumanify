@@ -1,5 +1,7 @@
 import type { APIGatewayProxyHandler } from "aws-lambda";
 
+// https://docs.amplify.aws/react/build-a-backend/data/custom-business-logic/connect-bedrock/#step-1---add-amazon-bedrock-as-a-data-source
+
 export const handler: APIGatewayProxyHandler = async (event) => {
   console.log("event", event);
   let responseBody = "No body received";

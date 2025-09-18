@@ -7,16 +7,27 @@ import {
   LambdaIntegration,
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
-import { Policy, PolicyStatement } from "aws-cdk-lib/aws-iam";
+import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 import { apiFunction } from "./functions/api-function/resource";
 import { auth } from "./auth/resource";
-import { data } from "./data/resource";
+import { data, MODEL_ID, generateHaikuFunction } from "./data/resource";
 
 const backend = defineBackend({
   auth,
   data,
   apiFunction,
+  generateHaikuFunction,
 });
+
+backend.generateHaikuFunction.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ["bedrock:InvokeModel"],
+    resources: [
+      `arn:aws:bedrock:*::foundation-model/${MODEL_ID}`,
+    ],
+  })
+);
 
 // create a new API stack
 const apiStack = backend.createStack("api-stack");
