@@ -68,7 +68,7 @@ const App: React.FC = () => {
       }
       const restOperation = get({
         apiName: 'myRestApi',
-        path: '/cognito-auth-path/ai',
+        path: '/cognito-auth-path',
         options: {
           headers: {
             Authorization: `Bearer ${jwtToken}`,
@@ -92,7 +92,7 @@ const App: React.FC = () => {
     try {
       const restOperation = post({
         apiName: 'myRestApi',
-        path: '/cognito-auth-path',
+        path: '/ai',
         options: {
           body: data,
         },
