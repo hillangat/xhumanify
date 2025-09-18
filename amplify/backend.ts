@@ -22,9 +22,9 @@ const backend = defineBackend({
 backend.generateHaikuFunction.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
-    actions: ["bedrock:InvokeModel"],
+    actions: ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
     resources: [
-      `arn:aws:bedrock:*::foundation-model/${MODEL_ID}`,
+      "arn:aws:bedrock:us-east-2:960297070350:inference-profile/us.anthropic.claude-3-haiku-20240307-v1:0",
     ],
   })
 );
