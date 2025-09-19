@@ -1,0 +1,172 @@
+/* Modern, professional, and stunning SCSS styles for the header component */
+
+.header {
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 50;
+
+  .nav-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+
+    @media (min-width: 640px) {
+      padding: 0 2rem;
+    }
+
+    @media (min-width: 1024px) {
+      padding: 0 3rem;
+    }
+  }
+
+  .nav-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 4rem;
+  }
+
+  .logo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1f2937;
+    letter-spacing: -0.025em;
+
+    .logo-highlight {
+      color: #4f46e5;
+    }
+  }
+
+  .desktop-nav {
+    display: none;
+
+    @media (min-width: 768px) {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .nav-item {
+      position: relative;
+
+      .nav-link {
+        color: #374151;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: color 0.2s ease-in-out;
+
+        &:hover {
+          color: #4f46e5;
+        }
+      }
+
+      .dropdown {
+        position: absolute;
+        left: 0;
+        top: 100%;
+        margin-top: 0.5rem;
+        width: 12rem;
+        background-color: #ffffff;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        border-radius: 0.5rem;
+        overflow: hidden;
+        transform: scaleY(0);
+        transform-origin: top;
+        transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        opacity: 0;
+
+        &.open {
+          transform: scaleY(1);
+          opacity: 1;
+        }
+
+        .dropdown-item {
+          display: block;
+          padding: 0.5rem 1rem;
+          font-size: 0.875rem;
+          color: #374151;
+          transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+
+          &:hover {
+            background-color: #eef2ff;
+            color: #4f46e5;
+          }
+        }
+      }
+    }
+  }
+
+  .mobile-menu-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #374151;
+    padding: 0.5rem;
+
+    @media (min-width: 768px) {
+      display: none;
+    }
+
+    &:hover {
+      color: #4f46e5;
+    }
+
+    svg {
+      width: 1.5rem;
+      height: 1.5rem;
+    }
+  }
+
+  .mobile-nav {
+    display: none;
+    background-color: #ffffff;
+    border-top: 1px solid #e5e7eb;
+
+    &.open {
+      display: block;
+    }
+
+    @media (min-width: 768px) {
+      display: none;
+    }
+
+    .mobile-nav-item {
+      border-bottom: 1px solid #f3f4f6;
+
+      .mobile-nav-link {
+        display: block;
+        padding: 0.75rem 1rem;
+        color: #374151;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+
+        &:hover {
+          background-color: #eef2ff;
+          color: #4f46e5;
+        }
+      }
+
+      .mobile-dropdown {
+        padding-left: 1rem;
+        background-color: #f9fafb;
+
+        .mobile-dropdown-item {
+          display: block;
+          padding: 0.5rem 1rem;
+          font-size: 0.875rem;
+          color: #4b5563;
+          transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+
+          &:hover {
+            background-color: #e0e7ff;
+            color: #4f46e5;
+          }
+        }
+      }
+    }
+  }
+}

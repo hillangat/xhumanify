@@ -2,12 +2,13 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { Authenticator } from '@aws-amplify/ui-react';
 import App from "./App.tsx";
-import "./index.css";
+import "./index.scss";
 import { Amplify } from "aws-amplify";
 import outputs from "../amplify_outputs.json";
 import '@aws-amplify/ui-react/styles.css';
 
 import { parseAmplifyConfig } from "aws-amplify/utils";
+import { BrowserRouter } from "react-router-dom";
 
 const amplifyConfig = parseAmplifyConfig(outputs);
 
@@ -34,7 +35,9 @@ Amplify.configure(
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Authenticator>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </Authenticator>
   </React.StrictMode>
 );
