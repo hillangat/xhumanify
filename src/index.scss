@@ -1,12 +1,35 @@
+/* Global scrollbar styling */
+*::-webkit-scrollbar {
+  width: 6px;
+  background: #F0F0F0;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #B6B6B6;
+  border-radius: 4px;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #B6B6B6 #F0F0F0;
+}
 body {
   margin: 0;
-  background: linear-gradient(180deg, #FAFAFA, #DCDCDC);
-  /* background: radial-gradient(circle, #FAFAFA, #DCDCDC); */
-  display: flex;
+  min-height: 100vh;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  height: 100vh;
+  position: relative;
+  z-index: 0;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100vw;
-  justify-content: center;
+  height: 100vh;
+  background: linear-gradient(180deg, #FAFAFA, #DCDCDC);
+  z-index: -1;
 }
 
 main {
