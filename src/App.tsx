@@ -6,7 +6,7 @@ import IconTextButton from './IconTextButton';
 import { FaPlay } from 'react-icons/fa';
 import { FaUser } from 'react-icons/fa';
 import { FaSpinner } from 'react-icons/fa';
-import { MdOutlineContentPaste } from 'react-icons/md';
+import { MdHourglassEmpty } from 'react-icons/md';
 import EmptyContent from './EmptyContent';
 // import { FaPlay } from "react-icons/fa";
 // <button type='submit' onClick={handleButtonClick} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
@@ -94,7 +94,7 @@ export default function App() {
               <pre>{answer}</pre>
             ) : (
               <EmptyContent
-                icon={<MdOutlineContentPaste />}
+                icon={<MdHourglassEmpty size={35} />}
                 title="No Processed Content"
                 subtitle="Processed Content will appear here after a successful processing."
               />

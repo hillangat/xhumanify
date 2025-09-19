@@ -28,10 +28,10 @@ main {
 
 .title-section {
     text-align: center;
-    margin: 20px;
+    margin: 5px;
 
     .title-introduction {
-        max-width: min(40%, 800px);
+        max-width: min(60%, 1200px);
         margin: 0 auto;
     }
 }
@@ -82,6 +82,8 @@ main {
             overflow: auto;
             white-space: pre-wrap;
             word-break: break-all;
+            padding: 5px 15px !important;
+            font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
         }
 
         .empty-content {
