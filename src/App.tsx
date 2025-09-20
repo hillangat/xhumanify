@@ -104,38 +104,37 @@ export default function App() {
                 <p><strong>{countWords(prompt)}</strong> Words</p>
               </div>
               <div className='action-bar-right'>
-                  <Button
-                    label={copiedRaw ? 'Copied' : 'Copy'}
-                    outlined
-                    icon={copiedRaw ? <FaCheck /> : <FaRegCopy />}
-                    onClick={handleCopyRawClick}
-                    disabled={!prompt}
-                  />
-                  <Button
-                    label='Humanify'
-                    loading={isRunning}
-                    loadingIcon={<FaSpinner className='spin' />}
-                    icon={<FaPlay />}
-                    onClick={handleButtonClick}
-                    disabled={!prompt || isRunning}
-                  />
-                </div>
-              </div>
-              <form>
-                <textarea
-                  placeholder={isFocused ? '' : 'Enter Your Text Here...'}
-                  name='prompt'
-                  value={prompt}
-                  onChange={(event) => setPrompt(event.target.value)}
-                  onFocus={() => setIsFocused(true)}
-                  onBlur={() => setIsFocused(false)}
-                  rows={6}
-                  style={{ width: '100%', padding: '8px', fontSize: '16px', resize: 'none' }}
-                  disabled={isRunning}
+                <Button
+                  label={copiedRaw ? 'Copied' : 'Copy'}
+                  outlined
+                  icon={copiedRaw ? <FaCheck /> : <FaRegCopy />}
+                  onClick={handleCopyRawClick}
+                  disabled={!prompt}
                 />
-              </form>
+                <Button
+                  label='Humanify'
+                  loading={isRunning}
+                  loadingIcon={<FaSpinner className='spin' />}
+                  icon={<FaPlay />}
+                  onClick={handleButtonClick}
+                  disabled={!prompt || isRunning}
+                />
+              </div>
             </div>
-            <div className='processed-content'>
+            <form className='textarea-container'>
+              <textarea
+                placeholder={isFocused ? '' : 'Enter Your Text Here...'}
+                name='prompt'
+                value={prompt}
+                onChange={(event) => setPrompt(event.target.value)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                style={{ width: '100%', padding: '8px', fontSize: '16px', resize: 'none' }}
+                disabled={isRunning}
+              />
+            </form>
+          </div>
+          <div className='processed-content'>
             <div className='action-bar'>
               <div className='action-bar-left'>
                 <p><strong>{countWords(answer)}</strong> Words</p>
@@ -148,24 +147,19 @@ export default function App() {
                   onClick={handleCopyProcessedClick}
                   disabled={!answer}
                 />
-                {/* <Button
-                  label='Download'
-                  outlined
-                  icon={<FaFilePdf />}
-                  onClick={handleButtonClick}
-                  disabled={!prompt}
-                /> */}
               </div>
             </div>
-            {answer ? (
-              <pre>{answer}</pre>
-            ) : (
-              <EmptyContent
-                icon={<MdHourglassEmpty size={35} />}
-                title='No Processed Content'
-                subtitle='Processed Content will appear here after a successful processing.'
-              />
-            )}
+            <div className='content-container'>
+              {answer ? (
+                <pre>{answer}</pre>
+              ) : (
+                <EmptyContent
+                  icon={<MdHourglassEmpty size={35} />}
+                  title='No Processed Content'
+                  subtitle='Processed Content will appear here after a successful processing.'
+                />
+              )}
+            </div>
           </div>
         </section>
       </main>
