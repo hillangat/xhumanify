@@ -1,3 +1,13 @@
+/* Spinner animation for loading icon */
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 $border-color: #B6B6B6;
 $padding: 15px;
 
@@ -16,7 +26,8 @@ $padding: 15px;
         display: inline-flex;
         justify-content: flex-start;
         box-sizing: border-box;
-        > * {
+
+        >* {
             margin-right: 10px;
         }
     }
@@ -26,7 +37,8 @@ $padding: 15px;
         display: inline-flex;
         justify-content: flex-end;
         box-sizing: border-box;
-        > * {
+
+        >* {
             margin-left: 10px;
         }
     }
@@ -99,7 +111,7 @@ main {
             outline: none;
             resize: none;
             width: 100%;
-            height: 100%;
+            height: auto;
             box-sizing: border-box;
             border: none;
             padding: $padding !important;
@@ -112,6 +124,14 @@ main {
     }
 
     .processed-content {
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+        flex: 1 1 60%;
+        height: 100% !important;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        word-break: break-all;
+
         pre {
             max-width: 100%;
             overflow: auto;
@@ -128,13 +148,6 @@ main {
             align-items: center;
             justify-content: center;
         }
-
-        border-top-right-radius: 8px;
-        border-bottom-right-radius: 8px;
-        flex: 1 1 60%;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-        word-break: break-all;
     }
 }
 

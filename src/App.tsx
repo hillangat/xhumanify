@@ -7,7 +7,7 @@ import { FaPlay, FaUser, FaSpinner, FaCheck, FaRegCopy, FaFilePdf } from 'react-
 import { MdHourglassEmpty } from 'react-icons/md';
 import EmptyContent from './EmptyContent';
 import { Button } from 'primereact/button';
-// import { FaPlay } from "react-icons/fa";
+// import { FaPlay } from 'react-icons/fa';
 // <button type='submit' onClick={handleButtonClick} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
 //                 <FaPlay size={32} />
 //               </button>
@@ -83,7 +83,7 @@ export default function App() {
         <section className='header-section'>
           <div className='header-title-left p-text-primary'>XHumanify</div>
           <div className='header-title-right'>
-            <span className="user-icon-circle">
+            <span className='user-icon-circle'>
               <FaUser />
             </span>
           </div>
@@ -105,7 +105,7 @@ export default function App() {
               </div>
               <div className='action-bar-right'>
                   <Button
-                    label={copiedRaw ? "Copied" : "Copy"}
+                    label={copiedRaw ? 'Copied' : 'Copy'}
                     outlined
                     icon={copiedRaw ? <FaCheck /> : <FaRegCopy />}
                     onClick={handleCopyRawClick}
@@ -113,10 +113,11 @@ export default function App() {
                   />
                   <Button
                     label='Humanify'
-                    outlined
+                    loading={isRunning}
+                    loadingIcon={<FaSpinner className='spin' />}
                     icon={<FaPlay />}
                     onClick={handleButtonClick}
-                    disabled={!prompt}
+                    disabled={!prompt || isRunning}
                   />
                 </div>
               </div>
@@ -141,7 +142,7 @@ export default function App() {
               </div>
               <div className='action-bar-right'>
                 <Button
-                  label={copiedProcessed ? "Copied" : "Copy"}
+                  label={copiedProcessed ? 'Copied' : 'Copy'}
                   outlined
                   icon={copiedProcessed ? <FaCheck /> : <FaRegCopy />}
                   onClick={handleCopyProcessedClick}
@@ -161,8 +162,8 @@ export default function App() {
             ) : (
               <EmptyContent
                 icon={<MdHourglassEmpty size={35} />}
-                title="No Processed Content"
-                subtitle="Processed Content will appear here after a successful processing."
+                title='No Processed Content'
+                subtitle='Processed Content will appear here after a successful processing.'
               />
             )}
           </div>
