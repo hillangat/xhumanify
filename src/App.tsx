@@ -2,7 +2,7 @@ import type { Schema } from '../amplify/data/resource';
 import { useState } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import './App.scss';
-import { FaPlay, FaUser, FaSpinner, FaCheck, FaRegCopy, FaFilePdf, FaTimes, FaGooglePlay } from 'react-icons/fa';
+import { FaUser, FaSpinner, FaCheck, FaRegCopy, FaTimes, FaGooglePlay } from 'react-icons/fa';
 import { MdHourglassEmpty } from 'react-icons/md';
 import EmptyContent from './EmptyContent';
 import { Button } from 'primereact/button';
