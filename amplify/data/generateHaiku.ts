@@ -43,8 +43,7 @@ Context-Specific Details: Tailor details to the text’s purpose and audience. F
 Execution:
 
 Deliver one seamless rewrite with no drafts or explanations. Output just the rewritten text, in the right format, with no chatter about how you got there.
-Keep it authentic, slightly uneven, but clear and suited to the text’s purpose and audience.
-Output only the rewritten text, wrapped in the appropriate format, with no notes about the process.
+Output only the rewritten text, wrapped in the appropriate format, with no notes about the process. Completely avoid putting your voice in the letter; like "Here's my attempt at rewriting", etc.
 
 Input: 
 ${prompt}
