@@ -1,4 +1,4 @@
-$border-color: #B6B6B6;
+$border-color: var(--surface-border);
 $padding: 15px;
 
 main {
@@ -119,7 +119,7 @@ main {
 
 // Other styles remain unchanged
 .header-section {
-  padding: 10px 0;
+  padding: 10px;
   border-bottom: 1px solid $border-color;
   display: flex;
   justify-content: space-between;

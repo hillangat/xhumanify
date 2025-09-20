@@ -2,8 +2,7 @@ import type { Schema } from '../amplify/data/resource';
 import { useState } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import './App.scss';
-import IconTextButton from './IconTextButton';
-import { FaPlay, FaUser, FaSpinner, FaCheck, FaRegCopy, FaFilePdf } from 'react-icons/fa';
+import { FaPlay, FaUser, FaSpinner, FaCheck, FaRegCopy, FaFilePdf, FaTimes } from 'react-icons/fa';
 import { MdHourglassEmpty } from 'react-icons/md';
 import EmptyContent from './EmptyContent';
 import { Button } from 'primereact/button';
@@ -72,6 +71,11 @@ export default function App() {
     }
   };
 
+  const handleResetClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    setPrompt('');
+  };
+
   const countWords = (text: string | null | undefined) => {
     if (!text) return 0;
     return text.trim().split(/\s+/).filter(Boolean).length;
@@ -79,15 +83,15 @@ export default function App() {
 
   return (
     <>
+      <section className='header-section'>
+        <div className='header-title-left p-text-primary'>XHumanify</div>
+        <div className='header-title-right'>
+          <span className='user-icon-circle'>
+            <FaUser />
+          </span>
+        </div>
+      </section>
       <main>
-        <section className='header-section'>
-          <div className='header-title-left p-text-primary'>XHumanify</div>
-          <div className='header-title-right'>
-            <span className='user-icon-circle'>
-              <FaUser />
-            </span>
-          </div>
-        </section>
         <section className='title-section'>
           <div className='title-text'>
             <h1>Humanify AI Generated Content</h1>
@@ -105,8 +109,16 @@ export default function App() {
               </div>
               <div className='action-bar-right'>
                 <Button
-                  label={copiedRaw ? 'Copied' : 'Copy'}
+                  label='Reset'
                   outlined
+                  icon={<FaTimes />}
+                  onClick={handleResetClick}
+                  disabled={!prompt}
+                />
+                <Button
+                  label={copiedRaw ? 'Copied' : 'Copy'}
+                  outlined={!copiedRaw}
+                  severity={copiedRaw ? 'success' : undefined}
                   icon={copiedRaw ? <FaCheck /> : <FaRegCopy />}
                   onClick={handleCopyRawClick}
                   disabled={!prompt}
@@ -142,7 +154,8 @@ export default function App() {
               <div className='action-bar-right'>
                 <Button
                   label={copiedProcessed ? 'Copied' : 'Copy'}
-                  outlined
+                  outlined={!copiedProcessed}
+                  severity={copiedProcessed ? 'success' : undefined}
                   icon={copiedProcessed ? <FaCheck /> : <FaRegCopy />}
                   onClick={handleCopyProcessedClick}
                   disabled={!answer}
