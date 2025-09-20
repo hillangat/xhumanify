@@ -109,18 +109,18 @@ export default function App() {
               </div>
               <div className='action-bar-right'>
                 <Button
-                  label='Reset'
-                  outlined
-                  icon={<FaTimes />}
-                  onClick={handleResetClick}
-                  disabled={!prompt}
-                />
-                <Button
                   label={copiedRaw ? 'Copied' : 'Copy'}
                   outlined={!copiedRaw}
                   severity={copiedRaw ? 'success' : undefined}
                   icon={copiedRaw ? <FaCheck /> : <FaRegCopy />}
                   onClick={handleCopyRawClick}
+                  disabled={!prompt}
+                />
+                <Button
+                  label='Reset'
+                  outlined
+                  icon={<FaTimes />}
+                  onClick={handleResetClick}
                   disabled={!prompt}
                 />
                 <Button
