@@ -27,7 +27,7 @@ export const handler: Schema["generateHaiku"]["functionHandler"] = async (
 Core Goals:
 
 Preserve the core message, purpose, and intent of the original text.
-Rewrite it entirely fresh, avoiding any direct phrasing from the input.
+Rewrite it entirely fresh, avoiding any direct phrasing from the input. Preserve the overall structure, including paragraphs, line breaks, spacing, and formatting.
 Craft a voice that’s vivid, unique, and feels like it belongs to a specific person, shaped by the text’s intended tone and audience (e.g., casual email, heartfelt story, or professional report).
 
 Guidelines for Humanization:

@@ -74,6 +74,7 @@ export default function App() {
   const handleResetClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setPrompt('');
+    setAnswer('');
   };
 
   const countWords = (text: string | null | undefined) => {
@@ -109,22 +110,20 @@ export default function App() {
               </div>
               <div className='action-bar-right'>
                 <Button
-                  label={copiedRaw ? 'Copied' : 'Copy'}
                   outlined={!copiedRaw}
+                  label={copiedRaw ? 'Copied' : ''}
                   severity={copiedRaw ? 'success' : undefined}
                   icon={copiedRaw ? <FaCheck /> : <FaRegCopy />}
                   onClick={handleCopyRawClick}
                   disabled={!prompt}
                 />
                 <Button
-                  label='Reset'
                   outlined
                   icon={<FaTimes />}
                   onClick={handleResetClick}
                   disabled={!prompt}
                 />
                 <Button
-                  label='Humanify'
                   loading={isRunning}
                   loadingIcon={<FaSpinner className='spin' />}
                   icon={<FaGooglePlay />}
@@ -153,7 +152,7 @@ export default function App() {
               </div>
               <div className='action-bar-right'>
                 <Button
-                  label={copiedProcessed ? 'Copied' : 'Copy'}
+                  label={copiedProcessed ? 'Copied' : ''}
                   outlined={!copiedProcessed}
                   severity={copiedProcessed ? 'success' : undefined}
                   icon={copiedProcessed ? <FaCheck /> : <FaRegCopy />}
