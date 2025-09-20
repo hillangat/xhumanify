@@ -3,11 +3,10 @@ import { useState } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import './App.scss';
 import IconTextButton from './IconTextButton';
-import { FaPlay } from 'react-icons/fa';
-import { FaUser } from 'react-icons/fa';
-import { FaSpinner } from 'react-icons/fa';
+import { FaPlay, FaUser, FaSpinner, FaCheck, FaRegCopy, FaFilePdf } from 'react-icons/fa';
 import { MdHourglassEmpty } from 'react-icons/md';
 import EmptyContent from './EmptyContent';
+import { Button } from 'primereact/button';
 // import { FaPlay } from "react-icons/fa";
 // <button type='submit' onClick={handleButtonClick} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
 //                 <FaPlay size={32} />
@@ -20,6 +19,7 @@ export default function App() {
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [answer, setAnswer] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const sendPrompt = async () => {
     setIsRunning(true);
@@ -45,11 +45,24 @@ export default function App() {
     await sendPrompt();
   };
 
+  const handleCopyClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    if (answer) {
+      try {
+        await navigator.clipboard.writeText(answer);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 5000);
+      } catch (err) {
+        console.log('Copy failed', err);
+      }
+    }
+  };
+
   return (
     <>
       <main>
         <section className='header-section'>
-          <div className='header-title-left'>XHumanify</div>
+          <div className='header-title-left p-text-primary'>XHumanify</div>
           <div className='header-title-right'>
             <span className="user-icon-circle">
               <FaUser />
@@ -65,16 +78,29 @@ export default function App() {
             <p>Turn stiff, robotic AI text into writing that feels genuinely human. Our tool smooths out the rough edges of AI-generated content, reshaping it into clear, natural, and authentic language that won’t raise red flags. With us, your words will sound like they came straight from a real person—so you can publish or submit your work with confidence.</p>
           </div>
         </section>
-        <div className='button-container'>
-          <IconTextButton
-            icon={isRunning ? <FaSpinner className="spin" /> : <FaPlay />}
-            text={isRunning ? "Running" : "Run"}
-            onClick={handleButtonClick}
-            disabled={!prompt || isRunning}
-          />
-        </div>
         <section className='content-section'>
           <div className='raw-content'>
+            <div className='action-bar'>
+              <div className='action-bar-left'>
+                <p><strong>{prompt?.length ?? 0 }</strong> Words</p>
+              </div>
+              <div className='action-bar-right'>
+                <Button
+                  label={copied ? "Copied" : "Copy"}
+                  outlined
+                  icon={copied ? <FaCheck /> : <FaRegCopy />}
+                  onClick={handleCopyClick}
+                  disabled={!answer}
+                />
+                <Button
+                  label='Humanify'
+                  outlined
+                  icon={<FaPlay />}
+                  onClick={handleButtonClick}
+                  disabled={!prompt}
+                />
+              </div>
+            </div>
             <form>
               <textarea
                 placeholder={isFocused ? '' : 'Enter Your Text Here...'}
@@ -90,6 +116,27 @@ export default function App() {
             </form>
           </div>
           <div className='processed-content'>
+            <div className='action-bar'>
+              <div className='action-bar-left'>
+                <p><strong>{answer?.length ?? 0 }</strong> Words</p>
+              </div>
+              <div className='action-bar-right'>
+                <Button
+                  label={copied ? "Copied" : "Copy"}
+                  outlined
+                  icon={copied ? <FaCheck /> : <FaRegCopy />}
+                  onClick={handleCopyClick}
+                  disabled={!answer}
+                />
+                <Button
+                  label='Download'
+                  outlined
+                  icon={<FaFilePdf />}
+                  onClick={handleButtonClick}
+                  disabled={!prompt}
+                />
+              </div>
+            </div>
             {answer ? (
               <pre>{answer}</pre>
             ) : (

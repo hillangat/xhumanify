@@ -5,7 +5,13 @@ import App from "./App.tsx";
 import "./index.scss";
 import { Amplify } from "aws-amplify";
 import outputs from "../amplify_outputs.json";
+
 import '@aws-amplify/ui-react/styles.css';
+// import 'primereact/resources/themes/saga-blue/theme.css';
+// import 'primereact/resources/themes/md-dark-indigo/theme.css';
+import 'primereact/resources/themes/md-light-indigo/theme.css';
+import 'primereact/resources/primereact.min.css';
+import 'primeicons/primeicons.css';
 
 import { parseAmplifyConfig } from "aws-amplify/utils";
 import { BrowserRouter } from "react-router-dom";

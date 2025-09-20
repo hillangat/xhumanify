@@ -1,20 +1,3 @@
-/* Global scrollbar styling */
-*::-webkit-scrollbar {
-  width: 6px;
-  background: #F0F0F0;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: #B6B6B6;
-  border-radius: 4px;
-}
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: #B6B6B6 #F0F0F0;
-}
-
-
 body {
   margin: 0;
   min-height: 100vh;
@@ -30,7 +13,7 @@ body::before {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: linear-gradient(300deg, #ffffff 50%, #E3F2F6 100%, #ffffff 50%);
+  // background: linear-gradient(300deg, #ffffff 50%, #E3F2F6 100%, #ffffff 50%);
   z-index: -1;
 }
 
@@ -41,50 +24,9 @@ main {
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #E3F2F6;
-  cursor: pointer;
-  transition: border-color 0.25s;
-  color: white;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-ul {
-  padding-inline-start: 0;
-  margin-block-start: 0;
-  margin-block-end: 0;
-  list-style-type: none;
-  display: flex;
-  flex-direction: column;
-  margin: 8px 0;
-  border: 1px solid black;
-  gap: 1px;
-  background-color: black;
-  border-radius: 8px;
-  overflow: auto;
-}
-
-li {
-  background-color: white;
-  padding: 8px;
-}
-
-li:hover {
-  background: #dadbf9;
-}
-
-a {
-  font-weight: 800;
-  text-decoration: none;
+  font-size: 8px;
+  padding: 5px 10px;
+  .p-button-label {
+    margin-left: 4px;
+  }
 }

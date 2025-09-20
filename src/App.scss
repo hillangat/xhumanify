@@ -1,3 +1,37 @@
+$border-color: #B6B6B6;
+$padding: 15px;
+
+
+.action-bar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 10px;
+    border-bottom: 1px solid $border-color;
+
+    .action-bar-left {
+        width: 50%;
+        display: inline-flex;
+        justify-content: flex-start;
+        box-sizing: border-box;
+        > * {
+            margin-right: 10px;
+        }
+    }
+
+    .action-bar-right {
+        width: 50%;
+        display: inline-flex;
+        justify-content: flex-end;
+        box-sizing: border-box;
+        > * {
+            margin-left: 10px;
+        }
+    }
+}
+
 .header-title-right {
     display: flex;
     align-items: center;
@@ -14,12 +48,10 @@
     border: 2px solid #B6B6B6;
     background: #fff;
 }
+
 // Sleek scrollbar styles for processed-content and textarea
 
 // SCSS variable for border color
-$border-color: #B6B6B6;
-$padding: 15px;
-
 main {
     margin: 10px;
     padding: 10px;
@@ -43,7 +75,6 @@ main {
 .content-section {
     width: 100%;
     display: flex;
-    min-height: 400px;
     height: auto;
 
     .raw-content,
@@ -53,6 +84,9 @@ main {
     }
 
     .raw-content {
+        display: flex;
+        flex-direction: column;
+        height: 100% !important;
         flex: 0 0 40%;
         border-right: none;
         border-top-left-radius: 8px;
@@ -101,7 +135,6 @@ main {
         word-wrap: break-word;
         overflow-wrap: break-word;
         word-break: break-all;
-        padding: 10px;
     }
 }
 
@@ -112,11 +145,13 @@ main {
     justify-content: space-between;
     margin-bottom: 10px;
     flex-direction: row;
+
     .header-title-left {
         text-align: left;
         font-size: 24px;
         font-weight: bold;
     }
+
     .header-section-right {
         text-align: right;
         font-size: 14px;
