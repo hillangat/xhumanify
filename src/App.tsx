@@ -19,7 +19,8 @@ export default function App() {
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [answer, setAnswer] = useState<string | null>(null);
   const [isFocused, setIsFocused] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copiedRaw, setCopiedRaw] = useState(false);
+  const [copiedProcessed, setCopiedProcessed] = useState(false);
 
   const sendPrompt = async () => {
     setIsRunning(true);
@@ -45,17 +46,35 @@ export default function App() {
     await sendPrompt();
   };
 
-  const handleCopyClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleCopyRawClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    if (answer) {
+    if (prompt) {
       try {
-        await navigator.clipboard.writeText(answer);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 5000);
+        await navigator.clipboard.writeText(prompt);
+        setCopiedRaw(true);
+        setTimeout(() => setCopiedRaw(false), 5000);
       } catch (err) {
         console.log('Copy failed', err);
       }
     }
+  };
+
+  const handleCopyProcessedClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    if (answer) {
+      try {
+        await navigator.clipboard.writeText(answer);
+        setCopiedProcessed(true);
+        setTimeout(() => setCopiedProcessed(false), 5000);
+      } catch (err) {
+        console.log('Copy failed', err);
+      }
+    }
+  };
+
+  const countWords = (text: string | null | undefined) => {
+    if (!text) return 0;
+    return text.trim().split(/\s+/).filter(Boolean).length;
   };
 
   return (
@@ -82,59 +101,59 @@ export default function App() {
           <div className='raw-content'>
             <div className='action-bar'>
               <div className='action-bar-left'>
-                <p><strong>{prompt?.length ?? 0 }</strong> Words</p>
+                <p><strong>{countWords(prompt)}</strong> Words</p>
               </div>
               <div className='action-bar-right'>
-                <Button
-                  label={copied ? "Copied" : "Copy"}
-                  outlined
-                  icon={copied ? <FaCheck /> : <FaRegCopy />}
-                  onClick={handleCopyClick}
-                  disabled={!answer}
-                />
-                <Button
-                  label='Humanify'
-                  outlined
-                  icon={<FaPlay />}
-                  onClick={handleButtonClick}
-                  disabled={!prompt}
-                />
+                  <Button
+                    label={copiedRaw ? "Copied" : "Copy"}
+                    outlined
+                    icon={copiedRaw ? <FaCheck /> : <FaRegCopy />}
+                    onClick={handleCopyRawClick}
+                    disabled={!prompt}
+                  />
+                  <Button
+                    label='Humanify'
+                    outlined
+                    icon={<FaPlay />}
+                    onClick={handleButtonClick}
+                    disabled={!prompt}
+                  />
+                </div>
               </div>
+              <form>
+                <textarea
+                  placeholder={isFocused ? '' : 'Enter Your Text Here...'}
+                  name='prompt'
+                  value={prompt}
+                  onChange={(event) => setPrompt(event.target.value)}
+                  onFocus={() => setIsFocused(true)}
+                  onBlur={() => setIsFocused(false)}
+                  rows={6}
+                  style={{ width: '100%', padding: '8px', fontSize: '16px', resize: 'none' }}
+                  disabled={isRunning}
+                />
+              </form>
             </div>
-            <form>
-              <textarea
-                placeholder={isFocused ? '' : 'Enter Your Text Here...'}
-                name='prompt'
-                value={prompt}
-                onChange={(event) => setPrompt(event.target.value)}
-                onFocus={() => setIsFocused(true)}
-                onBlur={() => setIsFocused(false)}
-                rows={6}
-                style={{ width: '100%', padding: '8px', fontSize: '16px', resize: 'none' }}
-                disabled={isRunning}
-              />
-            </form>
-          </div>
-          <div className='processed-content'>
+            <div className='processed-content'>
             <div className='action-bar'>
               <div className='action-bar-left'>
-                <p><strong>{answer?.length ?? 0 }</strong> Words</p>
+                <p><strong>{countWords(answer)}</strong> Words</p>
               </div>
               <div className='action-bar-right'>
                 <Button
-                  label={copied ? "Copied" : "Copy"}
+                  label={copiedProcessed ? "Copied" : "Copy"}
                   outlined
-                  icon={copied ? <FaCheck /> : <FaRegCopy />}
-                  onClick={handleCopyClick}
+                  icon={copiedProcessed ? <FaCheck /> : <FaRegCopy />}
+                  onClick={handleCopyProcessedClick}
                   disabled={!answer}
                 />
-                <Button
+                {/* <Button
                   label='Download'
                   outlined
                   icon={<FaFilePdf />}
                   onClick={handleButtonClick}
                   disabled={!prompt}
-                />
+                /> */}
               </div>
             </div>
             {answer ? (
