@@ -98,6 +98,7 @@ export default function App() {
   const handleResetClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setPrompt('');
+    setAnswer('');
   };
 
   const countWords = (text: string | null | undefined) => {
