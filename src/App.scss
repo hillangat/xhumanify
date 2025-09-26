@@ -11,7 +11,7 @@ main {
   width: 100%;
   display: flex;
   align-items: stretch; // Ensure both panels stretch to the same height
-  min-height: 300px; // Optional: Set a minimum height for the panels
+  min-height: 500px; // Optional: Set a minimum height for the panels
   height: auto;
 
   .raw-content,
@@ -164,7 +164,27 @@ main {
   animation: spin 1s linear infinite;
 }
 
+.word-count-animate {
+  animation: wordCountPulse 0.6s ease-in-out;
+  color: var(--primary-color) !important;
+}
+
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+@keyframes wordCountPulse {
+  0% { 
+    transform: scale(1); 
+    color: inherit;
+  }
+  50% { 
+    transform: scale(1.2); 
+    color: var(--primary-color);
+  }
+  100% { 
+    transform: scale(1); 
+    color: var(--primary-color);
+  }
 }
