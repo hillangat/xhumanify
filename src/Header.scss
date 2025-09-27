@@ -21,6 +21,28 @@
   border-radius: 0px !important;
 }
 
+// User menu item styling
+.user-menu-item {
+  .p-menuitem-link {
+    color: var(--primary-color) !important;
+    font-weight: 500 !important;
+    
+    &:hover {
+      background-color: color-mix(in srgb, var(--primary-color) 10%, transparent) !important;
+    }
+  }
+}
+
+// User mega menu on the right
+.user-megamenu {
+  background: transparent !important;
+  border: none !important;
+  
+  .p-megamenu-root-list {
+    background: transparent !important;
+  }
+}
+
 // User icon circle styling
 .user-icon-circle {
   display: flex;
@@ -33,10 +55,35 @@
   background-color: transparent;
   color: var(--primary-color);
   transition: all 0.2s ease;
+  cursor: pointer;
 
   &:hover {
     border-color: color-mix(in srgb, var(--primary-color) 90%, black);
     color: color-mix(in srgb, var(--primary-color) 90%, black);
+    background-color: color-mix(in srgb, var(--primary-color) 5%, transparent);
+  }
+}
+
+// User dropdown menu styling
+#user-menu {
+  .p-menu-list {
+    padding: 0.5rem 0;
+    min-width: 180px;
+  }
+
+  .p-menuitem-link {
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    &:hover {
+      background-color: var(--surface-100);
+    }
+  }
+
+  .p-menuitem-separator {
+    margin: 0.5rem 0;
   }
 }
 

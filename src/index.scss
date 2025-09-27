@@ -93,3 +93,13 @@ button {
     }
   }
 }
+
+[data-amplify-authenticator] {
+  margin-top: 100px !important;
+  padding-top: 20px !important;
+}
+.amplify-authenticator,
+[data-amplify-authenticator],
+.amplify-authenticator__form {
+  margin-top: 100px !important;
+}

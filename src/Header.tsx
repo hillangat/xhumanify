@@ -1,12 +1,26 @@
-import { Menubar } from 'primereact/menubar';
-import { FaUser } from 'react-icons/fa';
-import { useLocation } from 'react-router-dom';
+import { MegaMenu } from 'primereact/megamenu';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { signOut } from 'aws-amplify/auth';
 import './Header.scss';
 
 export default function Header() {
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const menuItems = [
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      // Redirect to home page or login page after logout
+      navigate('/');
+      // Optional: Show success message or refresh the page
+      //window.location.reload();
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Optional: Show error message to user
+    }
+  };
+
+  const megaMenuItems = [
     {
       label: 'Home',
       icon: 'pi pi-home',
@@ -22,7 +36,29 @@ export default function Header() {
     {
       label: 'Features',
       icon: 'pi pi-star',
-      className: location.pathname === '/features' ? 'active-menu-item' : ''
+      className: location.pathname === '/features' ? 'active-menu-item' : '',
+      items: [
+        [
+          {
+            label: 'AI Tools',
+            items: [
+              { label: 'Content Humanizer', icon: 'pi pi-file-edit' },
+              { label: 'Text Analyzer', icon: 'pi pi-chart-line' },
+              { label: 'Grammar Check', icon: 'pi pi-check-circle' }
+            ]
+          }
+        ],
+        [
+          {
+            label: 'Integrations',
+            items: [
+              { label: 'API Access', icon: 'pi pi-cog' },
+              { label: 'Webhooks', icon: 'pi pi-link' },
+              { label: 'Third Party', icon: 'pi pi-external-link' }
+            ]
+          }
+        ]
+      ]
     },
     {
       label: 'About',
@@ -36,17 +72,59 @@ export default function Header() {
     }
   ];
 
+  const userMenuItem = {
+    label: 'My XHumanify',
+    icon: 'pi pi-user',
+    className: 'user-menu-item',
+    items: [
+      [
+        {
+          label: 'Account',
+          items: [
+            { 
+              label: 'Profile', 
+              icon: 'pi pi-user',
+              command: () => console.log('Navigate to profile')
+            },
+            { 
+              label: 'Settings', 
+              icon: 'pi pi-cog',
+              command: () => console.log('Navigate to settings')
+            },
+            { 
+              label: 'Billing', 
+              icon: 'pi pi-credit-card',
+              command: () => console.log('Navigate to billing')
+            },
+            { 
+              label: 'Log Out', 
+              icon: 'pi pi-sign-out',
+              command: () => handleLogout()
+            }
+          ]
+        }
+      ],
+      [
+        {
+          label: 'Actions',
+          items: [
+            { 
+              label: 'Log Out', 
+              icon: 'pi pi-sign-out',
+              command: () => handleLogout()
+            }
+          ]
+        }
+      ]
+    ]
+  };
+
   return (
     <div className="card header-card">
-      <Menubar 
-        model={menuItems} 
+      <MegaMenu 
+        model={megaMenuItems} 
         start={<div className="p-menubar-start"><strong>XHumanify</strong></div>}
-        end={
-          <div className="p-menubar-end">
-            <div className="user-icon-circle">
-              <FaUser style={{ fontSize: '1.2rem' }} />
-            </div>
-          </div>}
+        end={<MegaMenu model={[userMenuItem]} className="user-megamenu" />}
       />
     </div>
   );
