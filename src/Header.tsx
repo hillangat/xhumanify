@@ -1,60 +1,53 @@
-import React, { useState } from 'react';
+import { Menubar } from 'primereact/menubar';
+import { FaUser } from 'react-icons/fa';
+import { useLocation } from 'react-router-dom';
 import './Header.scss';
 
-// Define TypeScript interface for navigation items
-interface NavItem {
-  label: string;
-  url: string;
-  children?: NavItem[];
-}
+export default function Header() {
+  const location = useLocation();
 
-interface HeaderProps {
-  navItems: NavItem[];
-}
-
-const Header: React.FC<HeaderProps> = ({ navItems }) => {
-  const [isOpen, setIsOpen] = useState<number | null>(null);
-
-  const toggleDropdown = (index: number | null) => {
-    setIsOpen(isOpen === index ? null : index);
-  };
+  const menuItems = [
+    {
+      label: 'Home',
+      icon: 'pi pi-home',
+      url: '/',
+      className: location.pathname === '/' ? 'active-menu-item' : ''
+    },
+    {
+      label: 'History',
+      icon: 'pi pi-history',
+      url: '/history',
+      className: location.pathname === '/history' ? 'active-menu-item' : ''
+    },
+    {
+      label: 'Features',
+      icon: 'pi pi-star',
+      className: location.pathname === '/features' ? 'active-menu-item' : ''
+    },
+    {
+      label: 'About',
+      icon: 'pi pi-info-circle',
+      className: location.pathname === '/about' ? 'active-menu-item' : ''
+    },
+    {
+      label: 'Contact',
+      icon: 'pi pi-envelope',
+      className: location.pathname === '/contact' ? 'active-menu-item' : ''
+    }
+  ];
 
   return (
-    <header>
-      <nav>
-        <div>
-          <div>
-            <div>Logo</div>
-          </div>
-          <div>
-            {navItems.map((item, index) => (
-              <div key={index} className="relative">
-                <a
-                  href={item.url}
-                  onMouseEnter={() => item.children && toggleDropdown(index)}
-                  onMouseLeave={() => item.children && toggleDropdown(null)}
-                >
-                  {item.label}
-                </a>
-                {item.children && isOpen === index && (
-                  <div>
-                    {item.children.map((child, childIndex) => (
-                      <a
-                        key={childIndex}
-                        href={child.url}
-                      >
-                        {child.label}
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </nav>
-    </header>
+    <div className="card header-card">
+      <Menubar 
+        model={menuItems} 
+        start={<div className="p-menubar-start"><strong>XHumanify</strong></div>}
+        end={
+          <div className="p-menubar-end">
+            <div className="user-icon-circle">
+              <FaUser style={{ fontSize: '1.2rem' }} />
+            </div>
+          </div>}
+      />
+    </div>
   );
-};
-
-export default Header;
+}

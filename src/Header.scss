@@ -1,5 +1,44 @@
 /* Modern, professional, and stunning SCSS styles for the header component */
 
+// Active menu item styling for PrimeReact Menubar
+.active-menu-item {
+  box-sizing: border-box;
+  border-bottom: 2px solid var(--primary-color) !important;
+  background-color: color-mix(in srgb, var(--primary-color) 5%, transparent) !important;
+  border-top: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
+  border-left: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
+  border-right: 1px solid color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
+  
+  .p-menuitem-link {
+    color: var(--primary-color) !important;
+    font-weight: 600 !important;
+  }
+}
+
+.p-menubar-start {
+  margin-right: 16px;
+  font-size: 1.25rem;
+}
+
+// User icon circle styling
+.user-icon-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--primary-color);
+  background-color: transparent;
+  color: var(--primary-color);
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--primary-color) 90%, black);
+    color: color-mix(in srgb, var(--primary-color) 90%, black);
+  }
+}
+
 .header {
   background-color: #ffffff;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);

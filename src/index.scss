@@ -17,6 +17,12 @@ body::before {
   z-index: -1;
 }
 
+main {
+  margin: 50px 10px;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
 button {
   font-size: 8px;
   padding: 5px 10px;
@@ -28,4 +34,62 @@ button {
 .p-button {
   box-shadow: none !important;
   outline: none !important;
+}
+
+.header-card {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  width: 100%;
+  background: white;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+// Global Messages styling - reusable across all components
+.messages-container {
+  position: fixed !important;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  width: auto;
+  max-width: 500px;
+  min-width: 300px;
+  margin: 0 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+
+  .p-message-close {
+    margin-left: 8px !important;
+  }
+
+  // Ensure colored left borders show up
+  .p-message {
+    border-left-width: 6px !important;
+    border-left-style: solid !important;
+    margin-top: 0.25rem !important;
+    margin-bottom: 0.25rem !important;
+
+    .p-message-wrapper {
+        padding: 0.5rem 1rem !important;
+    }
+    
+    &.p-message-success {
+      border-left-color: var(--green-500) !important;
+    }
+    
+    &.p-message-error {
+      border-left-color: var(--red-500) !important;
+    }
+    
+    &.p-message-info {
+      border-left-color: var(--blue-500) !important;
+    }
+    
+    &.p-message-warn {
+      border-left-color: var(--yellow-500) !important;
+    }
+  }
 }

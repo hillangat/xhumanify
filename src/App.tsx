@@ -2,43 +2,19 @@ import type { Schema } from '../amplify/data/resource';
 import { useState, useEffect } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import './App.scss';
-import { FaUser, FaSpinner, FaCheck, FaRegCopy, FaTimes, FaGooglePlay } from 'react-icons/fa';
+import { FaSpinner, FaCheck, FaRegCopy, FaTimes, FaGooglePlay } from 'react-icons/fa';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { MdHourglassEmpty } from 'react-icons/md';
 import EmptyContent from './EmptyContent';
 import { Button } from 'primereact/button';
 import { ButtonGroup } from 'primereact/buttongroup';
-import { Menubar } from 'primereact/menubar';
+import Header from './Header';
 // import { FaPlay } from 'react-icons/fa';
 // <button type='submit' onClick={handleButtonClick} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
 //                 <FaPlay size={32} />
 //               </button>
 
 const client = generateClient<Schema>();
-
-const menuItems = [
-  {
-    label: 'Home',
-    icon: 'pi pi-home'
-  },
-  {
-    label: 'History',
-    icon: 'pi pi-history',
-    url: '/history'
-  },
-  {
-    label: 'Features',
-    icon: 'pi pi-star'
-  },
-  {
-    label: 'About',
-    icon: 'pi pi-info-circle'
-  },
-  {
-    label: 'Contact',
-    icon: 'pi pi-envelope'
-  }
-];
 
 export default function App() {
   const [prompt, setPrompt] = useState<string>('');
@@ -153,13 +129,7 @@ export default function App() {
 
   return (
     <>
-      <div className="card">
-        <Menubar 
-          model={menuItems} 
-          start={<div className="p-menubar-start"><strong>XHumanify</strong></div>}
-          end={<div className="p-menubar-end"><FaUser style={{ fontSize: '1.2rem' }} /></div>}
-        />
-      </div>
+      <Header />
       <main>
         <section className='title-section'>
           <div className='title-text'>
