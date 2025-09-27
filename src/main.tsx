@@ -12,7 +12,7 @@ import outputs from "./amplify_outputs.json";
 import '@aws-amplify/ui-react/styles.css';
 // import 'primereact/resources/themes/saga-blue/theme.css';
 // import 'primereact/resources/themes/md-dark-indigo/theme.css';
-import 'primereact/resources/themes/md-dark-indigo/theme.css';
+import 'primereact/resources/themes/lara-light-teal/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 

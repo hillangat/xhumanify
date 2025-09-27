@@ -57,6 +57,7 @@ button {
   z-index: 2000;
   width: auto;
   max-width: 500px;
+  border-radius: 6px;
   min-width: 300px;
   margin: 0 !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
@@ -69,8 +70,7 @@ button {
   .p-message {
     border-left-width: 6px !important;
     border-left-style: solid !important;
-    margin-top: 0.25rem !important;
-    margin-bottom: 0.25rem !important;
+    margin: 0px !important;
 
     .p-message-wrapper {
         padding: 0.5rem 1rem !important;

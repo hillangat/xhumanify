@@ -1,0 +1,61 @@
+/* App.css or index.css */
+
+/* Base futuristic background using PrimeReact vars for theme matching */
+.futuristic-bg {
+  position: relative;
+  width: 100%;
+  height: 100vh; /* Adjust to your app's needs */
+  background: linear-gradient(135deg, var(--surface-ground, #0d1117), var(--surface-900, #1a1f2c));
+  overflow: hidden;
+  isolation: isolate; /* Prevents bleed into other elements */
+}
+
+/* Nebula glow layer: Subtle color shift animation */
+.futuristic-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at 50% 50%, rgba(var(--primary-500-rgb, 59, 130, 246), 0.1), transparent 70%);
+  opacity: 0.6;
+  animation: nebula-glow 20s ease-in-out infinite alternate;
+  mix-blend-mode: screen; /* Enhances futuristic glow */
+}
+
+@keyframes nebula-glow {
+  0% { transform: scale(1); opacity: 0.6; filter: blur(10px); }
+  100% { transform: scale(1.05); opacity: 0.8; filter: blur(15px); }
+}
+
+/* Star particles layer: Animated falling stars for space/futuristic feel */
+.futuristic-bg .star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: var(--text-color, #ffffff);
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(255, 255, 255, 0.5); /* Subtle glow */
+  animation: fall 10s linear infinite;
+  pointer-events: none; /* Doesn't interfere with interactions */
+}
+
+/* Generate multiple stars with varied delays/sizes/positions via pseudo-elements or duplicates */
+.futuristic-bg .star:nth-child(1) { top: -10%; left: 10%; animation-duration: 8s; animation-delay: 0s; width: 3px; height: 3px; }
+.futuristic-bg .star:nth-child(2) { top: -10%; left: 20%; animation-duration: 12s; animation-delay: 2s; }
+.futuristic-bg .star:nth-child(3) { top: -10%; left: 30%; animation-duration: 10s; animation-delay: 1s; width: 1px; height: 1px; }
+.futuristic-bg .star:nth-child(4) { top: -10%; left: 40%; animation-duration: 15s; animation-delay: 3s; }
+.futuristic-bg .star:nth-child(5) { top: -10%; left: 50%; animation-duration: 9s; animation-delay: 4s; width: 2px; height: 2px; }
+/* Add more .star:nth-child(n) as needed for density (e.g., up to 20-30 for fuller effect without perf hit) */
+
+@keyframes fall {
+  0% { transform: translateY(0) scale(1); opacity: 0.8; }
+  100% { transform: translateY(120vh) scale(0.8); opacity: 0; }
+}
+
+/* Interactivity: Pulse on hover for engagement */
+.futuristic-bg:hover .star {
+  animation-duration: 8s; /* Speed up slightly on hover */
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8); /* Brighter glow */
+}
