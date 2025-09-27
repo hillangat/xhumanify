@@ -25,7 +25,6 @@ dist-ssr
 
 # amplify
 .amplify
-amplify_outputs*
 amplifyconfiguration*
 
 #amplify-do-not-edit-begin
