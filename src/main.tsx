@@ -1,8 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { Authenticator } from '@aws-amplify/ui-react';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App.tsx";
+import HistoryView from "./HistoryView.tsx";
 import "./index.scss";
+import './HistoryView.scss';
 import { Amplify } from "aws-amplify";
 import outputs from "./amplify_outputs.json";
 
@@ -14,7 +17,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 
 import { parseAmplifyConfig } from "aws-amplify/utils";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 const amplifyConfig = parseAmplifyConfig(outputs);
 
@@ -42,7 +45,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Authenticator>
       <BrowserRouter>
-        <App />
+        <Routes>
+          <Route path="/" element={<App />} />
+          <Route path="/history" element={<HistoryView />} />
+        </Routes>
       </BrowserRouter>
     </Authenticator>
   </React.StrictMode>

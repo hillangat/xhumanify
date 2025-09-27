@@ -3,7 +3,8 @@ import { generateClient } from 'aws-amplify/api';
 import type { Schema } from '../amplify/data/resource';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
-import { FaTrash, FaCopy } from 'react-icons/fa';
+import { Menubar } from 'primereact/menubar';
+import { FaTrash, FaCopy, FaUser } from 'react-icons/fa';
 import EmptyContent from './EmptyContent';
 import { MdHistory } from 'react-icons/md';
 
@@ -19,6 +20,31 @@ interface HistoryItem {
 export default function HistoryView() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const menuItems = [
+    {
+      label: 'Home',
+      icon: 'pi pi-home',
+      url: '/'
+    },
+    {
+      label: 'History',
+      icon: 'pi pi-history',
+      url: '/history'
+    },
+    {
+      label: 'Features',
+      icon: 'pi pi-star'
+    },
+    {
+      label: 'About',
+      icon: 'pi pi-info-circle'
+    },
+    {
+      label: 'Contact',
+      icon: 'pi pi-envelope'
+    }
+  ];
 
   const loadHistory = async () => {
     setIsLoading(true);
@@ -60,9 +86,17 @@ export default function HistoryView() {
   }
 
   return (
-    <div className="history-container">
-      <h2>Content History</h2>
-      <p>Your previous humanifications</p>
+    <>
+      <div className="card">
+        <Menubar 
+          model={menuItems} 
+          start={<div className="p-menubar-start"><strong>XHumanify</strong></div>}
+          end={<div className="p-menubar-end"><FaUser style={{ fontSize: '1.2rem' }} /></div>}
+        />
+      </div>
+      <div className="history-container">
+        <h2>Content History</h2>
+        <p>Your previous humanifications</p>
       
       {history.length === 0 ? (
         <EmptyContent
@@ -115,6 +149,7 @@ export default function HistoryView() {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

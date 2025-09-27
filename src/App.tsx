@@ -22,6 +22,11 @@ const menuItems = [
     icon: 'pi pi-home'
   },
   {
+    label: 'History',
+    icon: 'pi pi-history',
+    url: '/history'
+  },
+  {
     label: 'Features',
     icon: 'pi pi-star'
   },
