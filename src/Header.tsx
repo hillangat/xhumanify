@@ -31,12 +31,12 @@ export default function Header() {
       label: 'History',
       icon: 'pi pi-history',
       url: '/history',
-      className: location.pathname === '/history' ? 'active-menu-item' : ''
+      className: (location.pathname === '/history' || location.pathname === '/history/') ? 'active-menu-item' : ''
     },
     {
       label: 'Features',
       icon: 'pi pi-star',
-      className: location.pathname === '/features' ? 'active-menu-item' : '',
+      className: (location.pathname === '/features' || location.pathname === '/features/') ? 'active-menu-item' : '',
       items: [
         [
           {
@@ -63,12 +63,12 @@ export default function Header() {
     {
       label: 'About',
       icon: 'pi pi-info-circle',
-      className: location.pathname === '/about' ? 'active-menu-item' : ''
+      className: (location.pathname === '/about' || location.pathname === '/about/') ? 'active-menu-item' : ''
     },
     {
       label: 'Contact',
       icon: 'pi pi-envelope',
-      className: location.pathname === '/contact' ? 'active-menu-item' : ''
+      className: (location.pathname === '/contact' || location.pathname === '/contact/') ? 'active-menu-item' : ''
     }
   ];
 
