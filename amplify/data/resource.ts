@@ -18,8 +18,13 @@ export const generateHaikuFunction = defineFunction({
 
 const schema = a.schema({
   Todo: a
+    .model({content: a.string()})
+    .authorization((allow) => [allow.publicApiKey()]),
+  UserContentHistory: a
     .model({
-      content: a.string(),
+      originalContent: a.string().required(),
+      processedContent: a.string().required(),
+      createdAt: a.datetime(),
     })
     .authorization((allow) => [allow.publicApiKey()]),
   generateHaiku: a
