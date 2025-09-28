@@ -35,19 +35,6 @@ export default function App() {
       });
       if (!errors) {
         setAnswer(data);
-        
-        // Save to history
-        if (data) {
-          try {
-            await client.models.UserContentHistory.create({
-              originalContent: prompt,
-              processedContent: data,
-              createdAt: new Date().toISOString()
-            });
-          } catch (historyError) {
-            console.error('Failed to save to history:', historyError);
-          }
-        }
       } else {
         console.log(errors);
       }
