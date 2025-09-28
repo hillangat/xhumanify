@@ -24,6 +24,7 @@ const schema = a.schema({
     .model({
       originalContent: a.string().required(),
       processedContent: a.string().required(),
+      description: a.string(),
       createdAt: a.datetime(),
     })
     .authorization((allow) => [allow.publicApiKey()]),

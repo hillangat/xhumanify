@@ -8,11 +8,8 @@ import { MdHourglassEmpty } from 'react-icons/md';
 import EmptyContent from './EmptyContent';
 import { Button } from 'primereact/button';
 import { ButtonGroup } from 'primereact/buttongroup';
+import { Dialog } from 'primereact/dialog';
 import Header from './Header';
-// import { FaPlay } from 'react-icons/fa';
-// <button type='submit' onClick={handleButtonClick} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-//                 <FaPlay size={32} />
-//               </button>
 
 const client = generateClient<Schema>();
 
@@ -24,6 +21,9 @@ export default function App() {
   const [copiedRaw, setCopiedRaw] = useState(false);
   const [copiedProcessed, setCopiedProcessed] = useState(false);
   const [animatedWordCount, setAnimatedWordCount] = useState(0);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [description, setDescription] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   const sendPrompt = async () => {
     setIsRunning(true);
@@ -93,6 +93,33 @@ export default function App() {
     event.preventDefault();
     setPrompt('');
     setAnswer('');
+  };
+
+  const handleSave = async () => {
+    if (!prompt || !answer) {
+      console.error('Cannot save: missing prompt or answer');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await client.models.UserContentHistory.create({
+        originalContent: prompt,
+        processedContent: answer,
+        description: description.trim() || undefined,
+        createdAt: new Date().toISOString()
+      });
+      setShowSaveDialog(false);
+      setDescription('');
+    } catch (error) {
+      console.error('Failed to save to history:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancelSave = () => {
+    setShowSaveDialog(false);
+    setDescription('');
   };
 
   const countWords = (text: string | null | undefined) => {
@@ -202,6 +229,13 @@ export default function App() {
                     onClick={handleCopyProcessedClick}
                     disabled={!answer}
                   />
+                  <Button
+                    label='Save'
+                    outlined
+                    icon='pi pi-save'
+                    onClick={() => setShowSaveDialog(true)}
+                    disabled={!answer || !prompt}
+                  />
                 </ButtonGroup>
               </div>
             </div>
@@ -219,6 +253,65 @@ export default function App() {
           </div>
         </section>
       </main>
+
+      {/* Save Description Dialog */}
+      <Dialog
+        header="Save Content"
+        visible={showSaveDialog}
+        onHide={handleCancelSave}
+        footer={
+          <div className="dialog-footer">
+            <Button
+              label="Cancel"
+              outlined
+              onClick={handleCancelSave}
+              disabled={isSaving}
+            />
+            <Button
+              label="Save"
+              icon={isSaving ? "pi pi-spin pi-spinner" : "pi pi-save"}
+              onClick={handleSave}
+              disabled={isSaving}
+              loading={isSaving}
+            />
+          </div>
+        }
+        modal
+        className="save-dialog"
+        style={{ width: '500px' }}
+      >
+        <div className="dialog-content">
+          <div className="textarea-container">
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter description..."
+              maxLength={250}
+              rows={4}
+              className="description-textarea"
+              disabled={isSaving}
+              style={{
+                width: '100%',
+                padding: '12px',
+                border: '1px solid var(--surface-border)',
+                borderRadius: '6px',
+                fontSize: '14px',
+                fontFamily: 'inherit',
+                resize: 'vertical',
+                minHeight: '100px'
+              }}
+            />
+            <div className={`character-count ${description.length > 200 ? 'warning' : ''} ${description.length > 240 ? 'error' : ''}`} style={{
+              textAlign: 'right',
+              marginTop: '8px',
+              fontSize: '12px',
+              color: 'var(--text-color-secondary)'
+            }}>
+              {description.length}/250
+            </div>
+          </div>
+        </div>
+      </Dialog>
     </>
   );
 }
