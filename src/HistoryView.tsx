@@ -18,6 +18,7 @@ interface HistoryItem {
   id: string;
   originalContent: string;
   processedContent: string;
+  description?: string;
   createdAt: string;
 }
 
@@ -107,7 +108,7 @@ export default function HistoryView() {
       <div className="custom-panel-header">
         <div className="header-left">
           <span className="history-date">
-            {new Date(item.createdAt).toLocaleString()}
+            {new Date(item.createdAt).toLocaleString()}{item.description ? `: ${item.description}` : ''}
           </span>
         </div>
         <div className="header-right">
@@ -130,7 +131,7 @@ export default function HistoryView() {
               onClick={(e) => {
                 e.stopPropagation();
                 confirmDialog({
-                  message: `Are you sure you want to delete history item created on ${new Date(item.createdAt).toLocaleString()}?`,
+                  message: `Are you sure you want to delete history item created on ${new Date(item.createdAt).toLocaleString()}${item.description ? ` (${item.description})` : ''}?`,
                   header: 'Delete Confirmation',
                   icon: 'pi pi-exclamation-triangle',
                   defaultFocus: 'reject',

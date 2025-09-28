@@ -1,5 +1,5 @@
 import type { Schema } from '../amplify/data/resource';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { generateClient } from 'aws-amplify/api';
 import './App.scss';
 import { FaSpinner, FaCheck, FaRegCopy, FaTimes, FaGooglePlay } from 'react-icons/fa';
@@ -9,6 +9,7 @@ import EmptyContent from './EmptyContent';
 import { Button } from 'primereact/button';
 import { ButtonGroup } from 'primereact/buttongroup';
 import { Dialog } from 'primereact/dialog';
+import { Toast } from 'primereact/toast';
 import Header from './Header';
 
 const client = generateClient<Schema>();
@@ -24,6 +25,7 @@ export default function App() {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [description, setDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const toast = useRef<Toast>(null);
 
   const sendPrompt = async () => {
     setIsRunning(true);
@@ -57,8 +59,21 @@ export default function App() {
         await navigator.clipboard.writeText(prompt);
         setCopiedRaw(true);
         setTimeout(() => setCopiedRaw(false), 5000);
+        
+        toast.current?.show({
+          severity: 'success',
+          summary: 'Copied!',
+          detail: 'Original content copied to clipboard',
+          life: 3000
+        });
       } catch (err) {
         console.log('Copy failed', err);
+        toast.current?.show({
+          severity: 'error',
+          summary: 'Copy Failed',
+          detail: 'Unable to copy content to clipboard',
+          life: 3000
+        });
       }
     }
   };
@@ -97,8 +112,19 @@ export default function App() {
       });
       setShowSaveDialog(false);
       setDescription('');
+      toast.current?.show({
+        severity: 'success',
+        summary: 'Saved!',
+        detail: 'Successfully saved content.',
+        life: 3000
+      });
     } catch (error) {
-      console.error('Failed to save to history:', error);
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Save Failed',
+        detail: 'Unable to save content. Please try again.',
+        life: 3000
+      });
     } finally {
       setIsSaving(false);
     }
@@ -299,6 +325,9 @@ export default function App() {
           </div>
         </div>
       </Dialog>
+      
+      {/* Toast Notifications */}
+      <Toast ref={toast} position="top-right" />
     </>
   );
 }
