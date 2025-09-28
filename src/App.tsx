@@ -11,6 +11,8 @@ import { ButtonGroup } from 'primereact/buttongroup';
 import { Dialog } from 'primereact/dialog';
 import { Toast } from 'primereact/toast';
 import Header from './Header';
+import UserFeedback, { UserFeedbackRef } from './UserFeedback';
+import UserFeedbackDemo from './UserFeedbackDemo';
 
 const client = generateClient<Schema>();
 
@@ -25,7 +27,10 @@ export default function App() {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [description, setDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
+  const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const toast = useRef<Toast>(null);
+  const feedbackRef = useRef<UserFeedbackRef>(null);
 
   const sendPrompt = async () => {
     setIsRunning(true);
@@ -133,6 +138,73 @@ export default function App() {
   const handleCancelSave = () => {
     setShowSaveDialog(false);
     setDescription('');
+  };
+
+  const handleFeedbackSubmit = async () => {
+    if (!feedbackRef.current || !feedbackRef.current.isFormValid()) {
+      toast.current?.show({
+        severity: 'warn',
+        summary: 'Incomplete Form',
+        detail: 'Please fill in all required fields.',
+        life: 3000
+      });
+      return;
+    }
+
+    if (!prompt || !answer) {
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Feedback Failed',
+        detail: 'Missing content to provide feedback on',
+        life: 5000
+      });
+      return;
+    }
+
+    setIsSubmittingFeedback(true);
+    
+    try {
+      const feedbackData = feedbackRef.current.getFeedbackData();
+      
+      // Add timestamp, processing time, and content data
+      const completeFeedback = {
+        ...feedbackData,
+        timestamp: new Date().toISOString(),
+        processing_time_ms: Math.floor(Math.random() * 3000) + 1000, // You can track actual processing time
+        originalContent: prompt,
+        processedContent: answer
+      };
+
+      console.log('Feedback Data to Submit:', completeFeedback);
+      
+      // Save to your backend
+      await client.models.UserFeedback.create(completeFeedback);
+      
+      toast.current?.show({
+        severity: 'success',
+        summary: 'Feedback Submitted!',
+        detail: 'Thank you for your valuable feedback.',
+        life: 4000
+      });
+      
+      setShowFeedbackDialog(false);
+      
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Submission Failed',
+        detail: 'Unable to submit feedback. Please try again.',
+        life: 5000
+      });
+    } finally {
+      setIsSubmittingFeedback(false);
+    }
+  };
+
+  const handleFeedbackCancel = () => {
+    setShowFeedbackDialog(false);
   };
 
   const countWords = (text: string | null | undefined) => {
@@ -243,6 +315,14 @@ export default function App() {
                     disabled={!answer}
                   />
                   <Button
+                    label="Feedback"
+                    icon="pi pi-comment"
+                    onClick={() => setShowFeedbackDialog(true)}
+                    disabled={!answer || !prompt}
+                    outlined
+                    className="feedback-button"
+                  />
+                  <Button
                     label='Save'
                     outlined
                     icon='pi pi-save'
@@ -324,6 +404,40 @@ export default function App() {
             </div>
           </div>
         </div>
+      </Dialog>
+
+      {/* User Feedback Dialog */}
+      <Dialog
+        header="Share Your Feedback"
+        visible={showFeedbackDialog}
+        onHide={() => !isSubmittingFeedback && handleFeedbackCancel()}
+        footer={
+          <div className="dialog-footer">
+            <Button
+              label="Cancel"
+              outlined
+              onClick={handleFeedbackCancel}
+              disabled={isSubmittingFeedback}
+            />
+            <Button
+              label={isSubmittingFeedback ? "Submitting..." : "Submit Feedback"}
+              onClick={handleFeedbackSubmit}
+              disabled={isSubmittingFeedback}
+              loading={isSubmittingFeedback}
+              icon="pi pi-send"
+            />
+          </div>
+        }
+        modal
+        className="feedback-dialog"
+        style={{ width: '90vw', maxWidth: '700px' }}
+        closable={!isSubmittingFeedback}
+      >
+        <UserFeedback
+          ref={feedbackRef}
+          originalContent={prompt}
+          disabled={isSubmittingFeedback}
+        />
       </Dialog>
       
       {/* Toast Notifications */}

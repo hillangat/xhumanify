@@ -28,6 +28,20 @@ const schema = a.schema({
       createdAt: a.datetime(),
     })
     .authorization((allow) => [allow.publicApiKey()]),
+  UserFeedback: a
+    .model({
+      timestamp: a.datetime().required(),
+      humanization_rating: a.integer().required(),
+      tone_selected: a.string().required(),
+      tone_match: a.string().required(),
+      feedback_text: a.string(),
+      ease_of_use_rating: a.integer(),
+      input_text_length: a.integer(),
+      processing_time_ms: a.integer(),
+      originalContent: a.string(),
+      processedContent: a.string(),
+    })
+    .authorization((allow) => [allow.publicApiKey()]),
   generateHaiku: a
     .query()
     .arguments({ prompt: a.string().required() })

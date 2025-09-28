@@ -240,3 +240,28 @@ $padding: 15px;
     }
   }
 }
+
+/* Feedback Dialog Styles */
+.feedback-dialog {
+  .p-dialog-header {
+    background: var(--primary-color);
+    color: white;
+
+    .p-dialog-title {
+      color: white;
+      font-weight: 600;
+    }
+
+    .p-dialog-header-icon {
+      color: white;
+
+      &:hover {
+        background: color-mix(in srgb, white 10%, transparent);
+      }
+    }
+  }
+
+  .p-dialog-content {
+    padding: 0;
+  }
+}
