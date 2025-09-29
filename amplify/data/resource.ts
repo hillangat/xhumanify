@@ -44,7 +44,7 @@ const schema = a.schema({
     .authorization((allow) => [allow.publicApiKey()]),
   generateHaiku: a
     .query()
-    .arguments({ prompt: a.string().required() })
+    .arguments({ prompt: a.string().required(), tone: a.string() })
     .returns(a.string())
     .authorization((allow) => [allow.publicApiKey()])
     .handler(a.handler.function(generateHaikuFunction))

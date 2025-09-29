@@ -32,7 +32,7 @@ export default function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
-  const [selectedTone, setSelectedTone] = useState<string>('Select tone');
+  const [selectedTone, setSelectedTone] = useState<string>('Neutral');
   const toast = useRef<Toast>(null);
   const feedbackRef = useRef<UserFeedbackRef>(null);
   const toneMenuRef = useRef<Menu>(null);
@@ -53,7 +53,8 @@ export default function App() {
     setAnimatedWordCount(0);
     try {
       const { data, errors } = await client.queries.generateHaiku({
-        prompt
+        prompt,
+        tone: selectedTone
       });
       if (!errors) {
         setAnswer(data);

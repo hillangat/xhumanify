@@ -8,6 +8,7 @@ export const TONE_OPTIONS = [
   { key: 'technical', name: 'Technical' },
   { key: 'conversational', name: 'Conversational' },
   { key: 'academic', name: 'Academic' },
+  { key: 'neutral', name: 'Neutral' },
 ];
 
 // Tone match quality options for feedback
