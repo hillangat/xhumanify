@@ -1,15 +1,19 @@
 // Tone options for feedback and content processing
 export const TONE_OPTIONS = [
-  { key: 'professional', name: 'Professional' },
-  { key: 'casual', name: 'Casual' },
-  { key: 'friendly', name: 'Friendly' },
-  { key: 'formal', name: 'Formal' },
-  { key: 'creative', name: 'Creative' },
-  { key: 'technical', name: 'Technical' },
-  { key: 'conversational', name: 'Conversational' },
-  { key: 'academic', name: 'Academic' },
   { key: 'neutral', name: 'Neutral' },
+  { key: 'casual', name: 'Casual' },
+  { key: 'conversational', name: 'Conversational' },
+  { key: 'friendly', name: 'Friendly' },
+  { key: 'professional', name: 'Professional' },
+  { key: 'formal', name: 'Formal' },
+  { key: 'confident', name: 'Confident' },
+  { key: 'academic', name: 'Academic' },
+  { key: 'technical', name: 'Technical' },
+  { key: 'creative', name: 'Creative' },
+  { key: 'witty', name: 'Witty' },
+  { key: 'heartfelt', name: 'Heartfelt' },
 ];
+
 
 // Tone match quality options for feedback
 export const TONE_MATCH_OPTIONS = [

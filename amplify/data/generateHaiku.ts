@@ -5,7 +5,7 @@ import {
   InvokeModelCommandInput,
 } from "@aws-sdk/client-bedrock-runtime";
 
-// initialize bedrock runtime client
+// Initialize Bedrock runtime client
 const client = new BedrockRuntimeClient();
 
 export const handler: Schema["generateHaiku"]["functionHandler"] = async (
@@ -16,6 +16,29 @@ export const handler: Schema["generateHaiku"]["functionHandler"] = async (
   const prompt = event.arguments.prompt;
   const tone = event.arguments.tone || "neutral"; // Default to "neutral" if no tone is provided
 
+  // Validate tone
+  const validTones = [
+    "neutral",
+    "casual",
+    "conversational",
+    "friendly",
+    "professional",
+    "formal",
+    "confident",
+    "academic",
+    "technical",
+    "creative",
+    "witty",
+    "heartfelt"
+  ];
+  
+  if (!validTones.includes(tone)) {
+    throw new Error(`Invalid tone. Choose from: ${validTones.join(", ")}`);
+  }
+
+  const inputTokenEstimate = Math.ceil(prompt.length / 4); // ~4 characters per token
+  const maxTokens = Math.min(inputTokenEstimate + 100, 4000);
+
   // Invoke model
   const input = {
     modelId: process.env.MODEL_ID,
@@ -24,27 +47,37 @@ export const handler: Schema["generateHaiku"]["functionHandler"] = async (
     body: JSON.stringify({
       anthropic_version: "bedrock-2023-05-31",
       system: `
-You’re a master at transforming AI-generated text into something that feels unmistakably human—vibrant, a bit raw, and bursting with personality, like it came straight from someone’s messy, brilliant mind. Your task is to rewrite the given text from scratch, making it sound like a real person wrote it, tailored to the text’s purpose, context, and the specified tone of "${tone}", while staying true to its original meaning and intent.
+You are an expert at transforming AI-generated text into human-like text that feels vibrant, authentic, and tailored to the specified tone of "${tone}". Your task is to rewrite the input text from scratch, preserving its core message, purpose, and intent, while making it sound like it was written by a real person with a distinct voice shaped by the tone and context. Do not add introductory sentences, concluding remarks, or any content not present in the original input. The output must have the same number of sentences as the input and maintain its structure (e.g., paragraphs, line breaks, spacing, formatting).
 
 Core Goals:
-- Preserve the core message, purpose, and intent of the original text.
-- Rewrite it entirely fresh, avoiding any direct phrasing from the input. Preserve the overall structure, including paragraphs, line breaks, spacing, and formatting.
-- Craft a voice that’s vivid, unique, and feels like it belongs to a specific person, shaped by the text’s intended tone ("${tone}") and audience (e.g., casual email, heartfelt story, or professional report).
+- Preserve the exact meaning, purpose, and intent of the original text.
+- Rewrite the text entirely in your own words, avoiding any direct phrasing from the input.
+- Match the input's structure exactly, including the number of sentences, paragraphs, and formatting.
+- Craft a voice that feels human, vivid, and unique, shaped by the "${tone}" tone and the text’s intended audience (e.g., casual email, professional report, heartfelt story).
 
 Guidelines for Humanization:
-- Distinct Persona: Picture a specific writer—e.g., a frazzled student cramming an essay for a casual tone, a polished executive drafting a memo for a professional tone, or a reflective blogger musing over life for a heartfelt tone. Let their personality and the "${tone}" tone shape the word choice, phrasing, and quirks. Avoid generic or overly polished vibes that feel like a template.
-- Organic Imperfections: Mix short, snappy sentences with longer, wandering ones. Include asides (e.g., “okay, that was a wild day” for casual tone, or “I trust this clarifies the matter” for formal tone), hesitations, or brief tangents that fit the context and tone. Use punctuation like dashes, ellipses, or parentheses to mimic natural speech or thought, but keep it subtle and aligned with the "${tone}" tone.
-- Lived-In Details: Swap vague statements for specific, sensory moments (e.g., “scribbling notes in a coffee shop” for casual, or “reviewing the proposal over morning coffee” for professional). Avoid precise metrics (e.g., “saved a ton of time” instead of “improved efficiency by 25%”). If numbers are needed, ground them in relatable context, like “we got it done fast enough to catch happy hour” for casual or “delivered ahead of schedule” for professional.
-- Non-Formulaic Flow: Ditch predictable structures (e.g., intro, points, conclusion for every text type). Let the text flow naturally—maybe start with a quirky anecdote for a casual tone, a clear statement of purpose for a formal tone, or an emotional hook for a heartfelt tone. Keep it cohesive but let it breathe like a human’s thoughts.
-- Dynamic Rhythm and Tone: Blend high-energy bursts with quieter, reflective moments, adjusted to the "${tone}" tone. For example, use sarcastic wit for casual, confident clarity for professional, or earnest vulnerability for heartfelt. Add subtle humor, curiosity, or self-deprecation to engage the reader, but only if it fits the tone.
-- Authentic Engagement: Make it feel like a real person addressing their audience directly, using the "${tone}" tone. Avoid corporate buzzwords like “game-changer” or “synergy.” Use phrases that feel personal and context-specific, like “I’m still buzzing about that project” for casual, “I’m confident this approach will succeed” for professional, or “this idea kept me up all night” for heartfelt.
-- Context-Specific Details: Tailor details to the text’s purpose, audience, and "${tone}" tone. For professional texts, mention specific experiences or tools tied to the persona’s journey (e.g., “I’ve been tinkering with Python on a chaotic startup project”). For personal texts, weave in emotional or sensory specifics (e.g., “I wrote this while my cat was yelling for food”). Avoid generic lists of skills or achievements unless they’re uniquely relevant.
+- Distinct Persona: Imagine a specific writer (e.g., a busy professional for "professional" tone, a chatty friend for "casual" tone, or a sincere storyteller for "heartfelt" tone). Let their personality and the "${tone}" tone guide word choice, phrasing, and subtle quirks. Avoid generic or overly polished language.
+- Organic Imperfections: Use a mix of short and long sentences, and include asides (e.g., “honestly, it’s a lifesaver” for casual, or “this approach is robust” for professional) or punctuation (dashes, ellipses, parentheses) to mimic natural speech, but only if it fits the "${tone}" tone and context. Keep it subtle.
+- Lived-In Details: Replace vague phrases with specific, relatable details (e.g., “tweaked the workflow” instead of “optimized processes” for casual, or “refined our processes” for professional). Avoid precise metrics unless present in the input, and ground them in context (e.g., “it runs faster now” instead of “20% performance increase”).
+- Strict Structural Adherence: Do not add extra sentences, introductions, or conclusions. If the input has two sentences, the output must have exactly two sentences. Maintain paragraph breaks and formatting exactly as in the input.
+- Tone Accuracy: Ensure the tone matches "${tone}" consistently. For example:
+  - Professional: Polished, clear, and confident (e.g., “Our solution enhances team efficiency.”).
+  - Casual: Relaxed and conversational (e.g., “This thing makes work way easier.”).
+  - Formal: Structured and official (e.g., “The solution significantly improves operational efficacy.”).
+  - Friendly: Warm and approachable (e.g., “It’s a great tool to help your team shine!”).
+  - Heartfelt: Sincere and emotional (e.g., “This tool feels like a game-changer for our team.”).
+  - Confident: Bold and persuasive (e.g., “Our solution will transform your workflow.”).
+  - Witty: Clever and playful (e.g., “Say goodbye to workflow woes with this gem.”).
+  - Neutral: Clear and objective (e.g., “The software improves workflow and reduces errors.”).
+- Authentic Engagement: Write as if addressing the intended audience directly, avoiding buzzwords like “game-changer” or “synergy.” Use context-specific phrases that feel personal (e.g., “I’ve seen it save hours” for professional, or “it’s like a breath of fresh air” for heartfelt).
+- No Extra Content: Do not add anecdotes, examples, or details not in the input (e.g., no mentions of demos, meetings, or unrelated contexts). Stick strictly to rephrasing the input content.
 
 Execution:
-- Deliver one seamless rewrite with no drafts or explanations. Output just the rewritten text, in the right format, with no notes about the process.
-- Ensure the tone matches "${tone}" throughout, while keeping the text human, engaging, and true to the original intent.
+- Output only the rewritten text, matching the input’s sentence count, structure, and formatting.
+- Do not include introductory sentences, conclusions, or any commentary about the process.
+- Ensure the tone is "${tone}" throughout, with no deviation from the input’s meaning or structure.
 
-Input: 
+Input:
 ${prompt}
 `,
       messages: [
@@ -58,8 +91,8 @@ ${prompt}
           ],
         },
       ],
-      max_tokens: 1000,
-      temperature: 0.5,
+      max_tokens: maxTokens, // Reduced to limit verbosity
+      temperature: 0.38, // Lowered for less creative deviation
     }),
   } as InvokeModelCommandInput;
 

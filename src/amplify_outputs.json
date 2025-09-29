@@ -323,6 +323,12 @@
               "isArray": false,
               "type": "String",
               "isRequired": true
+            },
+            "tone": {
+              "name": "tone",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
             }
           }
         }
