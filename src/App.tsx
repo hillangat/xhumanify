@@ -32,7 +32,7 @@ export default function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
-  const [selectedTone, setSelectedTone] = useState<string>('Neutral');
+  const [selectedTone, setSelectedTone] = useState<string>('neutral');
   const toast = useRef<Toast>(null);
   const feedbackRef = useRef<UserFeedbackRef>(null);
   const toneMenuRef = useRef<Menu>(null);
@@ -41,11 +41,17 @@ export default function App() {
   const toneMenuItems = TONE_OPTIONS.map(tone => ({
     label: tone.name,
     icon: 'pi pi-palette',
-    className: selectedTone === tone.name ? 'selected-tone-item' : '',
+    className: selectedTone === tone.key ? 'selected-tone-item' : '',
     command: () => {
-      setSelectedTone(tone.name);
+      setSelectedTone(tone.key);
     }
   }));
+
+  // Helper to get display name from key
+  const getSelectedToneDisplayName = () => {
+    const selectedToneOption = TONE_OPTIONS.find(tone => tone.key === selectedTone);
+    return selectedToneOption ? selectedToneOption.name : 'Neutral';
+  };
 
   const sendPrompt = async () => {
     setIsRunning(true);
@@ -274,7 +280,7 @@ export default function App() {
                     baseZIndex={3000}
                   />
                   <Button 
-                    label={selectedTone}
+                    label={getSelectedToneDisplayName()}
                     icon="pi pi-angle-down"
                     iconPos="right"
                     onClick={(e) => toneMenuRef.current?.toggle(e)}
