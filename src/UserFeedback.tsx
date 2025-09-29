@@ -4,6 +4,7 @@ import { Rating } from 'primereact/rating';
 import { RadioButton } from 'primereact/radiobutton';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Divider } from 'primereact/divider';
+import { TONE_OPTIONS, TONE_MATCH_OPTIONS, RATING_DESCRIPTIONS, FEEDBACK_CONSTANTS } from './constants/feedbackConstants';
 import './UserFeedback.scss';
 
 export interface UserFeedbackData {
@@ -40,25 +41,6 @@ const UserFeedback = forwardRef<UserFeedbackRef, UserFeedbackProps>(
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    const toneOptions = [
-      { key: 'professional', name: 'Professional' },
-      { key: 'casual', name: 'Casual' },
-      { key: 'friendly', name: 'Friendly' },
-      { key: 'formal', name: 'Formal' },
-      { key: 'creative', name: 'Creative' },
-      { key: 'technical', name: 'Technical' },
-      { key: 'conversational', name: 'Conversational' },
-      { key: 'academic', name: 'Academic' },
-    ];
-
-    const toneMatchOptions = [
-      { key: 'perfect_match', name: 'Perfect Match' },
-      { key: 'very_close', name: 'Very Close' },
-      { key: 'somewhat_close', name: 'Somewhat Close' },
-      { key: 'not_very_close', name: 'Not Very Close' },
-      { key: 'not_at_all', name: 'Not At All' },
-    ];
 
     const isFormValid = (): boolean => {
       return (
@@ -110,16 +92,16 @@ const UserFeedback = forwardRef<UserFeedbackRef, UserFeedbackProps>(
         <div className="feedback-form">
           {/* Humanization Rating */}
           <div className="feedback-question">
-            <h4>How do you rate our humanification of your content?</h4>
+            <h4>{RATING_DESCRIPTIONS.humanization.question}</h4>
             <Rating
               value={feedback.humanization_rating}
               onChange={(e) => updateFeedback('humanization_rating', e.value ?? 0)} // Added null check
-              stars={5}
+              stars={FEEDBACK_CONSTANTS.starRating}
               cancel={false}
               disabled={disabled || isSubmitting}
               className="feedback-rating"
             />
-            <small className="rating-help">1 = Poor, 5 = Excellent</small>
+            <small className="rating-help">{RATING_DESCRIPTIONS.humanization.help}</small>
           </div>
 
           <Divider />
@@ -128,7 +110,7 @@ const UserFeedback = forwardRef<UserFeedbackRef, UserFeedbackProps>(
           <div className="feedback-question">
             <h4>What tone were you aiming for in your content?</h4>
             <div className="radio-group">
-              {toneOptions.map((tone) => (
+              {TONE_OPTIONS.map((tone) => (
                 <div key={tone.key} className="flex align-items-center mb-2">
                   <RadioButton
                     inputId={tone.key}
@@ -150,7 +132,7 @@ const UserFeedback = forwardRef<UserFeedbackRef, UserFeedbackProps>(
           <div className="feedback-question">
             <h4>How well did the output match your desired tone?</h4>
             <div className="radio-group">
-              {toneMatchOptions.map((match) => (
+              {TONE_MATCH_OPTIONS.map((match) => (
                 <div key={match.key} className="flex align-items-center mb-2">
                   <RadioButton
                     inputId={match.key}
@@ -170,16 +152,16 @@ const UserFeedback = forwardRef<UserFeedbackRef, UserFeedbackProps>(
 
           {/* Ease of Use Rating */}
           <div className="feedback-question">
-            <h4>How would you rate the ease of use of our platform?</h4>
+            <h4>{RATING_DESCRIPTIONS.easeOfUse.question}</h4>
             <Rating
               value={feedback.ease_of_use_rating}
               onChange={(e) => updateFeedback('ease_of_use_rating', e.value ?? 0)} // Added null check
-              stars={5}
+              stars={FEEDBACK_CONSTANTS.starRating}
               cancel={false}
               disabled={disabled || isSubmitting}
               className="feedback-rating"
             />
-            <small className="rating-help">1 = Very Difficult, 5 = Very Easy</small>
+            <small className="rating-help">{RATING_DESCRIPTIONS.easeOfUse.help}</small>
           </div>
 
           <Divider />
@@ -194,11 +176,11 @@ const UserFeedback = forwardRef<UserFeedbackRef, UserFeedbackProps>(
               onChange={(e) => updateFeedback('feedback_text', e.target.value)}
               placeholder="Share your thoughts, suggestions, or any issues you encountered..."
               rows={4}
-              maxLength={500}
+              maxLength={FEEDBACK_CONSTANTS.maxFeedbackLength}
               disabled={disabled || isSubmitting}
               className="feedback-textarea"
             />
-            <div className="character-count">{feedback.feedback_text.length}/500</div>
+            <div className="character-count">{feedback.feedback_text.length}/{FEEDBACK_CONSTANTS.maxFeedbackLength}</div>
           </div>
 
         </div>

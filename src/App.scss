@@ -91,7 +91,7 @@ $padding: 15px;
   flex-shrink: 0; // Prevent action bar from shrinking
 
   .action-bar-left {
-    width: 50%;
+    width: 20%;
     display: inline-flex;
     justify-content: flex-start;
     box-sizing: border-box;
@@ -102,9 +102,10 @@ $padding: 15px;
   }
 
   .action-bar-right {
-    width: 50%;
+    width: 80%;
     display: inline-flex;
     justify-content: flex-end;
+    align-items: center;
     box-sizing: border-box;
 
     > * {

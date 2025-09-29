@@ -9,10 +9,13 @@ import EmptyContent from './EmptyContent';
 import { Button } from 'primereact/button';
 import { ButtonGroup } from 'primereact/buttongroup';
 import { Dialog } from 'primereact/dialog';
+import { Menu } from 'primereact/menu';
 import { Toast } from 'primereact/toast';
 import Header from './Header';
 import UserFeedback, { UserFeedbackRef } from './UserFeedback';
-import UserFeedbackDemo from './UserFeedbackDemo';
+import { TONE_OPTIONS } from './constants/feedbackConstants';
+import { VscFeedback } from "react-icons/vsc";
+
 
 const client = generateClient<Schema>();
 
@@ -29,8 +32,20 @@ export default function App() {
   const [isSaving, setIsSaving] = useState(false);
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [selectedTone, setSelectedTone] = useState<string>('Select tone');
   const toast = useRef<Toast>(null);
   const feedbackRef = useRef<UserFeedbackRef>(null);
+  const toneMenuRef = useRef<Menu>(null);
+
+  // Configure tone menu items
+  const toneMenuItems = TONE_OPTIONS.map(tone => ({
+    label: tone.name,
+    icon: 'pi pi-palette',
+    className: selectedTone === tone.name ? 'selected-tone-item' : '',
+    command: () => {
+      setSelectedTone(tone.name);
+    }
+  }));
 
   const sendPrompt = async () => {
     setIsRunning(true);
@@ -64,21 +79,8 @@ export default function App() {
         await navigator.clipboard.writeText(prompt);
         setCopiedRaw(true);
         setTimeout(() => setCopiedRaw(false), 5000);
-        
-        toast.current?.show({
-          severity: 'success',
-          summary: 'Copied!',
-          detail: 'Original content copied to clipboard',
-          life: 3000
-        });
       } catch (err) {
         console.log('Copy failed', err);
-        toast.current?.show({
-          severity: 'error',
-          summary: 'Copy Failed',
-          detail: 'Unable to copy content to clipboard',
-          life: 3000
-        });
       }
     }
   };
@@ -260,8 +262,28 @@ export default function App() {
               </div>
               <div className='action-bar-right'>
                 <ButtonGroup>
+                  <Menu 
+                    ref={toneMenuRef} 
+                    model={toneMenuItems} 
+                    popup 
+                    className="tone-menu"
+                    id="tone_menu"
+                    appendTo={document.body}
+                    autoZIndex={true}
+                    baseZIndex={3000}
+                  />
+                  <Button 
+                    label={selectedTone}
+                    icon="pi pi-angle-down"
+                    iconPos="right"
+                    onClick={(e) => toneMenuRef.current?.toggle(e)}
+                    outlined
+                    size="small"
+                    aria-controls="tone_menu"
+                    aria-haspopup
+                  />
                   <Button
-                    label={copiedRaw ? 'Copied' : 'Copy'}
+                    label={copiedRaw ? 'Copied' : ''}
                     outlined={!copiedRaw}
                     severity={copiedRaw ? 'success' : undefined}
                     icon={copiedRaw ? <FaCheck /> : <FaRegCopy />}
@@ -269,7 +291,7 @@ export default function App() {
                     disabled={!prompt}
                   />
                   <Button
-                    label='Reset'
+                    label=''
                     outlined
                     icon={<FaTimes />}
                     onClick={handleResetClick}
@@ -307,7 +329,7 @@ export default function App() {
               <div className='action-bar-right'>
                 <ButtonGroup>
                   <Button
-                    label={copiedProcessed ? 'Copied' : 'Copy'}
+                    label={copiedProcessed ? 'Copied' : ''}
                     outlined={!copiedProcessed}
                     severity={copiedProcessed ? 'success' : undefined}
                     icon={copiedProcessed ? <FaCheck /> : <FaRegCopy />}
@@ -315,15 +337,15 @@ export default function App() {
                     disabled={!answer}
                   />
                   <Button
-                    label="Feedback"
-                    icon="pi pi-comment"
+                    label=""
+                    icon={<VscFeedback />}
                     onClick={() => setShowFeedbackDialog(true)}
                     disabled={!answer || !prompt}
                     outlined
                     className="feedback-button"
                   />
                   <Button
-                    label='Save'
+                    label=''
                     outlined
                     icon='pi pi-save'
                     onClick={() => setShowSaveDialog(true)}
