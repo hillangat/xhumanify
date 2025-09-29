@@ -48,52 +48,6 @@ button {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-// Global Messages styling - reusable across all components
-.messages-container {
-  position: fixed !important;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 2000;
-  width: auto;
-  max-width: 500px;
-  border-radius: 6px;
-  min-width: 300px;
-  margin: 0 !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-
-  .p-message-close {
-    margin-left: 8px !important;
-  }
-
-  // Ensure colored left borders show up
-  .p-message {
-    border-left-width: 6px !important;
-    border-left-style: solid !important;
-    margin: 0px !important;
-
-    .p-message-wrapper {
-        padding: 0.5rem 1rem !important;
-    }
-    
-    &.p-message-success {
-      border-left-color: var(--green-500) !important;
-    }
-    
-    &.p-message-error {
-      border-left-color: var(--red-500) !important;
-    }
-    
-    &.p-message-info {
-      border-left-color: var(--blue-500) !important;
-    }
-    
-    &.p-message-warn {
-      border-left-color: var(--yellow-500) !important;
-    }
-  }
-}
-
 [data-amplify-authenticator] {
   margin-top: 100px !important;
   padding-top: 20px !important;

@@ -5,7 +5,7 @@ import { Button } from 'primereact/button';
 import { Panel } from 'primereact/panel';
 import { Splitter, SplitterPanel } from 'primereact/splitter';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
-import { Messages } from 'primereact/messages';
+import { Toast } from 'primereact/toast';
 import { FaTrash, FaCopy, FaCheck } from 'react-icons/fa';
 import EmptyContent from './EmptyContent';
 import { ProgressSpinner } from 'primereact/progressspinner';
@@ -27,7 +27,7 @@ export default function HistoryView() {
   const [isLoading, setIsLoading] = useState(false);
   const [copiedItems, setCopiedItems] = useState<{[key: string]: 'original' | 'processed' | null}>({});
   const [deletingItems, setDeletingItems] = useState<Set<string>>(new Set());
-  const msgs = useRef<Messages>(null);
+  const toast = useRef<Toast>(null);
 
   const loadHistory = async () => {
     setIsLoading(true);
@@ -52,31 +52,23 @@ export default function HistoryView() {
       await client.models.UserContentHistory.delete({ id });
       await loadHistory(); // Refresh the list
       
-      // Show success message
-      if (msgs.current) {
-        msgs.current.show([
-          { 
-            severity: 'success', 
-            summary: 'Success', 
-            detail: 'History item deleted successfully',
-            life: 3000
-          }
-        ]);
-      }
+      // Show success toast
+      toast.current?.show({
+        severity: 'success',
+        summary: 'Success',
+        detail: 'History item deleted successfully',
+        life: 3000
+      });
     } catch (error) {
       console.error('Failed to delete history item:', error);
       
-      // Show error message
-      if (msgs.current) {
-        msgs.current.show([
-          { 
-            severity: 'error', 
-            summary: 'Error', 
-            detail: 'Failed to delete history item. Please try again.',
-            life: 5000
-          }
-        ]);
-      }
+      // Show error toast
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Failed to delete history item. Please try again.',
+        life: 5000
+      });
     } finally {
       setDeletingItems(prev => {
         const newSet = new Set(prev);
@@ -158,9 +150,7 @@ export default function HistoryView() {
     <main>
       <ConfirmDialog />
       <Header />
-      <div className="card messages-container">
-        <Messages ref={msgs} />
-      </div>
+      <Toast ref={toast} position="top-right" />
       <div className="history-container">
         {history.length > 0 && (
           <>
