@@ -34,6 +34,12 @@ export default function Header() {
       className: (location.pathname === '/history' || location.pathname === '/history/') ? 'active-menu-item' : ''
     },
     {
+      label: 'Pricing',
+      icon: 'pi pi-dollar',
+      url: '/upgrade',
+      className: (location.pathname === '/upgrade' || location.pathname === '/upgrade/') ? 'active-menu-item' : ''
+    },
+    {
       label: 'Features',
       icon: 'pi pi-star',
       className: (location.pathname === '/features' || location.pathname === '/features/') ? 'active-menu-item' : '',
@@ -94,7 +100,12 @@ export default function Header() {
             { 
               label: 'Billing', 
               icon: 'pi pi-credit-card',
-              command: () => console.log('Navigate to billing')
+              command: () => navigate('/upgrade')
+            },
+            { 
+              label: 'Upgrade Plan', 
+              icon: 'pi pi-star-fill',
+              command: () => navigate('/upgrade')
             },
             { 
               label: 'Log Out', 

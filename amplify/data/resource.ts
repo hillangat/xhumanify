@@ -27,7 +27,7 @@ const schema = a.schema({
       description: a.string(),
       createdAt: a.datetime(),
     })
-    .authorization((allow) => [allow.publicApiKey()]),
+    .authorization((allow) => [allow.owner()]),
   UserFeedback: a
     .model({
       timestamp: a.datetime().required(),
@@ -41,7 +41,7 @@ const schema = a.schema({
       originalContent: a.string(),
       processedContent: a.string(),
     })
-    .authorization((allow) => [allow.publicApiKey()]),
+    .authorization((allow) => [allow.owner()]),
   generateHaiku: a
     .query()
     .arguments({ prompt: a.string().required(), tone: a.string() })
@@ -55,8 +55,8 @@ export type Schema = ClientSchema<typeof schema>;
 export const data = defineData({
   schema,
   authorizationModes: {
-    defaultAuthorizationMode: "apiKey",
-    // API Key is used for a.allow.public() rules
+    defaultAuthorizationMode: "userPool",
+    // API Key is used for public operations like generateHaiku
     apiKeyAuthorizationMode: {
       expiresInDays: 30,
     },

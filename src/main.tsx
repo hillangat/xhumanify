@@ -4,8 +4,13 @@ import { Authenticator } from '@aws-amplify/ui-react';
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App.tsx";
 import HistoryView from "./HistoryView.tsx";
+import HistoryDetails from "./HistoryDetails.tsx";
+import PricingComponent from "./PricingComponent.tsx";
+import Layout from "./Layout.tsx";
 import "./index.scss";
 import './HistoryView.scss';
+import './HistoryDetails.scss';
+import './PricingComponent.scss';
 import { Amplify } from "aws-amplify";
 import outputs from "./amplify_outputs.json";
 
@@ -44,10 +49,14 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Authenticator>
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<App />} />
-          <Route path="/history" element={<HistoryView />} />
-        </Routes>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<App />} />
+            <Route path="/history" element={<HistoryView />} />
+            <Route path="/history/:id" element={<HistoryDetails />} />
+            <Route path="/upgrade" element={<PricingComponent />} />
+          </Routes>
+        </Layout>
       </BrowserRouter>
     </Authenticator>
   </React.StrictMode>

@@ -11,7 +11,6 @@ import { ButtonGroup } from 'primereact/buttongroup';
 import { Dialog } from 'primereact/dialog';
 import { Menu } from 'primereact/menu';
 import { Toast } from 'primereact/toast';
-import Header from './Header';
 import UserFeedback, { UserFeedbackRef } from './UserFeedback';
 import { TONE_OPTIONS } from './constants/feedbackConstants';
 import { VscFeedback } from "react-icons/vsc";
@@ -250,7 +249,6 @@ export default function App() {
 
   return (
     <>
-      <Header />
       <main>
         <section className='title-section'>
           <div className='title-text'>
