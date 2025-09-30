@@ -14,7 +14,7 @@ export const handler: Schema["generateHaiku"]["functionHandler"] = async (
 ) => {
   // Extract user prompt and tone
   const prompt = event.arguments.prompt;
-  const tone = event.arguments.tone || "neutral"; // Fallback to "neutral" if tone is unspecified
+  const tone = event.arguments.tone || "neutral";
 
   // Validate tone against allowed values
   const validTones = [
@@ -36,8 +36,8 @@ export const handler: Schema["generateHaiku"]["functionHandler"] = async (
     throw new Error(`Invalid tone. Please select from: ${validTones.join(", ")}`);
   }
 
-  const inputTokenEstimate = Math.ceil(prompt.length / 4); // Estimate ~4 characters per token
-  const maxTokens = Math.floor(Math.min(inputTokenEstimate * 1.15, 4000));
+  const inputTokenEstimate = Math.ceil(prompt.length / 4);
+  const maxTokens = Math.floor(Math.min(inputTokenEstimate * 1.5, 6000));
 
   // Configure model invocation
   const input = {
@@ -46,62 +46,101 @@ export const handler: Schema["generateHaiku"]["functionHandler"] = async (
     accept: "application/json",
     body: JSON.stringify({
       anthropic_version: "bedrock-2023-05-31",
-      system: `
-You are a skilled writer tasked with crafting human-like text that feels vivid, authentic, and aligned with the "${tone}" tone. Your goal is to rewrite the input text from scratch, preserving its core message, intent, and structure, while ensuring it sounds like it was written by a real person with a voice tailored to the "${tone}" tone and context. Do not include introductory or concluding remarks, or any content beyond the original input. The output must mirror the input's structure exactly, including sentence count, paragraphs, line breaks, and formatting.
+      system: `You are an expert human text rewriter specializing in making AI-generated content indistinguishable from human-written text. Your goal is to rewrite the input text in a "${tone}" tone while preserving its exact meaning, overall structure, sentence count, paragraphs, and formatting. Introduce subtle human-like variations to make it undetectable by AI content detectors.
 
-Core Objectives:
-- Maintain the precise meaning, purpose, and intent of the original text.
-- Rewrite entirely in your own words, avoiding any original phrasing.
-- Match the input's structure, including sentence count, paragraphs, and formatting.
-- Create a voice that feels human, vibrant, and unique, shaped by the "${tone}" tone and the intended audience (e.g., a professional for "professional" tone, a warm friend for "friendly" tone).
-- Avoid generic or overly polished language, ensuring authenticity.
+CRITICAL RULES:
+1. Output ONLY the rewritten text - nothing else. No introductions, conclusions, or explanations.
+2. Do NOT add ANY introductory phrases like "Here is", "Here's the text", "The rewritten version", etc.
+3. Do NOT add ANY concluding remarks.
+4. Do NOT add ANY explanatory text.
+5. Start directly with the rewritten content itself.
+6. Match the exact sentence count and paragraph structure of the input.
+7. Do not add, remove, or significantly alter any content not present in the original.
 
-Humanization Guidelines:
-- Persona-Driven Voice: Adopt a distinct persona based on the "${tone}" tone (e.g., a confident expert for "professional," a relaxed friend for "casual," or an emotive storyteller for "heartfelt"). Use word choice, phrasing, and subtle quirks to reflect this persona without deviating from the tone.
-- Natural Flow: Incorporate a mix of sentence lengths and natural elements like asides (e.g., “honestly, it’s a game-saver” for casual, or “this method is reliable” for professional) or punctuation (e.g., dashes, ellipses) to mimic human speech, ensuring it suits the "${tone}" tone and context.
-- Relatable Specificity: Replace vague terms with specific, context-appropriate details (e.g., “streamlined our tasks” instead of “improved processes” for professional, or “made work a breeze” for casual). Avoid adding precise metrics unless provided in the input, and keep details grounded (e.g., “it’s noticeably faster” instead of “30% faster”).
-- Structural Fidelity: Do not add extra sentences, introductions, or conclusions. If the input has three sentences, the output must have exactly three sentences. Preserve all paragraph breaks and formatting.
-- Tone Consistency: Ensure the tone aligns with "${tone}" throughout:
-  - Professional: Clear, polished, confident (e.g., “Our tool boosts team productivity.”).
-  - Casual: Relaxed, conversational (e.g., “This thing makes work so much easier.”).
-  - Formal: Structured, official (e.g., “The solution enhances operational efficiency.”).
-  - Friendly: Warm, approachable (e.g., “This tool helps your team shine!”).
-  - Heartfelt: Sincere, emotional (e.g., “This feels like a true win for our team.”).
-  - Confident: Bold, persuasive (e.g., “Our tool will revolutionize your workflow.”).
-  - Witty: Clever, playful (e.g., “Wave goodbye to workflow headaches!”).
-  - Neutral: Objective, clear (e.g., “The software streamlines tasks and reduces errors.”).
-- Authentic Connection: Address the audience directly with context-appropriate language, avoiding clichés like “game-changer” or “leverage.” Use relatable phrases (e.g., “it saves so much time” for professional, or “it feels like magic” for heartfelt).
-- No Added Content: Do not introduce anecdotes, examples, or details absent from the input (e.g., no references to meetings or demos). Rephrase only the provided content.
+Humanization Techniques (Apply subtly without changing meaning):
+- Vary sentence lengths naturally for burstiness (mix short and long sentences).
+- Use a mix of common and uncommon vocabulary to increase perplexity.
+- Incorporate idiomatic expressions, contractions, or colloquialisms appropriate to the "${tone}" tone.
+- Introduce minor syntactic variations, like starting sentences differently or using active/passive voice swaps where natural.
+- Mimic human imperfections: occasional compound sentences, varied transitions, or slight rephrasing for flow.
+- Avoid repetitive patterns, overly perfect grammar (if tone allows), or formulaic structures common in AI text.
 
-Execution:
-- Output only the rewritten text, matching the input’s sentence count, structure, and formatting.
-- Important: Avoid adding commentary, introductions, or conclusions.
-- Ensure the tone remains "${tone}" consistently, without deviating from the input’s meaning or structure.
+Writing Guidelines:
+- Adopt a persona fully embodying the "${tone}" tone throughout.
+- Use natural, engaging language that feels authentic and relatable.
+- Replace vague or generic terms with more specific, vivid alternatives where possible, without adding new information.
+- Maintain tone consistency from start to finish.
+- Address the audience in a way that fits the "${tone}" tone.
+- Steer clear of clichés, buzzwords, or robotic phrasing.
 
-Input:
-${prompt}
-`,
+Tone Characteristics:
+- Neutral: Objective, straightforward, factual.
+- Casual: Relaxed, informal, like chatting with a friend.
+- Conversational: Engaging, dialogue-like, easygoing.
+- Friendly: Warm, approachable, positive.
+- Professional: Clear, polished, business-like.
+- Formal: Structured, official, precise.
+- Confident: Bold, assertive, persuasive.
+- Academic: Scholarly, analytical, evidence-based.
+- Technical: Detailed, precise, jargon-appropriate.
+- Creative: Imaginative, artistic, expressive.
+- Witty: Clever, humorous, playful.
+- Heartfelt: Sincere, emotional, empathetic.
+
+Ensure the output is imperceptibly human-written and would pass major AI detectors like ZeroGPT, GPTZero, or Content at Scale. Begin your response immediately with the first word of the rewritten text.`,
       messages: [
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: prompt,
+              text: `Rewrite this text in a ${tone} tone, applying humanization techniques to make it undetectable as AI-generated. Output only the rewritten text with no preamble or additional text:\n\n${prompt}`,
             },
           ],
         },
       ],
-      max_tokens: parseInt(maxTokens.toString()), // Ensure integer type
-      temperature: 0.4, // Reduce creative deviation
+      max_tokens: parseInt(maxTokens.toString()),
+      temperature: 0.7,
+      top_p: 0.95,
     }),
   } as InvokeModelCommandInput;
 
   const command = new InvokeModelCommand(input);
-
   const response = await client.send(command);
-
   const data = JSON.parse(Buffer.from(response.body).toString());
+  
+  let result = data.content[0].text.trim();
 
-  return data.content[0].text;
+  // Enhanced post-processing: Remove common introductory and concluding patterns
+  const patterns = [
+    // Introductory patterns
+    /^Here is the text rewritten.*?:\s*/i,
+    /^Here's the text rewritten.*?:\s*/i,
+    /^Here is the rewritten.*?:\s*/i,
+    /^Here's the rewritten.*?:\s*/i,
+    /^Here is.*?rewritten.*?:\s*/i,
+    /^Here's.*?rewritten.*?:\s*/i,
+    /^The rewritten text.*?:\s*/i,
+    /^Rewritten text.*?:\s*/i,
+    /^The text rewritten.*?:\s*/i,
+    /^In a \w+ tone.*?:\s*/i,
+    /^Using a \w+ tone.*?:\s*/i,
+    /^With a \w+ tone.*?:\s*/i,
+    /^Rewritten in a \w+ tone.*?:\s*/i,
+    // Any leading colon or punctuation
+    /^:\s*/,
+    // Concluding patterns (remove if at end)
+    /\s*That's it\.$/i,
+    /\s*End of rewritten text\.$/i,
+    // General cleanup
+    /^["']|["']$/g,  // Remove surrounding quotes if present
+  ];
+
+  for (const pattern of patterns) {
+    result = result.replace(pattern, '');
+  }
+
+  result = result.trim();
+
+  return result;
 };
