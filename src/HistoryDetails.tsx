@@ -16,7 +16,7 @@ interface HistoryItem {
 }
 
 const HistoryDetails: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+//   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const [copiedOriginal, setCopiedOriginal] = useState(false);
