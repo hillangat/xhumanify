@@ -37,7 +37,7 @@ export const handler: Schema["generateHaiku"]["functionHandler"] = async (
   }
 
   const inputTokenEstimate = Math.ceil(prompt.length / 4); // Estimate ~4 characters per token
-  const maxTokens = Math.min(inputTokenEstimate * 1.15, 4000);
+  const maxTokens = Math.floor(Math.min(inputTokenEstimate * 1.15, 4000));
 
   // Configure model invocation
   const input = {
@@ -92,7 +92,7 @@ ${prompt}
           ],
         },
       ],
-      max_tokens: maxTokens, // Limit verbosity
+      max_tokens: parseInt(maxTokens.toString()), // Ensure integer type
       temperature: 0.4, // Reduce creative deviation
     }),
   } as InvokeModelCommandInput;
