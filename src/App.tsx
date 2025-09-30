@@ -15,10 +15,9 @@ import UserFeedback, { UserFeedbackRef } from './UserFeedback';
 import { TONE_OPTIONS } from './constants/feedbackConstants';
 import { VscFeedback } from "react-icons/vsc";
 
-
-const client = generateClient<Schema>();
-
 export default function App() {
+  const client = generateClient<Schema>();
+  
   const [prompt, setPrompt] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [answer, setAnswer] = useState<string | null>(null);

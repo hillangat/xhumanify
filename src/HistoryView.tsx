@@ -13,8 +13,6 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { MdHistory } from 'react-icons/md';
 import './HistoryView.scss';
 
-const client = generateClient<Schema>();
-
 interface HistoryItem {
   id: string;
   originalContent: string;
@@ -24,6 +22,7 @@ interface HistoryItem {
 }
 
 export default function HistoryView() {
+  const client = generateClient<Schema>();
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [deletingItems, setDeletingItems] = useState<Set<string>>(new Set());
