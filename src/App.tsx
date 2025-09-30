@@ -59,6 +59,8 @@ export default function App() {
       const { data, errors } = await client.queries.generateHaiku({
         prompt,
         tone: selectedTone
+      }, {
+        authMode: 'apiKey'
       });
       if (!errors) {
         setAnswer(data);
