@@ -27,7 +27,7 @@ const schema = a.schema({
       description: a.string(),
       createdAt: a.datetime(),
     })
-    .authorization((allow) => [allow.owner()]),
+    .authorization((allow) => [allow.owner().identityClaim("sub")]),
   UserFeedback: a
     .model({
       timestamp: a.datetime().required(),
@@ -41,7 +41,7 @@ const schema = a.schema({
       originalContent: a.string(),
       processedContent: a.string(),
     })
-    .authorization((allow) => [allow.owner()]),
+    .authorization((allow) => [allow.owner().identityClaim("sub")]),
   generateHaiku: a
     .query()
     .arguments({ prompt: a.string().required(), tone: a.string() })
