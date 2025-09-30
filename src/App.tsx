@@ -1,6 +1,6 @@
 import type { Schema } from '../amplify/data/resource';
 import { useState, useEffect, useRef } from 'react';
-import { generateClient } from 'aws-amplify/api';
+import { generateClient } from 'aws-amplify/data';
 import './App.scss';
 import { FaSpinner, FaCheck, FaRegCopy, FaTimes, FaGooglePlay } from 'react-icons/fa';
 import { ProgressSpinner } from 'primereact/progressspinner';

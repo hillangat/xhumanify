@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { generateClient as generateDataClient } from 'aws-amplify/data';
+import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../amplify/data/resource';
 import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
@@ -13,7 +13,7 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { MdHistory } from 'react-icons/md';
 import './HistoryView.scss';
 
-const client = generateDataClient<Schema>();
+const client = generateClient<Schema>();
 
 interface HistoryItem {
   id: string;
