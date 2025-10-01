@@ -6,8 +6,6 @@ import { Button } from 'primereact/button';
 import { Card } from 'primereact/card';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { Toast } from 'primereact/toast';
-import { FaTrash } from 'react-icons/fa';
-import { FcViewDetails } from "react-icons/fc";
 import EmptyContent from './EmptyContent';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { MdHistory } from 'react-icons/md';
@@ -129,35 +127,36 @@ export default function HistoryView() {
                 </div>
                 <div className="card-actions">
                   <Button
-                    icon={<FcViewDetails />}
-                    className="p-button-text p-button-sm"
+                    label="View"
+                    outlined
+                    icon="pi pi-eye"
+                    className="p-button-sm"
                     onClick={() => handleViewDetails(item)}
                     tooltip="View details"
                     tooltipOptions={{ position: 'bottom' }}
                   />
-                  {deletingItems.has(item.id) ? (
-                    <ProgressSpinner style={{ width: '1.5rem', height: '1.5rem' }} />
-                  ) : (
-                    <Button
-                      icon={<FaTrash />}
-                      className="p-button-text p-button-sm p-button-danger"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        confirmDialog({
-                          message: `Are you sure you want to delete this history item?`,
-                          header: 'Delete Confirmation',
-                          icon: 'pi pi-exclamation-triangle',
-                          defaultFocus: 'reject',
-                          acceptClassName: 'p-button-danger',
-                          acceptLabel: 'Delete',
-                          rejectLabel: 'Cancel',
-                          accept: () => deleteHistoryItem(item.id)
-                        });
-                      }}
-                      tooltip="Delete item"
-                      tooltipOptions={{ position: 'bottom' }}
-                    />
-                  )}
+                  <Button
+                    label={deletingItems.has(item.id) ? "Deleting..." : "Delete"}
+                    outlined
+                    icon={deletingItems.has(item.id) ? "pi pi-spin pi-spinner" : "pi pi-trash"}
+                    className="p-button-sm p-button-danger"
+                    disabled={deletingItems.has(item.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      confirmDialog({
+                        message: `Are you sure you want to delete this history item?`,
+                        header: 'Delete Confirmation',
+                        icon: 'pi pi-exclamation-triangle',
+                        defaultFocus: 'reject',
+                        acceptClassName: 'p-button-danger',
+                        acceptLabel: 'Delete',
+                        rejectLabel: 'Cancel',
+                        accept: () => deleteHistoryItem(item.id)
+                      });
+                    }}
+                    tooltip={deletingItems.has(item.id) ? "Deletion in progress..." : "Delete item"}
+                    tooltipOptions={{ position: 'bottom' }}
+                  />
                 </div>
               </div>
 
