@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
 import { Badge } from 'primereact/badge';
 import { Divider } from 'primereact/divider';
 import { Accordion, AccordionTab } from 'primereact/accordion';
+import { ProgressSpinner } from 'primereact/progressspinner';
+import { Toast } from 'primereact/toast';
+import { useSubscription } from './contexts/SubscriptionContext';
+import { PRICING_PLANS, formatPrice, PlanType } from './utils/stripe';
+import { useAuthenticator } from '@aws-amplify/ui-react';
 import './PricingComponent.scss';
 
 interface PricingPlan {
@@ -21,6 +26,10 @@ interface PricingPlan {
 
 const PricingComponent: React.FC = () => {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { subscription, currentPlan, hasActiveSubscription } = useSubscription();
+  const { user } = useAuthenticator();
+  const toast = useRef<Toast>(null);
 
   const plans: PricingPlan[] = [
     {
@@ -125,6 +134,182 @@ const PricingComponent: React.FC = () => {
     return `Save ${savings}%`;
   };
 
+  // Stripe functionality
+  const handleSubscribe = async (planId: string) => {
+    if (!user) {
+      toast.current?.show({
+        severity: 'warn',
+        summary: 'Authentication Required',
+        detail: 'Please sign in to subscribe to a plan.',
+        life: 5000
+      });
+      return;
+    }
+
+    setLoadingPlan(planId);
+    
+    toast.current?.show({
+      severity: 'info',
+      summary: 'Processing',
+      detail: 'Creating your checkout session...',
+      life: 3000
+    });
+    
+    try {
+      // Map plan IDs to Stripe plan types
+      const planMapping: Record<string, PlanType> = {
+        'lite': 'basic',
+        'standard': 'pro',
+        'pro': 'enterprise'
+      };
+      
+      const planType = planMapping[planId];
+      if (!planType) {
+        toast.current?.show({
+          severity: 'error',
+          summary: 'Invalid Plan',
+          detail: 'The selected plan is not available.',
+          life: 5000
+        });
+        return;
+      }
+      
+      const plan = PRICING_PLANS[planType];
+      
+      // Use Amplify API endpoint
+      const response = await fetch(`${import.meta.env.VITE_APP_URL || window.location.origin}/stripe/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: plan.priceId,
+          userId: user.userId,
+          userEmail: user.signInDetails?.loginId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const { url } = await response.json();
+      
+      if (url) {
+        toast.current?.show({
+          severity: 'success',
+          summary: 'Redirecting',
+          detail: 'Taking you to secure checkout...',
+          life: 2000
+        });
+        // Small delay to show success message
+        setTimeout(() => {
+          window.location.href = url;
+        }, 1000);
+      } else {
+        throw new Error('No checkout URL received');
+      }
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Checkout Failed',
+        detail: 'Unable to create checkout session. Please try again or contact support.',
+        life: 7000
+      });
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    if (!subscription?.stripeCustomerId) {
+      toast.current?.show({
+        severity: 'warn',
+        summary: 'No Subscription',
+        detail: 'No active subscription found to manage.',
+        life: 5000
+      });
+      return;
+    }
+    
+    toast.current?.show({
+      severity: 'info',
+      summary: 'Loading',
+      detail: 'Opening subscription management portal...',
+      life: 3000
+    });
+    
+    try {
+      const response = await fetch(`${import.meta.env.VITE_APP_URL || window.location.origin}/stripe/create-portal-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerId: subscription.stripeCustomerId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const { url } = await response.json();
+      
+      if (url) {
+        toast.current?.show({
+          severity: 'success',
+          summary: 'Redirecting',
+          detail: 'Taking you to the subscription portal...',
+          life: 2000
+        });
+        // Small delay to show success message
+        setTimeout(() => {
+          window.location.href = url;
+        }, 1000);
+      } else {
+        throw new Error('No portal URL received');
+      }
+    } catch (error) {
+      console.error('Error creating portal session:', error);
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Portal Access Failed',
+        detail: 'Unable to access subscription portal. Please try again or contact support.',
+        life: 7000
+      });
+    }
+  };
+
+  const getButtonText = (planId: string) => {
+    const planMapping: Record<string, PlanType> = {
+      'lite': 'basic',
+      'standard': 'pro', 
+      'pro': 'enterprise'
+    };
+    
+    const planType = planMapping[planId];
+    if (currentPlan === planType) {
+      return 'Current Plan';
+    }
+    if (hasActiveSubscription && currentPlan !== planType) {
+      return 'Upgrade';
+    }
+    return plans.find(p => p.id === planId)?.buttonText || 'Get Started';
+  };
+
+  const isButtonDisabled = (planId: string) => {
+    const planMapping: Record<string, PlanType> = {
+      'lite': 'basic',
+      'standard': 'pro',
+      'pro': 'enterprise'
+    };
+    
+    const planType = planMapping[planId];
+    return currentPlan === planType || loadingPlan === planId;
+  };
+
   return (
     <div className="pricing-component">
       <div className="pricing-header">
@@ -153,6 +338,22 @@ const PricingComponent: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Current Subscription Status */}
+      {hasActiveSubscription && (
+        <Card className="current-subscription" style={{ marginBottom: '2rem', padding: '1rem' }}>
+          <div className="subscription-info">
+            <h3>Current Subscription: {currentPlan && PRICING_PLANS[currentPlan]?.name}</h3>
+            <p>Usage: {subscription?.usageCount} / {subscription?.usageLimit === -1 ? 'Unlimited' : subscription?.usageLimit}</p>
+            <Button 
+              label="Manage Subscription"
+              icon="pi pi-cog"
+              className="p-button-outlined"
+              onClick={handleManageSubscription}
+            />
+          </div>
+        </Card>
+      )}
 
       {/* Pricing Cards */}
       <div className="pricing-grid">
@@ -200,9 +401,12 @@ const PricingComponent: React.FC = () => {
 
             <div className="plan-footer">
               <Button 
-                label={plan.buttonText}
+                label={loadingPlan === plan.id ? '' : getButtonText(plan.id)}
+                icon={loadingPlan === plan.id ? <ProgressSpinner style={{ width: '20px', height: '20px' }} /> : undefined}
                 className={`plan-button ${plan.popular ? 'p-button-primary' : 'p-button-outlined'}`}
                 size="large"
+                disabled={plan.free ? false : isButtonDisabled(plan.id)}
+                onClick={() => plan.free ? undefined : handleSubscribe(plan.id)}
               />
             </div>
           </Card>
@@ -220,6 +424,9 @@ const PricingComponent: React.FC = () => {
           ))}
         </Accordion>
       </div>
+      
+      {/* Toast Notifications */}
+      <Toast ref={toast} position="top-right" />
     </div>
   );
 };

@@ -115,7 +115,7 @@ export default function HistoryView() {
         <EmptyContent
           icon={<MdHistory size={35} />}
           title="No History Found"
-          subtitle="Start humanifying content to see your history here."
+          subtitle="Start humanizing content to see your history here."
         />
       ) : (
         <div className="history-grid">

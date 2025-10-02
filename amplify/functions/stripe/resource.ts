@@ -1,0 +1,27 @@
+import { defineFunction } from '@aws-amplify/backend';
+
+export const createCheckoutSession = defineFunction({
+  name: 'createCheckoutSession',
+  entry: './create-checkout-session.ts',
+  environment: {
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || '',
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || ''
+  }
+});
+
+export const createPortalSession = defineFunction({
+  name: 'createPortalSession', 
+  entry: './create-portal-session.ts',
+  environment: {
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || ''
+  }
+});
+
+export const handleWebhook = defineFunction({
+  name: 'handleWebhook',
+  entry: './webhook-handler.ts',
+  environment: {
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || '',
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || ''
+  }
+});

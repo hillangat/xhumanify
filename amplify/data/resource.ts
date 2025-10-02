@@ -42,6 +42,30 @@ const schema = a.schema({
       processedContent: a.string(),
     })
     .authorization((allow) => [allow.owner().identityClaim("sub")]),
+  UserSubscription: a
+    .model({
+      stripeCustomerId: a.string().required(),
+      stripeSubscriptionId: a.string(),
+      stripePriceId: a.string(),
+      status: a.enum(['active', 'canceled', 'past_due', 'incomplete', 'trialing']),
+      planName: a.string(), // 'basic', 'pro', 'enterprise'
+      currentPeriodStart: a.datetime(),
+      currentPeriodEnd: a.datetime(),
+      cancelAtPeriodEnd: a.boolean().default(false),
+      usageCount: a.integer().default(0),
+      usageLimit: a.integer().default(50), // Default to basic plan limit
+      createdAt: a.datetime(),
+      updatedAt: a.datetime(),
+    })
+    .authorization((allow) => [allow.owner().identityClaim("sub")]),
+  UsageTracking: a
+    .model({
+      operation: a.string().required(), // 'humanify', 'analyze', etc.
+      tokensUsed: a.integer(),
+      success: a.boolean().default(true),
+      timestamp: a.datetime().required(),
+    })
+    .authorization((allow) => [allow.owner().identityClaim("sub")]),
   generateHaiku: a
     .query()
     .arguments({ prompt: a.string().required(), tone: a.string() })

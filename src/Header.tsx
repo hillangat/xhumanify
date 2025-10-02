@@ -79,7 +79,7 @@ export default function Header() {
   ];
 
   const userMenuItem = {
-    label: 'My XHumanify',
+    label: 'My Humanize',
     icon: 'pi pi-user',
     className: 'user-menu-item',
     items: [
@@ -134,7 +134,7 @@ export default function Header() {
     <div className="card header-card">
       <MegaMenu 
         model={megaMenuItems} 
-        start={<div className="p-menubar-start"><strong>XHumanify</strong></div>}
+        start={<div className="p-menubar-start"><strong>Humanize AI Contents</strong></div>}
         end={<MegaMenu model={[userMenuItem]} className="user-megamenu" />}
       />
     </div>

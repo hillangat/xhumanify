@@ -9,6 +9,7 @@ import {
 } from "aws-cdk-lib/aws-apigateway";
 import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 import { apiFunction } from "./functions/api-function/resource";
+import { createCheckoutSession, createPortalSession, handleWebhook } from "./functions/stripe/resource";
 import { auth } from "./auth/resource";
 import { data, MODEL_ID, generateHaikuFunction } from "./data/resource";
 
@@ -17,7 +18,16 @@ const backend = defineBackend({
   data,
   apiFunction,
   generateHaikuFunction,
+  createCheckoutSession,
+  createPortalSession,
+  handleWebhook,
 });
+
+// Add environment variables for Stripe functions
+backend.createCheckoutSession.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
+backend.createPortalSession.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
+backend.handleWebhook.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
+backend.handleWebhook.addEnvironment("STRIPE_WEBHOOK_SECRET", process.env.STRIPE_WEBHOOK_SECRET || "");
 
 backend.generateHaikuFunction.resources.lambda.addToRolePolicy(
   new PolicyStatement({
@@ -49,6 +59,17 @@ const myRestApi = new RestApi(apiStack, "RestApi", {
 // create a new Lambda integration
 const lambdaIntegration = new LambdaIntegration(
   backend.apiFunction.resources.lambda
+);
+
+// Stripe function integrations
+const checkoutIntegration = new LambdaIntegration(
+  backend.createCheckoutSession.resources.lambda
+);
+const portalIntegration = new LambdaIntegration(
+  backend.createPortalSession.resources.lambda
+);
+const webhookIntegration = new LambdaIntegration(
+  backend.handleWebhook.resources.lambda
 );
 
 // create a new resource path with IAM authorization
@@ -91,6 +112,30 @@ booksPath.addMethod("PUT", lambdaIntegration, {
   authorizationType: AuthorizationType.COGNITO,
   authorizer: cognitoAuth,
 });
+
+// Add Stripe API endpoints
+const stripePath = myRestApi.root.addResource("stripe");
+
+// Create checkout session endpoint (requires auth)
+const checkoutPath = stripePath.addResource("create-checkout-session");
+checkoutPath.addMethod("POST", checkoutIntegration, {
+  authorizationType: AuthorizationType.COGNITO,
+  authorizer: cognitoAuth,
+});
+checkoutPath.addMethod("OPTIONS", checkoutIntegration); // CORS preflight
+
+// Create portal session endpoint (requires auth)
+const portalPath = stripePath.addResource("create-portal-session");
+portalPath.addMethod("POST", portalIntegration, {
+  authorizationType: AuthorizationType.COGNITO,
+  authorizer: cognitoAuth,
+});
+portalPath.addMethod("OPTIONS", portalIntegration); // CORS preflight
+
+// Webhook endpoint (no auth required)
+const webhookPath = stripePath.addResource("webhook");
+webhookPath.addMethod("POST", webhookIntegration);
+webhookPath.addMethod("OPTIONS", webhookIntegration); // CORS preflight
 
 // create a new IAM policy to allow Invoke access to the API
 const apiRestPolicy = new Policy(apiStack, "RestApiPolicy", {

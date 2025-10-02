@@ -253,7 +253,7 @@ export default function App() {
       <main>
         <section className='title-section'>
           <div className='title-text'>
-            <h1>Humanify AI Generated Content</h1>
+            <h1>Humanize AI Generated Content</h1>
             <h4>Give AI content a human touch with the most advanced tool.</h4>
           </div>
           <div className='title-introduction'>
@@ -304,7 +304,7 @@ export default function App() {
                     disabled={!prompt}
                   />
                   <Button
-                    label='Humanify'
+                    label='Humanize'
                     loading={isRunning}
                     loadingIcon={<FaSpinner className='spin' />}
                     icon={<FaGooglePlay />}
@@ -367,7 +367,7 @@ export default function App() {
                 <EmptyContent
                   icon={isRunning ? <ProgressSpinner style={{ width: '45px', height: '45px' }} /> : <MdHourglassEmpty size={35} />}
                   title={isRunning ? 'Processing...' : 'No Processed Content'}
-                  subtitle={isRunning ? 'Please wait while we humanify your content.' : 'Processed Content will appear here after a successful processing.'}
+                  subtitle={isRunning ? 'Please wait while we humanize your content.' : 'Processed Content will appear here after a successful processing.'}
                 />
               )}
             </div>

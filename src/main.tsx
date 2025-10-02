@@ -7,6 +7,7 @@ import HistoryView from "./HistoryView.tsx";
 import HistoryDetails from "./HistoryDetails.tsx";
 import PricingComponent from "./PricingComponent.tsx";
 import Layout from "./Layout.tsx";
+import { SubscriptionProvider } from "./contexts/SubscriptionContext.tsx";
 import "./index.scss";
 import './HistoryView.scss';
 import './HistoryDetails.scss';
@@ -48,16 +49,18 @@ Amplify.configure(
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Authenticator>
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<App />} />
-            <Route path="/history" element={<HistoryView />} />
-            <Route path="/history/:id" element={<HistoryDetails />} />
-            <Route path="/upgrade" element={<PricingComponent />} />
-          </Routes>
-        </Layout>
-      </BrowserRouter>
+      <SubscriptionProvider>
+        <BrowserRouter>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<App />} />
+              <Route path="/history" element={<HistoryView />} />
+              <Route path="/history/:id" element={<HistoryDetails />} />
+              <Route path="/upgrade" element={<PricingComponent />} />
+            </Routes>
+          </Layout>
+        </BrowserRouter>
+      </SubscriptionProvider>
     </Authenticator>
   </React.StrictMode>
 );
