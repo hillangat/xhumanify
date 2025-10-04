@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 import { PlanType } from '../utils/stripe';
+import { countWords, getUserTier, getPlanLimits, type PlanTier as UsageTier } from '../config/plans';
 
 interface SubscriptionContextType {
   subscription: UserSubscription | null;
@@ -11,8 +12,10 @@ interface SubscriptionContextType {
   usageCount: number;
   usageLimit: number;
   canUseService: boolean;
+  currentTier: UsageTier;
   refreshSubscription: () => Promise<void>;
-  incrementUsage: () => Promise<void>;
+  trackUsage: (inputText: string, outputText: string) => Promise<void>;
+  checkUsageLimit: (inputText: string) => boolean;
 }
 
 interface UserSubscription {
@@ -71,29 +74,53 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     }
   };
 
-  const incrementUsage = async () => {
-    if (!subscription) return;
+  const trackUsage = async (inputText: string, outputText: string) => {
+    const inputWords = countWords(inputText);
+    const outputWords = countWords(outputText);
+    const totalWords = inputWords + outputWords;
     
     try {
       // Create usage tracking record
       await client.models.UsageTracking.create({
         operation: 'humanify',
-        tokensUsed: 1,
+        tokensUsed: totalWords,
         success: true,
         timestamp: new Date().toISOString()
       });
       
-      // Update subscription usage count
-      await client.models.UserSubscription.update({
-        id: subscription.id,
-        usageCount: subscription.usageCount + 1
-      });
+      // Update subscription usage count if subscription exists
+      if (subscription) {
+        await client.models.UserSubscription.update({
+          id: subscription.id,
+          usageCount: subscription.usageCount + totalWords
+        });
+      }
       
       // Refresh local state
       await loadSubscription();
     } catch (error) {
-      console.error('Failed to increment usage:', error);
+      console.error('Failed to track usage:', error);
     }
+  };
+
+  const checkUsageLimit = (inputText: string): boolean => {
+    const inputWords = countWords(inputText);
+    const currentTier = getUserTier(hasActiveSubscription, subscription?.planName);
+    const limits = getPlanLimits(currentTier);
+    
+    // Check if adding this request would exceed monthly limit
+    const newTotal = usageCount + inputWords;
+    
+    if (newTotal > limits.monthlyWordLimit) {
+      return false;
+    }
+    
+    // Check per-request word limit
+    if (inputWords > limits.wordsPerRequest) {
+      return false;
+    }
+    
+    return true;
   };
 
   useEffect(() => {
@@ -105,12 +132,15 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
   
   const currentPlan: PlanType | null = subscription?.planName as PlanType || null;
   
+  const currentTier = getUserTier(hasActiveSubscription, subscription?.planName);
+  const limits = getPlanLimits(currentTier);
+  
   const usageCount = subscription?.usageCount || 0;
-  const usageLimit = subscription?.usageLimit || 5; // Free tier: 5 uses
+  const usageLimit = limits.monthlyWordLimit;
   
   const canUseService = hasActiveSubscription 
-    ? (usageLimit === -1 || usageCount < usageLimit) // Unlimited or under limit
-    : usageCount < 5; // Free tier: 5 uses
+    ? usageCount < usageLimit // Under limit for paid tiers
+    : usageCount < limits.monthlyWordLimit; // Free tier limit
 
   const value: SubscriptionContextType = {
     subscription,
@@ -120,8 +150,10 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     usageCount,
     usageLimit,
     canUseService,
+    currentTier,
     refreshSubscription: loadSubscription,
-    incrementUsage
+    trackUsage,
+    checkUsageLimit
   };
 
   return (
