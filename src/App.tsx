@@ -15,12 +15,11 @@ import UserFeedback, { UserFeedbackRef } from './UserFeedback';
 import { TONE_OPTIONS } from './constants/feedbackConstants';
 import { VscFeedback } from "react-icons/vsc";
 import { useSubscription } from './contexts/SubscriptionContext';
-import { countWords } from './config/plans';
 import UsageDisplay from './components/UsageDisplay';
 
 export default function App() {
   const client = generateClient<Schema>();
-  const { trackUsage, checkUsageLimit, canUseService, usageCount, usageLimit, currentTier } = useSubscription();
+  const { trackUsage, checkUsageLimit, canUseService, currentTier } = useSubscription();
   
   const [prompt, setPrompt] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -294,15 +293,11 @@ export default function App() {
             <div className='action-bar'>
               <div className='action-bar-left'>
                 <p><strong>{countWords(prompt)}</strong> Words</p>
-                <div className='input-info-bar' style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', fontSize: '14px', color: '#666' }}>
-                <span>
-                  {!canUseService && <span style={{ color: '#dc3545', marginLeft: '8px' }}>• Usage limit reached</span>}
-                  {prompt && !checkUsageLimit(prompt) && <span style={{ color: '#ff6b35', marginLeft: '8px' }}>• Request too large for your plan</span>}
-                </span>
-                <UsageDisplay compact/>
-              </div>
+                {!canUseService && <span style={{ color: '#dc3545', fontSize: '12px' }}>• Usage limit reached</span>}
+                {prompt && !checkUsageLimit(prompt) && <span style={{ color: '#ff6b35', fontSize: '12px' }}>• Request too large for your plan</span>}
               </div>
               <div className='action-bar-right'>
+                <UsageDisplay compact />
                 <ButtonGroup>
                   <Menu 
                     ref={toneMenuRef} 
