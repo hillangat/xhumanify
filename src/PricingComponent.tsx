@@ -139,6 +139,8 @@ const PricingComponent: React.FC = () => {
 
   // Stripe functionality
   const handleSubscribe = async (planId: string) => {
+    console.log('handleSubscribe called with planId:', planId);
+    
     if (!user) {
       toast.current?.show({
         severity: 'warn',
@@ -178,7 +180,14 @@ const PricingComponent: React.FC = () => {
       }
       
       const plan = PRICING_PLANS[planType];
+      console.log('Plan type:', planType);
+      console.log('Billing period:', billingPeriod);
+      console.log('Plan object:', plan);
+      console.log('Monthly price ID:', plan.monthlyPriceId);
+      console.log('Yearly price ID:', plan.yearlyPriceId);
+      
       const priceId = billingPeriod === 'monthly' ? plan.monthlyPriceId : plan.yearlyPriceId;
+      console.log('Selected price ID:', priceId);
       
       // Use Amplify API endpoint from outputs
       const apiEndpoint = outputs.custom?.API?.myRestApi?.endpoint || import.meta.env.VITE_APP_URL || window.location.origin;
