@@ -6,7 +6,9 @@ import {
 } from "@aws-sdk/client-bedrock-runtime";
 
 // Initialize Bedrock runtime client
-const client = new BedrockRuntimeClient();
+const client = new BedrockRuntimeClient({ 
+  region: "us-east-1" 
+});
 
 export const handler: Schema["generateHaiku"]["functionHandler"] = async (
   event,
