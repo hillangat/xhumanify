@@ -7,7 +7,7 @@ import { Accordion, AccordionTab } from 'primereact/accordion';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Toast } from 'primereact/toast';
 import { useSubscription } from './contexts/SubscriptionContext';
-import { PRICING_PLANS, formatPrice, PlanType } from './utils/stripe';
+import { PRICING_PLANS, PlanType } from './utils/stripe';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import './PricingComponent.scss';
 
