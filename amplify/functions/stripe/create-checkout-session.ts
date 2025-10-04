@@ -82,8 +82,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/upgrade?canceled=true`,
+      success_url: `https://www.humanizeaicontents.com/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `https://www.humanizeaicontents.com/upgrade?canceled=true`,
       metadata: {
         userId: userId,
       },
