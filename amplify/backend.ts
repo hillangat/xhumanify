@@ -50,9 +50,9 @@ const myRestApi = new RestApi(apiStack, "RestApi", {
     stageName: "dev",
   },
   defaultCorsPreflightOptions: {
-    allowOrigins: Cors.ALL_ORIGINS, // Restrict this to domains you trust
-    allowMethods: Cors.ALL_METHODS, // Specify only the methods you need to allow
-    allowHeaders: Cors.DEFAULT_HEADERS, // Specify only the headers you need to allow
+    allowOrigins: ["https://www.humanizeaicontents.com", "http://localhost:5173", "https://localhost:5173"],
+    allowMethods: Cors.ALL_METHODS,
+    allowHeaders: ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "X-Amz-Security-Token", "X-Amz-User-Agent"],
   },
 });
 
@@ -116,18 +116,18 @@ booksPath.addMethod("PUT", lambdaIntegration, {
 // Add Stripe API endpoints
 const stripePath = myRestApi.root.addResource("stripe", {
   defaultCorsPreflightOptions: {
-    allowOrigins: Cors.ALL_ORIGINS,
+    allowOrigins: ["https://www.humanizeaicontents.com", "http://localhost:5173", "https://localhost:5173"],
     allowMethods: Cors.ALL_METHODS,
-    allowHeaders: Cors.DEFAULT_HEADERS,
+    allowHeaders: ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "X-Amz-Security-Token", "X-Amz-User-Agent"],
   },
 });
 
 // Create checkout session endpoint (requires auth)
 const checkoutPath = stripePath.addResource("create-checkout-session", {
   defaultCorsPreflightOptions: {
-    allowOrigins: Cors.ALL_ORIGINS,
+    allowOrigins: ["https://www.humanizeaicontents.com", "http://localhost:5173", "https://localhost:5173"],
     allowMethods: ["POST", "OPTIONS"],
-    allowHeaders: Cors.DEFAULT_HEADERS,
+    allowHeaders: ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "X-Amz-Security-Token", "X-Amz-User-Agent"],
   },
 });
 checkoutPath.addMethod("POST", checkoutIntegration, {
@@ -138,9 +138,9 @@ checkoutPath.addMethod("POST", checkoutIntegration, {
 // Create portal session endpoint (requires auth)
 const portalPath = stripePath.addResource("create-portal-session", {
   defaultCorsPreflightOptions: {
-    allowOrigins: Cors.ALL_ORIGINS,
+    allowOrigins: ["https://www.humanizeaicontents.com", "http://localhost:5173", "https://localhost:5173"],
     allowMethods: ["POST", "OPTIONS"],
-    allowHeaders: Cors.DEFAULT_HEADERS,
+    allowHeaders: ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "X-Amz-Security-Token", "X-Amz-User-Agent"],
   },
 });
 portalPath.addMethod("POST", portalIntegration, {
@@ -151,9 +151,9 @@ portalPath.addMethod("POST", portalIntegration, {
 // Webhook endpoint (no auth required)
 const webhookPath = stripePath.addResource("webhook", {
   defaultCorsPreflightOptions: {
-    allowOrigins: Cors.ALL_ORIGINS,
+    allowOrigins: ["https://www.humanizeaicontents.com", "http://localhost:5173", "https://localhost:5173"],
     allowMethods: ["POST", "OPTIONS"],
-    allowHeaders: Cors.DEFAULT_HEADERS,
+    allowHeaders: ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "X-Amz-Security-Token", "X-Amz-User-Agent"],
   },
 });
 webhookPath.addMethod("POST", webhookIntegration);
