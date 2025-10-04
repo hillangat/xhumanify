@@ -7,10 +7,23 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+    'Access-Control-Allow-Origin': 'https://www.humanizeaicontents.com',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Credentials': 'true'
   };
+
+  // Check if Stripe secret key is configured
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ 
+        error: 'Stripe secret key not configured',
+        details: 'STRIPE_SECRET_KEY environment variable is missing'
+      })
+    };
+  }
 
   if (event.httpMethod === 'OPTIONS') {
     return {
