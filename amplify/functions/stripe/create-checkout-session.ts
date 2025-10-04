@@ -44,11 +44,29 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   try {
     const { priceId, userId, userEmail } = JSON.parse(event.body || '{}');
 
-    if (!priceId || !userId || !userEmail) {
+    console.log('Received parameters:', { priceId, userId, userEmail });
+
+    if (!priceId) {
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'Missing required parameters' })
+        body: JSON.stringify({ error: 'Missing priceId parameter' })
+      };
+    }
+
+    if (!userId) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Missing userId parameter' })
+      };
+    }
+
+    if (!userEmail) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Missing userEmail parameter' })
       };
     }
 
