@@ -17,48 +17,52 @@ export const formatPrice = (price: number): string => {
 };
 
 export const PRICING_PLANS = {
-  basic: {
-    name: 'Basic',
-    price: 999, // $9.99 in cents
-    priceId: import.meta.env.VITE_STRIPE_BASIC_PRICE_ID!,
+  lite: {
+    name: 'Lite',
+    monthlyPrice: 1900, // $19.00 in cents
+    yearlyPrice: 17100, // $171.00 in cents (25% discount)
+    monthlyPriceId: import.meta.env.VITE_STRIPE_LITE_MONTHLY_PRICE_ID!,
+    yearlyPriceId: import.meta.env.VITE_STRIPE_LITE_YEARLY_PRICE_ID!,
     features: [
-      '50 humanifications per month',
-      'Basic tone options',
-      'Email support',
-      'Standard processing speed'
+      '20,000 words per month',
+      '500 words per process',
+      'All modes and settings',
+      'Customer support'
     ],
-    usageLimit: 50,
+    usageLimit: 20000,
     popular: false
+  },
+  standard: {
+    name: 'Standard',
+    monthlyPrice: 2900, // $29.00 in cents
+    yearlyPrice: 26100, // $261.00 in cents (25% discount)
+    monthlyPriceId: import.meta.env.VITE_STRIPE_STANDARD_MONTHLY_PRICE_ID!,
+    yearlyPriceId: import.meta.env.VITE_STRIPE_STANDARD_YEARLY_PRICE_ID!,
+    features: [
+      '50,000 words per month',
+      'Unlimited words per process',
+      'Re-paraphrasing is free',
+      'All modes and settings',
+      'Priority support'
+    ],
+    usageLimit: 50000,
+    popular: true
   },
   pro: {
     name: 'Pro',
-    price: 2999, // $29.99 in cents
-    priceId: import.meta.env.VITE_STRIPE_PRO_PRICE_ID!,
+    monthlyPrice: 7900, // $79.00 in cents
+    yearlyPrice: 71100, // $711.00 in cents (25% discount)
+    monthlyPriceId: import.meta.env.VITE_STRIPE_PRO_MONTHLY_PRICE_ID!,
+    yearlyPriceId: import.meta.env.VITE_STRIPE_PRO_YEARLY_PRICE_ID!,
     features: [
-      '500 humanifications per month',
-      'All tone options',
-      'Priority support',
-      'Faster processing',
-      'Export to multiple formats',
-      'Analytics dashboard'
-    ],
-    usageLimit: 500,
-    popular: true
-  },
-  enterprise: {
-    name: 'Enterprise',
-    price: 9999, // $99.99 in cents
-    priceId: import.meta.env.VITE_STRIPE_ENTERPRISE_PRICE_ID!,
-    features: [
-      'Unlimited humanifications',
-      'Custom tone creation',
+      '150,000 words per month',
+      'Unlimited words per process',
+      'Re-paraphrasing is free',
+      'All modes and settings',
       'Dedicated support',
-      'API access',
-      'White-label options',
-      'Custom integrations',
-      'SLA guarantee'
+      'API access'
     ],
-    usageLimit: -1, // Unlimited
+    usageLimit: 150000,
     popular: false
   }
 } as const;

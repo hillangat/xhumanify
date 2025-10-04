@@ -95,7 +95,8 @@ const PricingComponent: React.FC = () => {
         'Continuous improvements',
         'Undetectable by all AIs',
         'No weird or random words',
-        'Customer support'
+        'Customer support',
+        'API access'
       ],
       buttonText: 'Choose Pro'
     }
@@ -158,9 +159,9 @@ const PricingComponent: React.FC = () => {
     try {
       // Map plan IDs to Stripe plan types
       const planMapping: Record<string, PlanType> = {
-        'lite': 'basic',
-        'standard': 'pro',
-        'pro': 'enterprise'
+        'lite': 'lite',
+        'standard': 'standard',
+        'pro': 'pro'
       };
       
       const planType = planMapping[planId];
@@ -175,6 +176,7 @@ const PricingComponent: React.FC = () => {
       }
       
       const plan = PRICING_PLANS[planType];
+      const priceId = billingPeriod === 'monthly' ? plan.monthlyPriceId : plan.yearlyPriceId;
       
       // Use Amplify API endpoint
       const response = await fetch(`${import.meta.env.VITE_APP_URL || window.location.origin}/stripe/create-checkout-session`, {
@@ -183,7 +185,7 @@ const PricingComponent: React.FC = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          priceId: plan.priceId,
+          priceId: priceId,
           userId: user.userId,
           userEmail: user.signInDetails?.loginId
         }),
@@ -284,9 +286,9 @@ const PricingComponent: React.FC = () => {
 
   const getButtonText = (planId: string) => {
     const planMapping: Record<string, PlanType> = {
-      'lite': 'basic',
-      'standard': 'pro', 
-      'pro': 'enterprise'
+      'lite': 'lite',
+      'standard': 'standard', 
+      'pro': 'pro'
     };
     
     const planType = planMapping[planId];
@@ -301,9 +303,9 @@ const PricingComponent: React.FC = () => {
 
   const isButtonDisabled = (planId: string) => {
     const planMapping: Record<string, PlanType> = {
-      'lite': 'basic',
-      'standard': 'pro',
-      'pro': 'enterprise'
+      'lite': 'lite',
+      'standard': 'standard',
+      'pro': 'pro'
     };
     
     const planType = planMapping[planId];

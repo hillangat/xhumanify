@@ -114,28 +114,49 @@ booksPath.addMethod("PUT", lambdaIntegration, {
 });
 
 // Add Stripe API endpoints
-const stripePath = myRestApi.root.addResource("stripe");
+const stripePath = myRestApi.root.addResource("stripe", {
+  defaultCorsPreflightOptions: {
+    allowOrigins: Cors.ALL_ORIGINS,
+    allowMethods: Cors.ALL_METHODS,
+    allowHeaders: Cors.DEFAULT_HEADERS,
+  },
+});
 
 // Create checkout session endpoint (requires auth)
-const checkoutPath = stripePath.addResource("create-checkout-session");
+const checkoutPath = stripePath.addResource("create-checkout-session", {
+  defaultCorsPreflightOptions: {
+    allowOrigins: Cors.ALL_ORIGINS,
+    allowMethods: ["POST", "OPTIONS"],
+    allowHeaders: Cors.DEFAULT_HEADERS,
+  },
+});
 checkoutPath.addMethod("POST", checkoutIntegration, {
   authorizationType: AuthorizationType.COGNITO,
   authorizer: cognitoAuth,
 });
-checkoutPath.addMethod("OPTIONS", checkoutIntegration); // CORS preflight
 
 // Create portal session endpoint (requires auth)
-const portalPath = stripePath.addResource("create-portal-session");
+const portalPath = stripePath.addResource("create-portal-session", {
+  defaultCorsPreflightOptions: {
+    allowOrigins: Cors.ALL_ORIGINS,
+    allowMethods: ["POST", "OPTIONS"],
+    allowHeaders: Cors.DEFAULT_HEADERS,
+  },
+});
 portalPath.addMethod("POST", portalIntegration, {
   authorizationType: AuthorizationType.COGNITO,
   authorizer: cognitoAuth,
 });
-portalPath.addMethod("OPTIONS", portalIntegration); // CORS preflight
 
 // Webhook endpoint (no auth required)
-const webhookPath = stripePath.addResource("webhook");
+const webhookPath = stripePath.addResource("webhook", {
+  defaultCorsPreflightOptions: {
+    allowOrigins: Cors.ALL_ORIGINS,
+    allowMethods: ["POST", "OPTIONS"],
+    allowHeaders: Cors.DEFAULT_HEADERS,
+  },
+});
 webhookPath.addMethod("POST", webhookIntegration);
-webhookPath.addMethod("OPTIONS", webhookIntegration); // CORS preflight
 
 // create a new IAM policy to allow Invoke access to the API
 const apiRestPolicy = new Policy(apiStack, "RestApiPolicy", {
@@ -146,6 +167,7 @@ const apiRestPolicy = new Policy(apiStack, "RestApiPolicy", {
         `${myRestApi.arnForExecuteApi("*", "/ai", "dev")}`,
         `${myRestApi.arnForExecuteApi("*", "/ai/*", "dev")}`,
         `${myRestApi.arnForExecuteApi("*", "/cognito-auth-path", "dev")}`,
+        `${myRestApi.arnForExecuteApi("*", "/stripe/*", "dev")}`,
       ],
     }),
   ],
