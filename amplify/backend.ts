@@ -23,11 +23,11 @@ const backend = defineBackend({
   handleWebhook,
 });
 
-// Add environment variables for Stripe functions
-backend.createCheckoutSession.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
-backend.createPortalSession.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
-backend.handleWebhook.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
-backend.handleWebhook.addEnvironment("STRIPE_WEBHOOK_SECRET", process.env.STRIPE_WEBHOOK_SECRET || "");
+// Add environment variables for Stripe functions - these will be set in AWS Console
+backend.createCheckoutSession.addEnvironment("STRIPE_SECRET_KEY", "");
+backend.createPortalSession.addEnvironment("STRIPE_SECRET_KEY", "");
+backend.handleWebhook.addEnvironment("STRIPE_SECRET_KEY", "");
+backend.handleWebhook.addEnvironment("STRIPE_WEBHOOK_SECRET", "");
 
 backend.generateHaikuFunction.resources.lambda.addToRolePolicy(
   new PolicyStatement({

@@ -9,6 +9,8 @@ import { Toast } from 'primereact/toast';
 import { useSubscription } from './contexts/SubscriptionContext';
 import { PRICING_PLANS, PlanType } from './utils/stripe';
 import { useAuthenticator } from '@aws-amplify/ui-react';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import outputs from './amplify_outputs.json';
 import './PricingComponent.scss';
 
 interface PricingPlan {
@@ -178,11 +180,18 @@ const PricingComponent: React.FC = () => {
       const plan = PRICING_PLANS[planType];
       const priceId = billingPeriod === 'monthly' ? plan.monthlyPriceId : plan.yearlyPriceId;
       
-      // Use Amplify API endpoint
-      const response = await fetch(`${import.meta.env.VITE_APP_URL || window.location.origin}/stripe/create-checkout-session`, {
+      // Use Amplify API endpoint from outputs
+      const apiEndpoint = outputs.custom?.API?.myRestApi?.endpoint || import.meta.env.VITE_APP_URL || window.location.origin;
+      
+      // Get the current user's JWT token for authentication
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+      
+      const response = await fetch(`${apiEndpoint}stripe/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           priceId: priceId,
@@ -243,10 +252,17 @@ const PricingComponent: React.FC = () => {
     });
     
     try {
-      const response = await fetch(`${import.meta.env.VITE_APP_URL || window.location.origin}/stripe/create-portal-session`, {
+      const apiEndpoint = outputs.custom?.API?.myRestApi?.endpoint || import.meta.env.VITE_APP_URL || window.location.origin;
+      
+      // Get the current user's JWT token for authentication
+      const session = await fetchAuthSession();
+      const token = session.tokens?.idToken?.toString();
+      
+      const response = await fetch(`${apiEndpoint}stripe/create-portal-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
           customerId: subscription.stripeCustomerId
