@@ -139,8 +139,6 @@ const PricingComponent: React.FC = () => {
 
   // Stripe functionality
   const handleSubscribe = async (planId: string) => {
-    console.log('handleSubscribe called with planId:', planId);
-    
     if (!user) {
       toast.current?.show({
         severity: 'warn',
@@ -180,14 +178,7 @@ const PricingComponent: React.FC = () => {
       }
       
       const plan = PRICING_PLANS[planType];
-      console.log('Plan type:', planType);
-      console.log('Billing period:', billingPeriod);
-      console.log('Plan object:', plan);
-      console.log('Monthly price ID:', plan.monthlyPriceId);
-      console.log('Yearly price ID:', plan.yearlyPriceId);
-      
       const priceId = billingPeriod === 'monthly' ? plan.monthlyPriceId : plan.yearlyPriceId;
-      console.log('Selected price ID:', priceId);
       
       // Use Amplify API endpoint from outputs
       const apiEndpoint = outputs.custom?.API?.myRestApi?.endpoint || import.meta.env.VITE_APP_URL || window.location.origin;
@@ -195,11 +186,6 @@ const PricingComponent: React.FC = () => {
       // Get the current user's JWT token for authentication
       const session = await fetchAuthSession();
       const token = session.tokens?.idToken?.toString();
-      
-      console.log('User object:', user);
-      console.log('User email:', user.signInDetails?.loginId);
-      console.log('User userId:', user.userId);
-      console.log('Price ID:', priceId);
       
       // Try to get email from JWT token if signInDetails is not available
       const userEmail = user.signInDetails?.loginId || 
@@ -211,8 +197,6 @@ const PricingComponent: React.FC = () => {
         userId: user.userId,
         userEmail: userEmail
       };
-      
-      console.log('Request body:', requestBody);
       
       const response = await fetch(`${apiEndpoint}stripe/create-checkout-session`, {
         method: 'POST',
