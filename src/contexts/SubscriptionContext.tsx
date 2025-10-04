@@ -15,6 +15,7 @@ interface SubscriptionContextType {
   currentTier: UsageTier;
   refreshSubscription: () => Promise<void>;
   trackUsage: (inputText: string, outputText: string) => Promise<void>;
+  trackUsageWithTokens: (inputText: string, outputText: string, usage: any) => Promise<void>;
   checkUsageLimit: (inputText: string) => boolean;
 }
 
@@ -103,6 +104,45 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     }
   };
 
+  const trackUsageWithTokens = async (inputText: string, outputText: string, usage: any) => {
+    try {
+      // Use actual token data for more accurate tracking
+      const actualTokens = usage.totalTokens || 0;
+      const estimatedWords = usage.estimatedWords || countWords(inputText) + countWords(outputText);
+      
+      // Create usage tracking record with actual token data
+      await client.models.UsageTracking.create({
+        operation: 'humanify',
+        tokensUsed: estimatedWords, // Store as word equivalent for consistency
+        success: true,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Update subscription usage count if subscription exists
+      if (subscription) {
+        await client.models.UserSubscription.update({
+          id: subscription.id,
+          usageCount: subscription.usageCount + estimatedWords
+        });
+      }
+      
+      // Log actual vs estimated for monitoring
+      console.log('Usage tracking:', {
+        actualTokens,
+        estimatedWords,
+        inputWords: countWords(inputText),
+        outputWords: countWords(outputText)
+      });
+      
+      // Refresh local state
+      await loadSubscription();
+    } catch (error) {
+      console.error('Failed to track token usage:', error);
+      // Fallback to old method
+      await trackUsage(inputText, outputText);
+    }
+  };
+
   const checkUsageLimit = (inputText: string): boolean => {
     const inputWords = countWords(inputText);
     const currentTier = getUserTier(hasActiveSubscription, subscription?.planName);
@@ -153,6 +193,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     currentTier,
     refreshSubscription: loadSubscription,
     trackUsage,
+    trackUsageWithTokens,
     checkUsageLimit
   };
 

@@ -109,6 +109,12 @@ Ensure the output is imperceptibly human-written and would pass major AI detecto
   const response = await client.send(command);
   const data = JSON.parse(Buffer.from(response.body).toString());
   
+  // Extract token usage from Bedrock response
+  const usage = data.usage || {};
+  const inputTokens = usage.input_tokens || 0;
+  const outputTokens = usage.output_tokens || 0;
+  const totalTokens = inputTokens + outputTokens;
+  
   let result = data.content[0].text.trim();
 
   // Enhanced post-processing: Remove common introductory and concluding patterns
@@ -142,5 +148,15 @@ Ensure the output is imperceptibly human-written and would pass major AI detecto
 
   result = result.trim();
 
-  return result;
+  // Return structured data with content and usage info
+  return JSON.stringify({
+    content: result,
+    usage: {
+      inputTokens,
+      outputTokens,
+      totalTokens,
+      // Convert tokens to estimated words for display (1.3 tokens ≈ 1 word)
+      estimatedWords: Math.ceil(totalTokens / 1.3)
+    }
+  });
 };

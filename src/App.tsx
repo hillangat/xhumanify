@@ -19,7 +19,7 @@ import UsageDisplay from './components/UsageDisplay';
 
 export default function App() {
   const client = generateClient<Schema>();
-  const { trackUsage, checkUsageLimit, canUseService, currentTier } = useSubscription();
+  const { trackUsage, trackUsageWithTokens, checkUsageLimit, canUseService, currentTier } = useSubscription();
   
   const [prompt, setPrompt] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -86,10 +86,24 @@ export default function App() {
       }, {
         authMode: 'apiKey'
       });
-      if (!errors) {
-        setAnswer(data);
-        // Track usage after successful response
-        if (data) {
+      if (!errors && data) {
+        try {
+          // Parse the JSON response containing content and usage data
+          const response = JSON.parse(data);
+          const content = response.content;
+          const usage = response.usage;
+          
+          setAnswer(content);
+          
+          // Track usage with actual token data
+          if (content && usage) {
+            await trackUsageWithTokens(prompt, content, usage);
+          }
+        } catch (parseError) {
+          // Fallback: treat as plain text (backward compatibility)
+          console.warn('Response parsing failed, using as plain text:', parseError);
+          setAnswer(data);
+          // Use old tracking method as fallback
           await trackUsage(prompt, data);
         }
       } else {
