@@ -33,16 +33,7 @@ backend.generateHaikuFunction.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
-    resources: [
-      // Foundation model ARNs
-      "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
-      "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
-      "arn:aws:bedrock:*::foundation-model/anthropic.claude-3-haiku-20240307-v1:0",
-      // Inference profile ARNs (new format)
-      "arn:aws:bedrock:us-west-2:*:inference-profile/anthropic.claude-3-haiku-20240307-v1:0",
-      "arn:aws:bedrock:us-east-1:*:inference-profile/anthropic.claude-3-haiku-20240307-v1:0",
-      "arn:aws:bedrock:*:*:inference-profile/anthropic.claude-3-haiku-20240307-v1:0",
-    ],
+    resources: ["*"],
   })
 );
 
