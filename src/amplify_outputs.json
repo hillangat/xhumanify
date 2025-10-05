@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "us-east-2_DEn66Aos6",
+    "user_pool_id": "us-east-2_l8yafCojK",
     "aws_region": "us-east-2",
-    "user_pool_client_id": "4nc2ancprr1u9ocmcg994nf6sh",
-    "identity_pool_id": "us-east-2:c78d50c4-2c95-4418-a4a7-4b687e085f1f",
+    "user_pool_client_id": "4tsgpch48pcjhd49pqffv02hcj",
+    "identity_pool_id": "us-east-2:378e41f1-380f-4f07-891e-1f19e5201951",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -26,9 +26,9 @@
     "unauthenticated_identities_enabled": true
   },
   "data": {
-    "url": "https://rj3noo2tzjdqnkw42zmcmsf2km.appsync-api.us-east-2.amazonaws.com/graphql",
+    "url": "https://22wtmqe72zhfzdeizh3zkfb7lq.appsync-api.us-east-2.amazonaws.com/graphql",
     "aws_region": "us-east-2",
-    "api_key": "da2-k5jentwjt5d3zbyhmq4q4nmdwa",
+    "api_key": "da2-iigfrobnfjaojfophngtorpkga",
     "default_authorization_type": "AMAZON_COGNITO_USER_POOLS",
     "authorization_types": [
       "API_KEY",
@@ -572,7 +572,7 @@
   "custom": {
     "API": {
       "myRestApi": {
-        "endpoint": "https://cmi5roiiqi.execute-api.us-east-2.amazonaws.com/dev/",
+        "endpoint": "https://kkvzaxfqai.execute-api.us-east-2.amazonaws.com/dev/",
         "region": "us-east-2",
         "apiName": "myRestApi"
       }
