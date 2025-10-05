@@ -14,6 +14,7 @@ export const generateHaikuFunction = defineFunction({
   environment: {
     MODEL_ID,
   },
+  timeoutSeconds: 180, // Increase timeout to 180 seconds for Bedrock API calls
 });
 
 const schema = a.schema({
