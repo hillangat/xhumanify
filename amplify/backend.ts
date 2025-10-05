@@ -34,16 +34,26 @@ backend.generateHaikuFunction.resources.lambda.addToRolePolicy(
     effect: Effect.ALLOW,
     actions: ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
     resources: [
-      // Foundation model ARNs (legacy format)
+      // Foundation model ARNs (legacy format with us. prefix)
       "arn:aws:bedrock:us-east-1::foundation-model/us.anthropic.claude-3-5-sonnet-20241022-v2:0",
       "arn:aws:bedrock:us-east-2::foundation-model/us.anthropic.claude-3-5-sonnet-20241022-v2:0",
       "arn:aws:bedrock:us-west-2::foundation-model/us.anthropic.claude-3-5-sonnet-20241022-v2:0",
       "arn:aws:bedrock:*::foundation-model/us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+      // Foundation model ARNs (without us. prefix)
+      "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "arn:aws:bedrock:*::foundation-model/anthropic.claude-3-5-sonnet-20241022-v2:0",
       // Inference profile ARNs (new format for Claude 3.5 Sonnet)
       "arn:aws:bedrock:us-east-1:*:inference-profile/us.anthropic.claude-3-5-sonnet-20241022-v2:0",
       "arn:aws:bedrock:us-east-2:*:inference-profile/us.anthropic.claude-3-5-sonnet-20241022-v2:0",
       "arn:aws:bedrock:us-west-2:*:inference-profile/us.anthropic.claude-3-5-sonnet-20241022-v2:0",
       "arn:aws:bedrock:*:*:inference-profile/us.anthropic.claude-3-5-sonnet-20241022-v2:0",
+      // Inference profile ARNs (without us. prefix)
+      "arn:aws:bedrock:us-east-1:*:inference-profile/anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "arn:aws:bedrock:us-east-2:*:inference-profile/anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "arn:aws:bedrock:us-west-2:*:inference-profile/anthropic.claude-3-5-sonnet-20241022-v2:0",
+      "arn:aws:bedrock:*:*:inference-profile/anthropic.claude-3-5-sonnet-20241022-v2:0",
     ],
   })
 );
