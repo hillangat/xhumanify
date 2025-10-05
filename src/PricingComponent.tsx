@@ -282,6 +282,17 @@ const PricingComponent: React.FC = () => {
       console.warn('Debug analysis failed:', debugError);
     }
     
+    // Check if subscription exists first
+    if (!subscription) {
+      toast.current?.show({
+        severity: 'warn',
+        summary: 'No Subscription',
+        detail: 'No active subscription found to manage. Please subscribe first.',
+        life: 5000
+      });
+      return;
+    }
+    
     // Validate portal access
     const validation = validatePortalAccess(subscription);
     console.log('Portal access validation:', validation);
