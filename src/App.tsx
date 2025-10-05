@@ -364,6 +364,12 @@ export default function App() {
                     icon={<FaGooglePlay />}
                     onClick={handleButtonClick}
                     disabled={loading || !prompt || isRunning || !canUseService || (!!prompt && !checkUsageLimit(prompt))}
+                    severity={!canUseService || (prompt && !checkUsageLimit(prompt)) ? 'danger' : undefined}
+                    style={!canUseService || (prompt && !checkUsageLimit(prompt)) ? {
+                      backgroundColor: '#f44336',
+                      borderColor: '#f44336',
+                      color: 'white'
+                    } : undefined}
                   />
                 </ButtonGroup>
               </div>

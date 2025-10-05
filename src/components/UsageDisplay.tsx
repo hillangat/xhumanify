@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ProgressBar } from 'primereact/progressbar';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Card } from 'primereact/card';
@@ -17,6 +18,7 @@ interface UsageDisplayProps {
 const UsageDisplay: React.FC<UsageDisplayProps> = ({ compact = false, currentPrompt = '' }) => {
   const { usageCount, usageLimit, currentPlan, currentTier, canUseService, checkUsageLimit, loading } = useSubscription();
   const overlayRef = useRef<OverlayPanel>(null);
+  const navigate = useNavigate();
 
   const usagePercentage = usageLimit > 0 ? Math.round((usageCount / usageLimit) * 100 * 10) / 10 : 0;
   const wordsRemaining = Math.max(0, usageLimit - usageCount);
@@ -38,6 +40,11 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({ compact = false, currentPro
 
   const toggleDetails = (event: React.MouseEvent) => {
     overlayRef.current?.toggle(event);
+  };
+
+  const handleUpgradeClick = () => {
+    overlayRef.current?.hide();
+    navigate('/upgrade');
   };
 
   // Detailed usage panel content
@@ -137,7 +144,30 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({ compact = false, currentPro
             <i className="pi pi-exclamation-triangle" style={{ color: '#856404' }}></i>
             <span>Consider upgrading your plan to avoid service interruption</span>
           </div>
-        )}
+        )}        
+      </div>
+      
+      {/* Upgrade Button */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        marginTop: '1.5rem',
+        paddingTop: '1rem',
+        borderTop: '1px solid var(--surface-border)'
+      }}>
+        <Button 
+          label="Upgrade"
+          icon="pi pi-arrow-up"
+          onClick={handleUpgradeClick}
+          className="p-button-primary"
+          style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            border: 'none',
+            padding: '0.75rem 2rem',
+            fontSize: '1rem',
+            fontWeight: '600'
+          }}
+        />
       </div>
     </div>
     );
