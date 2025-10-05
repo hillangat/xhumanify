@@ -24,6 +24,7 @@ export default function App() {
   const [prompt, setPrompt] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [answer, setAnswer] = useState<string | null>(null);
+  const [usageInfo, setUsageInfo] = useState<any>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [copiedRaw, setCopiedRaw] = useState(false);
   const [copiedProcessed, setCopiedProcessed] = useState(false);
@@ -89,6 +90,7 @@ export default function App() {
 
     setIsRunning(true);
     setAnswer(null);
+    setUsageInfo(null);
     setAnimatedWordCount(0);
     try {
       const { data, errors } = await client.queries.generateHaiku({
@@ -105,6 +107,7 @@ export default function App() {
           const usage = response.usage;
           
           setAnswer(content);
+          setUsageInfo(usage);
           
           // Track usage with actual token data
           if (content && usage) {
@@ -162,6 +165,7 @@ export default function App() {
     event.preventDefault();
     setPrompt('');
     setAnswer('');
+    setUsageInfo(null);
   };
 
   const handleSave = async () => {
@@ -422,7 +426,32 @@ export default function App() {
             </div>
             <div className='content-container'>
               {answer ? (
-                <pre>{answer}</pre>
+                <>
+                  <pre>{answer}</pre>
+                  {usageInfo && (
+                    <div className="token-transparency" style={{
+                      fontSize: '0.8rem',
+                      color: 'var(--text-color-secondary)',
+                      marginTop: '1rem',
+                      padding: '0.5rem',
+                      background: 'var(--surface-100)',
+                      borderRadius: '4px',
+                      borderLeft: '3px solid var(--primary-color)'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>💰 <strong>Charged:</strong> {usageInfo.estimatedWords} words</span>
+                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>
+                          (Input: {usageInfo.inputTokens} + Output: {usageInfo.outputTokens} tokens)
+                        </span>
+                      </div>
+                      {usageInfo.systemPromptTokens && (
+                        <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '0.25rem' }}>
+                          ✅ System overhead: {usageInfo.systemPromptTokens} tokens (FREE - not charged)
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
               ) : (
                 <EmptyContent
                   icon={isRunning ? <ProgressSpinner style={{ width: '45px', height: '45px' }} /> : <MdHourglassEmpty size={35} />}

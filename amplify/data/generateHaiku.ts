@@ -117,6 +117,16 @@ Ensure the output is imperceptibly human-written and would pass major AI detecto
   const outputTokens = usage.output_tokens || 0;
   const totalTokens = inputTokens + outputTokens;
   
+  // Calculate system prompt tokens (estimate based on our system prompt)
+  // Our system prompt is approximately 1200-1500 characters = ~300-375 tokens
+  const systemPromptTokens = Math.ceil(350); // Conservative estimate
+  
+  // Calculate user input tokens (exclude system prompt from billing)
+  const userInputTokens = Math.max(0, inputTokens - systemPromptTokens);
+  
+  // Billable tokens = user input + output (excluding system overhead)
+  const billableTokens = userInputTokens + outputTokens;
+  
   let result = data.content[0].text.trim();
 
   // Enhanced post-processing: Remove common introductory and concluding patterns
@@ -154,11 +164,14 @@ Ensure the output is imperceptibly human-written and would pass major AI detecto
   return JSON.stringify({
     content: result,
     usage: {
-      inputTokens,
+      inputTokens: userInputTokens, // Only user input tokens (system prompt excluded)
       outputTokens,
-      totalTokens,
-      // Convert tokens to estimated words for display (1.3 tokens ≈ 1 word)
-      estimatedWords: Math.ceil(totalTokens / 1.3)
+      totalTokens: billableTokens, // Only billable tokens
+      systemPromptTokens, // Track but don't charge for this
+      actualInputTokens: inputTokens, // For internal monitoring
+      actualTotalTokens: totalTokens, // For internal monitoring
+      // Convert billable tokens to estimated words for display (1.3 tokens ≈ 1 word)
+      estimatedWords: Math.ceil(billableTokens / 1.3)
     }
   });
 };

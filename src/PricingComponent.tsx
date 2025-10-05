@@ -106,6 +106,34 @@ const PricingComponent: React.FC = () => {
 
   const faqs = [
     {
+      question: 'How does token-based pricing work?',
+      answer: 'We charge based on the actual content you process. Each word in your text typically uses about 1.3 tokens. You only pay for your input text and the generated output - never for our system overhead or processing instructions.'
+    },
+    {
+      question: 'What exactly am I charged for?',
+      answer: 'You are charged only for: (1) Your input text tokens and (2) The humanized output tokens. We do NOT charge you for system prompts, processing instructions, or any internal overhead - that\'s on us!'
+    },
+    {
+      question: 'How many requests can I make with each plan?',
+      answer: 'Based on our analysis of typical usage: Lite plan (~15-20 business documents), Standard plan (~40-50 documents), Pro plan (~120-135 documents). Actual usage depends on your document sizes - shorter texts allow more requests.'
+    },
+    {
+      question: 'What counts as a "word" in my usage?',
+      answer: 'We count both your input text and the humanized output. For example, if you process 1000 words and get back 980 words, your usage is ~1980 words. We use industry-standard token-to-word conversion (approximately 1.3 tokens = 1 word).'
+    },
+    {
+      question: 'Do I get charged for processing errors or failed requests?',
+      answer: 'No! You are only charged for successful humanization. If a request fails or produces an error, no tokens are deducted from your account.'
+    },
+    {
+      question: 'How can I monitor my token usage?',
+      answer: 'Your dashboard shows real-time usage statistics including words processed, remaining allocation, and usage percentage. Each successful request also displays the exact token count used.'
+    },
+    {
+      question: 'What happens if I exceed my plan limits?',
+      answer: 'Your service will be temporarily paused until the next billing cycle or you can upgrade to a higher plan. We never charge overage fees - you stay in control of your costs.'
+    },
+    {
       question: 'How can I be sure that the content is undetectable?',
       answer: 'Our advanced AI humanification technology has been tested against all major AI detection tools. We continuously update our algorithms to stay ahead of detection methods.'
     },

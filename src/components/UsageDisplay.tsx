@@ -193,7 +193,7 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({ compact = false, currentPro
             value={
               loading ? (
                 <span style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                  <ProgressSpinner style={{ width: '12px', height: '12px' }} strokeWidth="4" />
+                  <ProgressSpinner style={{ width: '12px', height: '12px', color: 'white !important' }} strokeWidth="4" />
                   Loading...
                 </span>
               ) : (

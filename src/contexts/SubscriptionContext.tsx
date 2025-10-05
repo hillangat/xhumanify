@@ -122,11 +122,22 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
   const trackUsageWithTokens = async (inputText: string, outputText: string, usage: any) => {
     try {
-      // Use actual token data for more accurate tracking
-      const actualTokens = usage.totalTokens || 0;
+      // Use billable tokens (excludes system prompt overhead)
+      const billableTokens = usage.totalTokens || 0; // This is now billable tokens only
       const estimatedWords = usage.estimatedWords || countWords(inputText) + countWords(outputText);
+      const systemPromptTokens = usage.systemPromptTokens || 0;
       
-      // Create usage tracking record with actual token data
+      // Log transparency info for user
+      console.log('📊 Token Usage Breakdown:', {
+        userInputTokens: usage.inputTokens,
+        outputTokens: usage.outputTokens,
+        billableTokens: billableTokens,
+        systemPromptTokens: systemPromptTokens,
+        estimatedWords: estimatedWords,
+        note: 'You are only charged for billable tokens (user input + output)'
+      });
+      
+      // Create usage tracking record with billable token data
       await client.models.UsageTracking.create({
         operation: 'humanify',
         tokensUsed: estimatedWords, // Store as word equivalent for consistency
@@ -158,12 +169,14 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         });
       }
       
-      // Log actual vs estimated for monitoring
-      console.log('Usage tracking:', {
-        actualTokens,
+      // Log usage summary for monitoring
+      console.log('📈 Usage Summary:', {
+        billableTokens,
         estimatedWords,
         inputWords: countWords(inputText),
-        outputWords: countWords(outputText)
+        outputWords: countWords(outputText),
+        systemOverhead: systemPromptTokens,
+        note: 'System overhead not charged to user'
       });
       
       // Refresh local state
