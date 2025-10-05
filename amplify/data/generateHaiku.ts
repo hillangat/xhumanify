@@ -7,7 +7,7 @@ import {
 
 // Initialize Bedrock runtime client
 const client = new BedrockRuntimeClient({ 
-  region: "us-west-2" 
+  region: "us-east-1" 
 });
 
 export const handler: Schema["generateHaiku"]["functionHandler"] = async (
