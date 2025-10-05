@@ -4,32 +4,21 @@ export const createCheckoutSession = defineFunction({
   name: 'createCheckoutSession',
   entry: './create-checkout-session.ts',
   timeoutSeconds: 60,
-  memoryMB: 512,
-  environment: {
-    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || '',
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || ''
-  }
+  memoryMB: 512
 });
 
 export const createPortalSession = defineFunction({
   name: 'createPortalSession', 
   entry: './create-portal-session.ts',
   timeoutSeconds: 60,
-  memoryMB: 512,
-  environment: {
-    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || ''
-  }
+  memoryMB: 512
 });
 
 export const handleWebhook = defineFunction({
   name: 'handleWebhook',
   entry: './webhook-handler.ts',
   timeoutSeconds: 60, // Increased from default 3 seconds to handle complex webhook processing
-  memoryMB: 512,
-  environment: {
-    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || '',
-    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || ''
-  }
+  memoryMB: 512
 });
 
 // Monthly usage reset function for free tier users
