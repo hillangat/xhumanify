@@ -8,7 +8,6 @@ import {
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
 import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
-import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { apiFunction } from "./functions/api-function/resource";
 import { createCheckoutSession, createPortalSession, handleWebhook } from "./functions/stripe/resource";
 import { debugSubscription } from "./functions/debug-subscription/resource";
@@ -26,55 +25,13 @@ const backend = defineBackend({
   debugSubscription
 });
 
-// Environment variables for Stripe functions using AWS Parameter Store (more secure)
-// Create parameters stack for managing secure parameters
-const parametersStack = backend.createStack("parameters-stack");
-
-// Reference Parameter Store values securely
-const stripeSecretKey = StringParameter.valueForStringParameter(
-  parametersStack, 
-  "/amplify/stripe/secret-key"
-);
-const stripeWebhookSecret = StringParameter.valueForStringParameter(
-  parametersStack, 
-  "/amplify/stripe/webhook-secret"
-);
-
-// Set environment variables using Parameter Store references with fallbacks
-backend.createCheckoutSession.addEnvironment(
-  "STRIPE_SECRET_KEY", 
-  process.env.STRIPE_SECRET_KEY || stripeSecretKey
-);
-backend.createCheckoutSession.addEnvironment(
-  "NEXT_PUBLIC_APP_URL", 
-  process.env.NEXT_PUBLIC_APP_URL || "https://www.humanizeaicontents.com"
-);
-backend.createPortalSession.addEnvironment(
-  "STRIPE_SECRET_KEY", 
-  process.env.STRIPE_SECRET_KEY || stripeSecretKey
-);
-backend.handleWebhook.addEnvironment(
-  "STRIPE_SECRET_KEY", 
-  process.env.STRIPE_SECRET_KEY || stripeSecretKey
-);
-backend.handleWebhook.addEnvironment(
-  "STRIPE_WEBHOOK_SECRET", 
-  process.env.STRIPE_WEBHOOK_SECRET || stripeWebhookSecret
-);
-
-// Grant Lambda functions permission to read from Parameter Store
-const parameterStorePolicy = new PolicyStatement({
-  effect: Effect.ALLOW,
-  actions: ["ssm:GetParameter", "ssm:GetParameters"],
-  resources: [
-    `arn:aws:ssm:*:*:parameter/amplify/stripe/*`
-  ],
-});
-
-// Apply Parameter Store permissions to all Stripe functions
-backend.createCheckoutSession.resources.lambda.addToRolePolicy(parameterStorePolicy);
-backend.createPortalSession.resources.lambda.addToRolePolicy(parameterStorePolicy);
-backend.handleWebhook.resources.lambda.addToRolePolicy(parameterStorePolicy);
+// Environment variables for Stripe functions
+// These use .env file values during deployment and can fall back to Parameter Store at runtime
+backend.createCheckoutSession.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
+backend.createCheckoutSession.addEnvironment("NEXT_PUBLIC_APP_URL", process.env.NEXT_PUBLIC_APP_URL || "https://www.humanizeaicontents.com");
+backend.createPortalSession.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
+backend.handleWebhook.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
+backend.handleWebhook.addEnvironment("STRIPE_WEBHOOK_SECRET", process.env.STRIPE_WEBHOOK_SECRET || "");
 
 backend.generateHaikuFunction.resources.lambda.addToRolePolicy(
   new PolicyStatement({
