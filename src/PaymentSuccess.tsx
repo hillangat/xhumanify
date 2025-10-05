@@ -4,6 +4,7 @@ import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { useSubscription } from './contexts/SubscriptionContext';
+import { debugUserSubscription, fixUserSubscription, createLiteSubscription } from './utils/subscriptionDebug';
 import './PaymentSuccess.scss';
 import { FaGooglePlay } from 'react-icons/fa';
 
@@ -63,6 +64,37 @@ const PaymentSuccess: React.FC = () => {
     } catch (err) {
       console.error('Error refreshing subscription:', err);
       setIsLoading(false);
+    }
+  };
+
+  const handleDebugSubscription = async () => {
+    try {
+      const debugInfo = await debugUserSubscription();
+      console.log('Debug completed, check console for details');
+      alert('Debug information logged to console. Check developer tools.');
+    } catch (error) {
+      console.error('Debug failed:', error);
+      alert('Debug failed. Check console for details.');
+    }
+  };
+
+  const handleFixSubscription = async () => {
+    try {
+      const debugInfo = await debugUserSubscription();
+      if (debugInfo.subscriptions.length > 0) {
+        const subscription = debugInfo.subscriptions[0];
+        await fixUserSubscription(subscription.id, 'lite');
+        await refreshSubscription();
+        alert('Subscription fix attempted. Please refresh the page.');
+      } else {
+        // No subscription found, create a new one
+        await createLiteSubscription();
+        await refreshSubscription();
+        alert('New Lite subscription created. Please refresh the page.');
+      }
+    } catch (error) {
+      console.error('Fix failed:', error);
+      alert('Fix failed. Check console for details.');
     }
   };
 
@@ -173,6 +205,24 @@ const PaymentSuccess: React.FC = () => {
               onClick={handleRefreshSubscription}
               size="small"
               className="refresh-button"
+            />
+            <Button 
+              label="Debug Subscription" 
+              icon="pi pi-search" 
+              severity="warning" 
+              outlined
+              onClick={handleDebugSubscription}
+              size="small"
+              className="debug-button"
+            />
+            <Button 
+              label="Fix Subscription" 
+              icon="pi pi-wrench" 
+              severity="danger" 
+              outlined
+              onClick={handleFixSubscription}
+              size="small"
+              className="fix-button"
             />
           </div>
 

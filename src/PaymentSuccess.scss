@@ -177,6 +177,11 @@
   min-width: 180px;
 }
 
+.debug-button, .fix-button, .refresh-button {
+  min-width: 120px !important;
+  font-size: 0.8rem !important;
+}
+
 /* Next Steps */
 .next-steps {
   background: var(--surface-50);
