@@ -69,7 +69,7 @@ const PaymentSuccess: React.FC = () => {
 
   const handleDebugSubscription = async () => {
     try {
-      const debugInfo = await debugUserSubscription();
+      await debugUserSubscription();
       console.log('Debug completed, check console for details');
       alert('Debug information logged to console. Check developer tools.');
     } catch (error) {
