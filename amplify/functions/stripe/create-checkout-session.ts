@@ -6,15 +6,38 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 });
 
 export const handler: APIGatewayProxyHandler = async (event) => {
+  console.log('Event received:', JSON.stringify(event, null, 2));
+  
   const headers = {
     'Access-Control-Allow-Origin': 'https://www.humanizeaicontents.com',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Credentials': 'true'
+    'Access-Control-Allow-Credentials': 'true',
+    'Content-Type': 'application/json'
   };
+
+  // Handle preflight OPTIONS request
+  if (event.httpMethod === 'OPTIONS') {
+    console.log('Handling OPTIONS request');
+    return {
+      statusCode: 200,
+      headers,
+      body: ''
+    };
+  }
+
+  if (event.httpMethod !== 'POST') {
+    console.log('Method not allowed:', event.httpMethod);
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: 'Method not allowed' })
+    };
+  }
 
   // Check if Stripe secret key is configured
   if (!process.env.STRIPE_SECRET_KEY) {
+    console.error('Stripe secret key not configured');
     return {
       statusCode: 500,
       headers,
@@ -25,24 +48,12 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     };
   }
 
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
-  }
-
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
-    };
-  }
-
   try {
-    const { priceId, userId, userEmail } = JSON.parse(event.body || '{}');
+    if (!event.body) {
+      throw new Error('Request body is required');
+    }
+
+    const { priceId, userId, userEmail } = JSON.parse(event.body);
 
     console.log('Received parameters:', { priceId, userId, userEmail });
 
@@ -70,6 +81,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       };
     }
 
+    console.log('Creating Stripe checkout session...');
+
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
       customer_email: userEmail,
@@ -88,6 +101,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         userId: userId,
       },
     });
+
+    console.log('Checkout session created successfully:', session.id);
 
     return {
       statusCode: 200,

@@ -67,9 +67,9 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({ compact = false, currentPro
       <div className="usage-header">
         <h4 style={{ margin: '0 0 1rem 0', fontSize: '1.1rem' }}>Usage Statistics</h4>
         <div className="usage-numbers" style={{ fontSize: '1rem', fontWeight: 'bold' }}>
-          <strong>{formatNumber(usageCount)} used</strong>
-          <span style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem', fontWeight: 'normal' }}>
-            of {formatNumber(usageLimit)} words
+          <strong>{formatNumber(usageCount)} used </strong>
+          <span style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem', fontWeight: 'normal'}}>
+             of {formatNumber(usageLimit)} words
           </span>
         </div>
       </div>
@@ -89,7 +89,7 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({ compact = false, currentPro
         
         <div className="usage-stat" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
           <span className="label">Current Plan:</span>
-          <span className="value" style={{ fontWeight: 'bold' }}>{displayPlan}</span>
+          <span className="value" style={{ fontWeight: 'bold' }}>{displayPlan.toUpperCase()}</span>
         </div>
 
         {/* Usage Limit Warnings */}
