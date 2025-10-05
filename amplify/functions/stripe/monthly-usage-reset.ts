@@ -1,0 +1,64 @@
+import type { ScheduledHandler } from 'aws-lambda';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../../data/resource';
+
+// Configure client for IAM auth
+const client = generateClient<Schema>({
+  authMode: 'iam'
+});
+
+export const handler: ScheduledHandler = async (event) => {
+  console.log('Monthly usage reset triggered:', event);
+  
+  try {
+    // Reset usage for free tier users (those without active Stripe subscriptions)
+    const { data: freeUsers } = await client.models.UserSubscription.list({
+      filter: {
+        and: [
+          { planName: { eq: 'free' } },
+          { 
+            or: [
+              { status: { attributeExists: false } },
+              { stripeSubscriptionId: { attributeExists: false } }
+            ]
+          }
+        ]
+      }
+    });
+    
+    if (freeUsers && freeUsers.length > 0) {
+      console.log(`Resetting usage for ${freeUsers.length} free tier users`);
+      
+      // Reset usage count for all free tier users
+      for (const user of freeUsers) {
+        await client.models.UserSubscription.update({
+          id: user.id,
+          usageCount: 0, // Reset to 0 for new month
+          updatedAt: new Date().toISOString()
+        });
+      }
+      
+      console.log('Free tier usage reset completed');
+    } else {
+      console.log('No free tier users found for reset');
+    }
+    
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ 
+        message: 'Monthly usage reset completed',
+        usersReset: freeUsers?.length || 0
+      })
+    };
+    
+  } catch (error) {
+    console.error('Error during monthly usage reset:', error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ 
+        error: 'Monthly usage reset failed',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      })
+    };
+  }
+};

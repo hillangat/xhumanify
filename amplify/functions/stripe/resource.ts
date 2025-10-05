@@ -25,3 +25,10 @@ export const handleWebhook = defineFunction({
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || ''
   }
 });
+
+// Monthly usage reset function for free tier users
+export const monthlyUsageReset = defineFunction({
+  name: 'monthlyUsageReset',
+  entry: './monthly-usage-reset.ts',
+  environment: {}
+});
