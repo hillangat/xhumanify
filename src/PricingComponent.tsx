@@ -10,6 +10,7 @@ import { useSubscription } from './contexts/SubscriptionContext';
 import { PRICING_PLANS, PlanType } from './utils/stripe';
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { fetchAuthSession } from 'aws-amplify/auth';
+import { debugSubscriptionPortal, validatePortalAccess } from './utils/portalDebug';
 import outputs from './amplify_outputs.json';
 import './PricingComponent.scss';
 
@@ -269,15 +270,33 @@ const PricingComponent: React.FC = () => {
   };
 
   const handleManageSubscription = async () => {
-    if (!subscription?.stripeCustomerId) {
+    // Enhanced validation and debugging
+    console.log('🔍 Starting subscription portal access...');
+    console.log('Current subscription:', subscription);
+    
+    // Run debug analysis
+    try {
+      const debugInfo = await debugSubscriptionPortal();
+      console.log('Debug analysis completed:', debugInfo);
+    } catch (debugError) {
+      console.warn('Debug analysis failed:', debugError);
+    }
+    
+    // Validate portal access
+    const validation = validatePortalAccess(subscription);
+    console.log('Portal access validation:', validation);
+    
+    if (!validation.canAccess) {
       toast.current?.show({
         severity: 'warn',
-        summary: 'No Subscription',
-        detail: 'No active subscription found to manage.',
-        life: 5000
+        summary: 'Portal Access Unavailable',
+        detail: `Cannot access subscription portal: ${validation.reason}. ${validation.reason.includes('local/manual') ? 'Please subscribe through our payment system to manage your subscription.' : 'Please subscribe first to access the portal.'}`,
+        life: 8000
       });
       return;
     }
+    
+    console.log('✅ Portal access validated, proceeding...');
     
     toast.current?.show({
       severity: 'info',
@@ -289,11 +308,15 @@ const PricingComponent: React.FC = () => {
     try {
       const apiEndpoint = outputs.custom?.API?.myRestApi?.endpoint || import.meta.env.VITE_APP_URL || window.location.origin;
       
+      console.log('Using API endpoint:', apiEndpoint);
+      
       // Get the current user's JWT token for authentication
       const session = await fetchAuthSession();
       const token = session.tokens?.idToken?.toString();
       
-      const response = await fetch(`${apiEndpoint}stripe/create-portal-session`, {
+      console.log('Making portal session request for customer:', subscription.stripeCustomerId);
+      
+      const response = await fetch(`${apiEndpoint}/stripe/create-portal-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -304,13 +327,18 @@ const PricingComponent: React.FC = () => {
         }),
       });
 
+      console.log('Portal session response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        console.error('Portal session error response:', errorData);
+        throw new Error(`HTTP error! status: ${response.status}${errorData ? ` - ${errorData.details || errorData.error}` : ''}`);
       }
 
       const { url } = await response.json();
       
       if (url) {
+        console.log('✅ Portal session URL received, redirecting...');
         toast.current?.show({
           severity: 'success',
           summary: 'Redirecting',
@@ -325,12 +353,12 @@ const PricingComponent: React.FC = () => {
         throw new Error('No portal URL received');
       }
     } catch (error) {
-      console.error('Error creating portal session:', error);
+      console.error('❌ Error creating portal session:', error);
       toast.current?.show({
         severity: 'error',
         summary: 'Portal Access Failed',
-        detail: 'Unable to access subscription portal. Please try again or contact support.',
-        life: 7000
+        detail: `Unable to access subscription portal: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again or contact support.`,
+        life: 10000
       });
     }
   };

@@ -13,8 +13,15 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     'Access-Control-Allow-Credentials': 'true'
   };
 
+  console.log('Portal session request received:', {
+    method: event.httpMethod,
+    body: event.body,
+    headers: event.headers
+  });
+
   // Check if Stripe secret key is configured
   if (!process.env.STRIPE_SECRET_KEY) {
+    console.error('Stripe secret key not configured');
     return {
       statusCode: 500,
       headers,
@@ -42,9 +49,13 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   }
 
   try {
-    const { customerId } = JSON.parse(event.body || '{}');
+    const requestBody = JSON.parse(event.body || '{}');
+    const { customerId } = requestBody;
+
+    console.log('Parsed request body:', { customerId });
 
     if (!customerId) {
+      console.error('Customer ID missing in request');
       return {
         statusCode: 400,
         headers,
@@ -52,11 +63,15 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       };
     }
 
+    console.log('Creating portal session for customer:', customerId);
+
     // Create Stripe customer portal session
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/account`,
+      return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.humanizeaicontents.com'}/upgrade`,
     });
+
+    console.log('Portal session created successfully:', session.id);
 
     return {
       statusCode: 200,
@@ -67,13 +82,19 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     };
 
   } catch (error) {
-    console.error('Error creating portal session:', error);
+    console.error('Error creating portal session:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      customerId: event.body ? JSON.parse(event.body).customerId : 'N/A'
+    });
+    
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({ 
         error: 'Failed to create portal session',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
       })
     };
   }
