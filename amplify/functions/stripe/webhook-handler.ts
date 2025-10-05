@@ -1,14 +1,13 @@
 import type { APIGatewayProxyHandler } from 'aws-lambda';
 import Stripe from 'stripe';
-import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../data/resource';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-09-30.clover',
+  apiVersion: '2025-09-30.clover', // Use the required API version
 });
 
-// Configure Amplify - use IAM auth for Lambda functions
+// Configure client for IAM auth
 const client = generateClient<Schema>({
   authMode: 'iam'
 });
@@ -134,14 +133,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   console.log('Checkout session completed:', session.id);
-  
-  // TODO: Update user's subscription status in your database
-  // You can access userId from session.client_reference_id
-  const userId = session.client_reference_id;
-  const customerId = session.customer as string;
-  
-  // Update user record with Stripe customer ID and subscription status
-  // This would integrate with your Amplify Data layer
+  // TODO: Can be implemented if needed for additional checkout processing
 }
 
 async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
@@ -176,9 +168,9 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
         stripePriceId: stripePriceId,
         status: subscription.status as any,
         planName: planName,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        currentPeriodStart: new Date((subscription as any).current_period_start * 1000).toISOString(),
+        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
+        cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
         usageLimit: limits.usageLimit,
         // Keep existing usageCount - don't reset until next billing cycle
         updatedAt: new Date().toISOString()
@@ -191,9 +183,9 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
         stripePriceId: stripePriceId,
         status: subscription.status as any,
         planName: planName,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        currentPeriodStart: new Date((subscription as any).current_period_start * 1000).toISOString(),
+        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
+        cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
         usageCount: 0, // New subscription starts fresh
         usageLimit: limits.usageLimit,
         createdAt: new Date().toISOString(),
@@ -236,9 +228,9 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
         stripePriceId: stripePriceId,
         status: subscription.status as any,
         planName: planName,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
-        cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        currentPeriodStart: new Date((subscription as any).current_period_start * 1000).toISOString(),
+        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
+        cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
         usageLimit: limits.usageLimit,
         // Reset usage only on renewal or upgrade, not on downgrades
         usageCount: isRenewal ? 0 : existingSub.usageCount,
@@ -269,8 +261,6 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       const existingSub = existingSubscriptions[0];
       
       // Revert to free tier but PRESERVE current usage count
-      // This ensures that if user exhausted free tier, then subscribed, then cancelled,
-      // they remain locked out until next billing cycle
       await client.models.UserSubscription.update({
         id: existingSub.id,
         stripeCustomerId: 'free-tier-user', // Revert to free tier marker
@@ -283,7 +273,6 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
         cancelAtPeriodEnd: false,
         usageLimit: PLAN_LIMITS['free'].usageLimit,
         // CRITICAL: Keep existing usage count - don't reset!
-        // If they used 1500/1500 free words, they stay at 1500/1500
         updatedAt: new Date().toISOString()
       });
       
@@ -299,8 +288,8 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
   
   try {
     // Only reset usage on recurring payments (not one-time charges)
-    if (invoice.billing_reason === 'subscription_cycle') {
-      const subscriptionId = invoice.subscription as string;
+    if ((invoice as any).billing_reason === 'subscription_cycle') {
+      const subscriptionId = (invoice as any).subscription as string;
       
       if (subscriptionId) {
         // Find subscription by Stripe subscription ID
@@ -333,7 +322,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
   console.log('Payment failed:', invoice.id);
   
   try {
-    const subscriptionId = invoice.subscription as string;
+    const subscriptionId = (invoice as any).subscription as string;
     
     if (subscriptionId) {
       // Find subscription by Stripe subscription ID
