@@ -1,0 +1,229 @@
+/* Payment Success Page Styles */
+.payment-success-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.payment-success-card {
+  max-width: 600px;
+  width: 100%;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  border: none;
+  overflow: hidden;
+}
+
+.payment-success-card .p-card-body {
+  padding: 3rem;
+}
+
+.payment-success-card .p-card-content {
+  padding: 0;
+}
+
+/* Loading State */
+.loading-content {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.loading-content h3 {
+  margin: 1rem 0 0.5rem 0;
+  color: var(--primary-color);
+}
+
+.loading-content p {
+  color: var(--text-color-secondary);
+  margin: 0;
+}
+
+/* Error State */
+.error-content {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.error-icon {
+  font-size: 3rem;
+  color: var(--red-500);
+  margin-bottom: 1rem;
+}
+
+.error-content h3 {
+  margin: 1rem 0;
+  color: var(--red-600);
+}
+
+/* Success State */
+.success-content {
+  text-align: center;
+}
+
+.success-icon {
+  margin-bottom: 1.5rem;
+}
+
+.success-icon i {
+  font-size: 4rem;
+  color: var(--green-500);
+  animation: checkmark-pop 0.6s ease-out;
+}
+
+@keyframes checkmark-pop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.success-content h2 {
+  margin: 0 0 1rem 0;
+  color: var(--text-color);
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.success-message {
+  font-size: 1.1rem;
+  color: var(--text-color-secondary);
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+/* Session Info */
+.session-info {
+  background: var(--surface-100);
+  padding: 1rem;
+  border-radius: 8px;
+  margin: 1.5rem 0;
+  border-left: 4px solid var(--primary-color);
+}
+
+.session-info p {
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.status-active {
+  color: var(--green-600);
+  font-weight: 600;
+}
+
+/* Features Unlocked */
+.features-unlocked {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 2rem 0;
+}
+
+.features-unlocked h4 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+}
+
+.features-unlocked ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.features-unlocked li {
+  padding: 0.3rem 0;
+  font-size: 0.95rem;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin: 2rem 0;
+  flex-wrap: wrap;
+}
+
+.action-buttons .p-button {
+  min-width: 180px;
+}
+
+/* Next Steps */
+.next-steps {
+  background: var(--surface-50);
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-top: 2rem;
+  text-align: left;
+}
+
+.next-steps h4 {
+  margin: 0 0 1rem 0;
+  color: var(--primary-color);
+  text-align: center;
+}
+
+.next-steps ol {
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.next-steps li {
+  padding: 0.3rem 0;
+  color: var(--text-color-secondary);
+  line-height: 1.4;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .payment-success-container {
+    padding: 1rem;
+    min-height: 70vh;
+  }
+  
+  .payment-success-card .p-card-body {
+    padding: 2rem 1.5rem;
+  }
+  
+  .success-content h2 {
+    font-size: 1.5rem;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .action-buttons .p-button {
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
+/* Dark Theme Support */
+[data-theme="dark"] .payment-success-container {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+[data-theme="dark"] .payment-success-card {
+  background: var(--surface-900);
+}
+
+[data-theme="dark"] .session-info {
+  background: var(--surface-800);
+}
+
+[data-theme="dark"] .next-steps {
+  background: var(--surface-800);
+}

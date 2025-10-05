@@ -6,12 +6,14 @@ import App from "./App.tsx";
 import HistoryView from "./HistoryView.tsx";
 import HistoryDetails from "./HistoryDetails.tsx";
 import PricingComponent from "./PricingComponent.tsx";
+import PaymentSuccess from "./PaymentSuccess.tsx";
 import Layout from "./Layout.tsx";
 import { SubscriptionProvider } from "./contexts/SubscriptionContext.tsx";
 import "./index.scss";
 import './HistoryView.scss';
 import './HistoryDetails.scss';
 import './PricingComponent.scss';
+import './PaymentSuccess.scss';
 import { Amplify } from "aws-amplify";
 import outputs from "./amplify_outputs.json";
 
@@ -57,6 +59,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               <Route path="/history" element={<HistoryView />} />
               <Route path="/history/:id" element={<HistoryDetails />} />
               <Route path="/upgrade" element={<PricingComponent />} />
+              <Route path="/payment/success" element={<PaymentSuccess />} />
             </Routes>
           </Layout>
         </BrowserRouter>
