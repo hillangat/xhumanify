@@ -19,7 +19,7 @@ import UsageDisplay from './components/UsageDisplay';
 
 export default function App() {
   const client = generateClient<Schema>();
-  const { trackUsage, trackUsageWithTokens, checkUsageLimit, canUseService, currentTier } = useSubscription();
+  const { trackUsage, trackUsageWithTokens, checkUsageLimit, canUseService, currentTier, loading } = useSubscription();
   
   const [prompt, setPrompt] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -55,6 +55,17 @@ export default function App() {
   };
 
   const sendPrompt = async () => {
+    // Prevent execution if usage data is still loading
+    if (loading) {
+      toast.current?.show({
+        severity: 'info',
+        summary: 'Loading',
+        detail: 'Please wait while we load your usage data...',
+        life: 3000
+      });
+      return;
+    }
+
     // Check usage limit before sending
     if (!checkUsageLimit(prompt)) {
       toast.current?.show({
@@ -307,11 +318,9 @@ export default function App() {
             <div className='action-bar'>
               <div className='action-bar-left'>
                 <p><strong>{countWords(prompt)}</strong> Words</p>
-                {!canUseService && <span style={{ color: '#dc3545', fontSize: '12px' }}>• Usage limit reached</span>}
-                {prompt && !checkUsageLimit(prompt) && <span style={{ color: '#ff6b35', fontSize: '12px' }}>• Request too large for your plan</span>}
               </div>
               <div className='action-bar-right'>
-                <UsageDisplay compact />
+                <UsageDisplay compact currentPrompt={prompt} />
                 <ButtonGroup>
                   <Menu 
                     ref={toneMenuRef} 
@@ -354,7 +363,7 @@ export default function App() {
                     loadingIcon={<FaSpinner className='spin' />}
                     icon={<FaGooglePlay />}
                     onClick={handleButtonClick}
-                    disabled={!prompt || isRunning || !canUseService || (!!prompt && !checkUsageLimit(prompt))}
+                    disabled={loading || !prompt || isRunning || !canUseService || (!!prompt && !checkUsageLimit(prompt))}
                   />
                 </ButtonGroup>
               </div>
