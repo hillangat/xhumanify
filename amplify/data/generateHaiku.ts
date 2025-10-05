@@ -31,6 +31,7 @@ export const handler: Schema["generateHaiku"]["functionHandler"] = async (
     "technical",
     "creative",
     "witty",
+    "funny",
     "heartfelt"
   ];
 
@@ -87,6 +88,7 @@ Tone Characteristics:
 - Technical: Detailed, precise, jargon-appropriate.
 - Creative: Imaginative, artistic, expressive.
 - Witty: Clever, humorous, playful.
+- Funny: Humorous, entertaining, lighthearted with appropriate jokes or amusing observations.
 - Heartfelt: Sincere, emotional, empathetic.
 
 Ensure the output is imperceptibly human-written and would pass major AI detectors like ZeroGPT, GPTZero, or Content at Scale. Begin your response immediately with the first word of the rewritten text.`,

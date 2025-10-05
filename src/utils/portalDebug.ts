@@ -1,11 +1,25 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 
-const client = generateClient<Schema>();
+let client: ReturnType<typeof generateClient<Schema>> | null = null;
+
+const getClient = () => {
+  if (!client) {
+    try {
+      client = generateClient<Schema>();
+    } catch (error) {
+      console.warn('Amplify not configured yet, cannot initialize client:', error);
+      throw new Error('Amplify not configured. Please ensure the app is properly initialized.');
+    }
+  }
+  return client;
+};
 
 export const debugSubscriptionPortal = async () => {
   try {
     console.log('🔍 Debugging Subscription Portal Access');
+    
+    const client = getClient();
     
     // Get all subscriptions for the current user
     const { data: subscriptions } = await client.models.UserSubscription.list();

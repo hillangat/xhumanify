@@ -63,7 +63,7 @@ $padding: 15px;
         flex: 1; // Fill the container
         overflow-y: auto; // Allow scrolling if content overflows
         white-space: pre-wrap;
-        word-break: break-all;
+        word-break: break-word;
         padding: 5px 15px;
         font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
         margin: 0; // Remove default margin

@@ -11,6 +11,7 @@ export const TONE_OPTIONS = [
   { key: 'technical', name: 'Technical' },
   { key: 'creative', name: 'Creative' },
   { key: 'witty', name: 'Witty' },
+  { key: 'funny', name: 'Funny' },
   { key: 'heartfelt', name: 'Heartfelt' },
 ];
 

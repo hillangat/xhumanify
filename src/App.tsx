@@ -433,22 +433,50 @@ export default function App() {
                       fontSize: '0.8rem',
                       color: 'var(--text-color-secondary)',
                       marginTop: '1rem',
-                      padding: '0.5rem',
+                      padding: '0.75rem',
                       background: 'var(--surface-100)',
-                      borderRadius: '4px',
+                      borderRadius: '6px',
                       borderLeft: '3px solid var(--primary-color)'
                     }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span>💰 <strong>Charged:</strong> {usageInfo.estimatedWords} words</span>
-                        <span style={{ fontSize: '0.75rem', opacity: 0.8 }}>
-                          (Input: {usageInfo.inputTokens} + Output: {usageInfo.outputTokens} tokens)
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <span style={{ fontWeight: '600' }}>💰 <strong>Usage Charged:</strong> {usageInfo.estimatedWords} words</span>
+                        <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>
+                          ({Math.ceil((usageInfo.inputTokens + usageInfo.outputTokens) / 1.3)} word equivalent)
                         </span>
                       </div>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
+                        <div>📝 <strong>Your Input:</strong> {countWords(prompt)} words</div>
+                        <div>🤖 <strong>AI Output:</strong> {countWords(answer)} words</div>
+                      </div>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.75rem', opacity: 0.8 }}>
+                        <div>⚡ Input tokens: {usageInfo.inputTokens}</div>
+                        <div>⚡ Output tokens: {usageInfo.outputTokens}</div>
+                      </div>
+                      
                       {usageInfo.systemPromptTokens && (
-                        <div style={{ fontSize: '0.75rem', opacity: 0.7, marginTop: '0.25rem' }}>
-                          ✅ System overhead: {usageInfo.systemPromptTokens} tokens (FREE - not charged)
+                        <div style={{ 
+                          fontSize: '0.7rem', 
+                          opacity: 0.7, 
+                          marginTop: '0.5rem', 
+                          padding: '0.25rem 0.5rem',
+                          background: 'var(--green-50)',
+                          borderRadius: '4px',
+                          border: '1px solid var(--green-200)'
+                        }}>
+                          ✅ System processing: {usageInfo.systemPromptTokens} tokens (FREE - not billed)
                         </div>
                       )}
+                      
+                      <div style={{ 
+                        fontSize: '0.7rem', 
+                        marginTop: '0.5rem', 
+                        fontStyle: 'italic', 
+                        opacity: 0.6 
+                      }}>
+                        💡 We convert tokens to words for billing (1.3 tokens ≈ 1 word)
+                      </div>
                     </div>
                   )}
                 </>

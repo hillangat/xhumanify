@@ -112,7 +112,11 @@ const PricingComponent: React.FC = () => {
     },
     {
       question: 'What exactly am I charged for?',
-      answer: 'You are charged only for: (1) Your input text tokens and (2) The humanized output tokens. We do NOT charge you for system prompts, processing instructions, or any internal overhead - that\'s on us!'
+      answer: 'You are charged only for: (1) Your input text tokens and (2) The humanized output tokens. We convert these tokens to words for billing (approximately 1.3 tokens = 1 word). We do NOT charge you for system prompts, processing instructions, or any internal overhead - that\'s on us!'
+    },
+    {
+      question: 'Why might the token count seem different from my word count?',
+      answer: 'Tokens and words are different units. AI models process text as tokens (smaller units), while we display usage in words for easier understanding. Each word typically equals about 1.3 tokens. The "word equivalent" in your usage display shows the actual billing calculation based on tokens processed.'
     },
     {
       question: 'How many requests can I make with each plan?',
@@ -120,7 +124,7 @@ const PricingComponent: React.FC = () => {
     },
     {
       question: 'What counts as a "word" in my usage?',
-      answer: 'We count both your input text and the humanized output. For example, if you process 1000 words and get back 980 words, your usage is ~1980 words. We use industry-standard token-to-word conversion (approximately 1.3 tokens = 1 word).'
+      answer: 'We count both your input text and the humanized output using actual word counts. However, billing is based on tokens (which the AI processes), then converted to "word equivalents" at 1.3 tokens = 1 word. Your usage display shows both the actual word counts and the token-based billing calculation for complete transparency.'
     },
     {
       question: 'Do I get charged for processing errors or failed requests?',

@@ -1,11 +1,25 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
 
-const client = generateClient<Schema>();
+let client: ReturnType<typeof generateClient<Schema>> | null = null;
+
+const getClient = () => {
+  if (!client) {
+    try {
+      client = generateClient<Schema>();
+    } catch (error) {
+      console.warn('Amplify not configured yet, cannot initialize client:', error);
+      throw new Error('Amplify not configured. Please ensure the app is properly initialized.');
+    }
+  }
+  return client;
+};
 
 export const debugUserSubscription = async () => {
   try {
     console.log('=== SUBSCRIPTION DEBUG START ===');
+    
+    const client = getClient();
     
     // Get all subscriptions for the current user
     const { data: subscriptions } = await client.models.UserSubscription.list();
@@ -55,6 +69,8 @@ export const fixUserSubscription = async (subscriptionId: string, planName: stri
   try {
     console.log('Attempting to fix subscription:', subscriptionId, 'to plan:', planName);
     
+    const client = getClient();
+    
     // Plan limits mapping
     const planLimits: Record<string, number> = {
       'lite': 20000,
@@ -86,6 +102,8 @@ export const fixUserSubscription = async (subscriptionId: string, planName: stri
 export const createLiteSubscription = async () => {
   try {
     console.log('Creating new Lite subscription...');
+    
+    const client = getClient();
     
     // Create a new lite subscription
     const { data: newSub } = await client.models.UserSubscription.create({
