@@ -89,11 +89,27 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         timestamp: new Date().toISOString()
       });
       
-      // Update subscription usage count if subscription exists
+      // Update or create subscription usage count
       if (subscription) {
         await client.models.UserSubscription.update({
           id: subscription.id,
           usageCount: subscription.usageCount + totalWords
+        });
+      } else {
+        // Create a free tier subscription record for tracking
+        await client.models.UserSubscription.create({
+          stripeCustomerId: 'free-tier-user',
+          stripeSubscriptionId: undefined,
+          stripePriceId: undefined,
+          status: undefined, // No active subscription
+          planName: 'free',
+          currentPeriodStart: undefined,
+          currentPeriodEnd: undefined,
+          cancelAtPeriodEnd: false,
+          usageCount: totalWords,
+          usageLimit: 50, // Free tier limit
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         });
       }
       
@@ -118,11 +134,27 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         timestamp: new Date().toISOString()
       });
       
-      // Update subscription usage count if subscription exists
+      // Update or create subscription usage count if subscription exists
       if (subscription) {
         await client.models.UserSubscription.update({
           id: subscription.id,
           usageCount: subscription.usageCount + estimatedWords
+        });
+      } else {
+        // Create a free tier subscription record for tracking
+        await client.models.UserSubscription.create({
+          stripeCustomerId: 'free-tier-user',
+          stripeSubscriptionId: undefined,
+          stripePriceId: undefined,
+          status: undefined, // No active subscription
+          planName: 'free',
+          currentPeriodStart: undefined,
+          currentPeriodEnd: undefined,
+          cancelAtPeriodEnd: false,
+          usageCount: estimatedWords,
+          usageLimit: 50, // Free tier limit
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         });
       }
       
