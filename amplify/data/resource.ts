@@ -7,7 +7,7 @@ specifies that any user authenticated via an API key can "create", "read",
 "update", and "delete" any "Todo" records.
 =========================================================================*/
 
-export const MODEL_ID = "us.anthropic.claude-3-5-sonnet-20241022-v2:0";
+export const MODEL_ID = "us.anthropic.claude-3-5-sonnet-20240620-v1:0";
 
 export const generateHaikuFunction = defineFunction({
   entry: "./generateHaiku.ts",
