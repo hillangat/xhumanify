@@ -5,6 +5,7 @@
   align-items: center;
   min-height: 80vh;
   padding: 2rem;
+  margin-top: 80px; /* Add top margin to avoid header overlap */
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
@@ -114,6 +115,23 @@
 .session-info p {
   margin: 0.5rem 0;
   font-size: 0.9rem;
+  word-break: break-all;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  line-height: 1.4;
+}
+
+.transaction-id {
+  font-family: 'Courier New', Monaco, monospace;
+  background: var(--surface-200);
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--surface-300);
+  user-select: all;
+  cursor: text;
 }
 
 .status-active {
@@ -190,6 +208,7 @@
   .payment-success-container {
     padding: 1rem;
     min-height: 70vh;
+    margin-top: 60px; /* Reduced margin for mobile to save space */
   }
   
   .payment-success-card .p-card-body {
@@ -222,6 +241,11 @@
 
 [data-theme="dark"] .session-info {
   background: var(--surface-800);
+}
+
+[data-theme="dark"] .transaction-id {
+  background: var(--surface-700);
+  border-color: var(--surface-600);
 }
 
 [data-theme="dark"] .next-steps {

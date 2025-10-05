@@ -5,6 +5,7 @@ import { Button } from 'primereact/button';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { useSubscription } from './contexts/SubscriptionContext';
 import './PaymentSuccess.scss';
+import { FaGooglePlay } from 'react-icons/fa';
 
 const PaymentSuccess: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -24,11 +25,23 @@ const PaymentSuccess: React.FC = () => {
       }
 
       try {
-        // Refresh subscription data to get the latest subscription status
+        // Multiple refresh attempts with delays to ensure webhook processing is complete
+        console.log('Starting payment verification for session:', sessionId);
+        
+        // First refresh immediately
         await refreshSubscription();
         
-        // You could also verify the session with Stripe here if needed
-        // For now, we'll just show success and refresh subscription data
+        // Wait 2 seconds and refresh again (webhooks can take time)
+        setTimeout(async () => {
+          console.log('Second refresh attempt...');
+          await refreshSubscription();
+        }, 2000);
+        
+        // Wait 5 seconds and refresh one more time
+        setTimeout(async () => {
+          console.log('Third refresh attempt...');
+          await refreshSubscription();
+        }, 5000);
         
         setIsLoading(false);
       } catch (err) {
@@ -40,6 +53,18 @@ const PaymentSuccess: React.FC = () => {
 
     verifyPayment();
   }, [sessionId, refreshSubscription]);
+
+  const handleRefreshSubscription = async () => {
+    setIsLoading(true);
+    try {
+      console.log('Manual refresh requested...');
+      await refreshSubscription();
+      setIsLoading(false);
+    } catch (err) {
+      console.error('Error refreshing subscription:', err);
+      setIsLoading(false);
+    }
+  };
 
   const handleContinue = () => {
     navigate('/');
@@ -109,7 +134,8 @@ const PaymentSuccess: React.FC = () => {
           </p>
 
           <div className="session-info">
-            <p><strong>Transaction ID:</strong> {sessionId}</p>
+            <p><strong>Transaction ID:</strong></p>
+            <p className="transaction-id">{sessionId}</p>
             <p><strong>Status:</strong> <span className="status-active">Active</span></p>
           </div>
 
@@ -127,7 +153,7 @@ const PaymentSuccess: React.FC = () => {
           <div className="action-buttons">
             <Button 
               label="Start Humanizing" 
-              icon="pi pi-play" 
+              icon={<FaGooglePlay />}
               className="p-button-primary"
               onClick={handleContinue}
               size="large"
@@ -138,6 +164,15 @@ const PaymentSuccess: React.FC = () => {
               severity="secondary" 
               outlined
               onClick={handleViewBilling}
+            />
+            <Button 
+              label="Refresh Status" 
+              icon="pi pi-refresh" 
+              severity="info" 
+              outlined
+              onClick={handleRefreshSubscription}
+              size="small"
+              className="refresh-button"
             />
           </div>
 

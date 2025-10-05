@@ -11,6 +11,7 @@ import { Policy, PolicyStatement, Effect } from "aws-cdk-lib/aws-iam";
 import { StringParameter } from "aws-cdk-lib/aws-ssm";
 import { apiFunction } from "./functions/api-function/resource";
 import { createCheckoutSession, createPortalSession, handleWebhook } from "./functions/stripe/resource";
+import { debugSubscription } from "./functions/debug-subscription/resource";
 import { auth } from "./auth/resource";
 import { data, MODEL_ID, generateHaikuFunction } from "./data/resource";
 
@@ -22,6 +23,7 @@ const backend = defineBackend({
   createCheckoutSession,
   createPortalSession,
   handleWebhook,
+  debugSubscription
 });
 
 // Environment variables for Stripe functions using AWS Parameter Store (more secure)
@@ -135,6 +137,9 @@ const portalIntegration = new LambdaIntegration(
 const webhookIntegration = new LambdaIntegration(
   backend.handleWebhook.resources.lambda
 );
+const debugIntegration = new LambdaIntegration(
+  backend.debugSubscription.resources.lambda
+);
 
 // create a new resource path with IAM authorization
 const itemsPath = myRestApi.root.addResource("ai", {
@@ -221,6 +226,19 @@ const webhookPath = stripePath.addResource("webhook", {
   },
 });
 webhookPath.addMethod("POST", webhookIntegration);
+
+// Debug subscription endpoint (requires auth)
+const debugPath = stripePath.addResource("debug-subscription", {
+  defaultCorsPreflightOptions: {
+    allowOrigins: ["https://www.humanizeaicontents.com", "http://localhost:5173", "https://localhost:5173"],
+    allowMethods: ["GET", "OPTIONS"],
+    allowHeaders: ["Content-Type", "X-Amz-Date", "Authorization", "X-Api-Key", "X-Amz-Security-Token", "X-Amz-User-Agent"],
+  },
+});
+debugPath.addMethod("GET", debugIntegration, {
+  authorizationType: AuthorizationType.COGNITO,
+  authorizer: cognitoAuth,
+});
 
 // create a new IAM policy to allow Invoke access to the API
 const apiRestPolicy = new Policy(apiStack, "RestApiPolicy", {
