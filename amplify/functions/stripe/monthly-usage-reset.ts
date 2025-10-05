@@ -43,22 +43,7 @@ export const handler: ScheduledHandler = async (event) => {
       console.log('No free tier users found for reset');
     }
     
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ 
-        message: 'Monthly usage reset completed',
-        usersReset: freeUsers?.length || 0
-      })
-    };
-    
   } catch (error) {
     console.error('Error during monthly usage reset:', error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ 
-        error: 'Monthly usage reset failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      })
-    };
   }
 };
