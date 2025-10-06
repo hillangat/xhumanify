@@ -1,10 +1,26 @@
 import type { APIGatewayProxyHandler } from 'aws-lambda';
 import Stripe from 'stripe';
+import { generateClient } from 'aws-amplify/data';
+import type { Schema } from '../../data/resource';
 import { PLAN_LIMITS } from '../../shared/planConfig';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-09-30.clover', // Use the required API version
 });
+
+// Lazy initialization to avoid module load time errors
+let client: ReturnType<typeof generateClient<Schema>> | null = null;
+
+const getClient = () => {
+  if (!client) {
+    console.log('🔧 Initializing GraphQL client for webhook...');
+    client = generateClient<Schema>({
+      authMode: 'iam'
+    });
+    console.log('✅ GraphQL client initialized successfully');
+  }
+  return client;
+};
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   const startTime = Date.now();
@@ -185,8 +201,127 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, requ
     console.log(`📊 [${requestId}] Plan mapping: priceId=${stripePriceId} -> planName=${planName}`);
     console.log(`📊 [${requestId}] Plan limits:`, limits);
     
-    console.log(`⚠️ [${requestId}] Database operations temporarily disabled - authentication fix in progress`);
-    console.log(`✅ [${requestId}] Webhook received and processed - subscription: ${subscription.id}`);
+    console.log(`🔍 [${requestId}] Searching for existing subscriptions...`);
+    
+    // Find ALL user subscriptions that could match this customer
+    const client = getClient();
+    const { data: allSubscriptions } = await client.models.UserSubscription.list();
+    console.log(`📊 [${requestId}] Total subscriptions in database: ${allSubscriptions?.length || 0}`);
+    
+    // Filter for potential matches
+    const potentialMatches = allSubscriptions?.filter((sub: any) => 
+      sub.stripeCustomerId === customerId || 
+      sub.stripeCustomerId === 'free-tier-user' ||
+      sub.stripeCustomerId?.includes('manual-fix')
+    ) || [];
+    
+    console.log(`🎯 [${requestId}] Potential matches found: ${potentialMatches.length}`);
+    potentialMatches.forEach((match: any, index: number) => {
+      console.log(`📋 [${requestId}] Match ${index + 1}:`, {
+        id: match.id,
+        stripeCustomerId: match.stripeCustomerId,
+        planName: match.planName,
+        status: match.status,
+        usageCount: match.usageCount,
+        updatedAt: match.updatedAt,
+        owner: match.owner
+      });
+    });
+    
+    if (potentialMatches.length > 0) {
+      // If multiple matches, prefer the most recent one
+      const targetSub = potentialMatches.sort((a: any, b: any) => 
+        new Date(b.updatedAt || '').getTime() - new Date(a.updatedAt || '').getTime()
+      )[0];
+      
+      console.log(`🎯 [${requestId}] Selected target subscription:`, {
+        id: targetSub.id,
+        stripeCustomerId: targetSub.stripeCustomerId,
+        planName: targetSub.planName,
+        owner: targetSub.owner
+      });
+      
+      console.log(`🔄 [${requestId}] Updating existing subscription ${targetSub.id}...`);
+      
+      const updateData = {
+        id: targetSub.id,
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscription.id,
+        stripePriceId: stripePriceId,
+        status: subscription.status as any,
+        planName: planName,
+        currentPeriodStart: new Date((subscription as any).current_period_start * 1000).toISOString(),
+        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
+        cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
+        usageLimit: limits.usageLimit,
+        updatedAt: new Date().toISOString()
+      };
+      
+      console.log(`📝 [${requestId}] Update payload:`, updateData);
+      
+      const { data: updatedSub, errors } = await client.models.UserSubscription.update(updateData);
+      
+      if (errors) {
+        console.error(`❌ [${requestId}] Update errors:`, errors);
+        throw new Error(`Database update failed: ${JSON.stringify(errors)}`);
+      }
+      
+      console.log(`✅ [${requestId}] Subscription updated successfully:`, {
+        id: updatedSub?.id,
+        stripeCustomerId: updatedSub?.stripeCustomerId,
+        planName: updatedSub?.planName,
+        status: updatedSub?.status
+      });
+      
+      // Clean up any duplicate subscriptions for this user
+      const duplicates = potentialMatches.filter((sub: any) => sub.id !== targetSub.id);
+      console.log(`🧹 [${requestId}] Cleaning up ${duplicates.length} duplicate subscriptions...`);
+      
+      for (const duplicate of duplicates) {
+        console.log(`🗑️ [${requestId}] Removing duplicate subscription ${duplicate.id}`);
+        try {
+          await client.models.UserSubscription.delete({ id: duplicate.id });
+          console.log(`✅ [${requestId}] Duplicate ${duplicate.id} removed successfully`);
+        } catch (deleteError) {
+          console.error(`❌ [${requestId}] Failed to delete duplicate ${duplicate.id}:`, deleteError);
+        }
+      }
+      
+    } else {
+      // Create new subscription record - this should rarely happen
+      console.log(`🆕 [${requestId}] No existing subscriptions found, creating new record...`);
+      
+      const createData = {
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscription.id,
+        stripePriceId: stripePriceId,
+        status: subscription.status as any,
+        planName: planName,
+        currentPeriodStart: new Date((subscription as any).current_period_start * 1000).toISOString(),
+        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
+        cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
+        usageCount: 0, // New subscription starts fresh
+        usageLimit: limits.usageLimit,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      console.log(`📝 [${requestId}] Create payload:`, createData);
+      
+      const { data: newSub, errors } = await client.models.UserSubscription.create(createData);
+      
+      if (errors) {
+        console.error(`❌ [${requestId}] Create errors:`, errors);
+        throw new Error(`Database creation failed: ${JSON.stringify(errors)}`);
+      }
+      
+      console.log(`✅ [${requestId}] New subscription created successfully:`, {
+        id: newSub?.id,
+        stripeCustomerId: newSub?.stripeCustomerId,
+        planName: newSub?.planName,
+        status: newSub?.status
+      });
+    }
     
     const handlerDuration = Date.now() - handlerStartTime;
     console.log(`✅ [${requestId}] Subscription creation handler completed successfully in ${handlerDuration}ms for plan: ${planName}`);
@@ -211,9 +346,40 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, requ
     const planName = getPlanFromPriceId(stripePriceId);
     const limits = PLAN_LIMITS[planName] || PLAN_LIMITS['free'];
     
-    console.log(`📊 [${requestId}] Plan mapping: priceId=${stripePriceId} -> planName=${planName}`);
-    console.log(`⚠️ [${requestId}] Database operations temporarily disabled - authentication fix in progress`);
-    console.log(`✅ [${requestId}] Webhook received and processed - subscription updated: ${subscription.id}`);
+    // Find existing subscription
+    const client = getClient();
+    const { data: existingSubscriptions } = await client.models.UserSubscription.list({
+      filter: {
+        stripeCustomerId: { eq: customerId }
+      }
+    });
+    
+    if (existingSubscriptions && existingSubscriptions.length > 0) {
+      const existingSub = existingSubscriptions[0];
+      
+      // Check if this is a plan change or renewal
+      const oldPlanName = existingSub.planName;
+      const isRenewal = oldPlanName === planName;
+      
+      await client.models.UserSubscription.update({
+        id: existingSub.id,
+        stripeSubscriptionId: subscription.id,
+        stripePriceId: stripePriceId,
+        status: subscription.status as any,
+        planName: planName,
+        currentPeriodStart: new Date((subscription as any).current_period_start * 1000).toISOString(),
+        currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
+        cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
+        usageLimit: limits.usageLimit,
+        // Reset usage only on renewal or upgrade, not on downgrades
+        usageCount: isRenewal ? 0 : existingSub.usageCount,
+        updatedAt: new Date().toISOString()
+      });
+      
+      console.log(`📊 [${requestId}] Subscription updated: ${oldPlanName} -> ${planName}, renewal: ${isRenewal}`);
+    } else {
+      console.warn(`⚠️ [${requestId}] No existing subscription found for customer: ${customerId}`);
+    }
   } catch (error) {
     console.error(`❌ [${requestId}] Error handling subscription updated:`, error);
     throw error;
@@ -226,8 +392,37 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription, requ
   try {
     const customerId = subscription.customer as string;
     
-    console.log(`⚠️ [${requestId}] Database operations temporarily disabled - authentication fix in progress`);
-    console.log(`✅ [${requestId}] Webhook received and processed - subscription deleted: ${subscription.id}`);
+    // Find existing subscription
+    const client = getClient();
+    const { data: existingSubscriptions } = await client.models.UserSubscription.list({
+      filter: {
+        stripeCustomerId: { eq: customerId }
+      }
+    });
+    
+    if (existingSubscriptions && existingSubscriptions.length > 0) {
+      const existingSub = existingSubscriptions[0];
+      
+      // Revert to free tier but PRESERVE current usage count
+      await client.models.UserSubscription.update({
+        id: existingSub.id,
+        stripeCustomerId: 'free-tier-user', // Revert to free tier marker
+        stripeSubscriptionId: undefined,
+        stripePriceId: undefined,
+        status: undefined, // No active paid subscription
+        planName: 'free',
+        currentPeriodStart: undefined,
+        currentPeriodEnd: undefined,
+        cancelAtPeriodEnd: false,
+        usageLimit: PLAN_LIMITS['free'].usageLimit,
+        // CRITICAL: Keep existing usage count - don't reset!
+        updatedAt: new Date().toISOString()
+      });
+      
+      console.log(`✅ [${requestId}] Subscription cancelled, reverted to free tier with preserved usage: ${existingSub.usageCount}/${PLAN_LIMITS['free'].usageLimit}`);
+    } else {
+      console.warn(`⚠️ [${requestId}] No existing subscription found for customer: ${customerId}`);
+    }
   } catch (error) {
     console.error(`❌ [${requestId}] Error handling subscription deleted:`, error);
     throw error;
@@ -238,10 +433,39 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice, requestId: string
   console.log(`💰 [${requestId}] Payment succeeded: ${invoice.id}`);
   
   try {
-    const subscriptionId = (invoice as any).subscription as string;
-    console.log(`📋 [${requestId}] Invoice billing reason: ${(invoice as any).billing_reason}`);
-    console.log(`⚠️ [${requestId}] Database operations temporarily disabled - authentication fix in progress`);
-    console.log(`✅ [${requestId}] Webhook received and processed - payment succeeded: ${invoice.id}`);
+    // Only reset usage on recurring payments (not one-time charges)
+    if ((invoice as any).billing_reason === 'subscription_cycle') {
+      const subscriptionId = (invoice as any).subscription as string;
+      
+      if (subscriptionId) {
+        // Find subscription by Stripe subscription ID
+        const client = getClient();
+        const { data: subscriptions } = await client.models.UserSubscription.list({
+          filter: {
+            stripeSubscriptionId: { eq: subscriptionId }
+          }
+        });
+        
+        if (subscriptions && subscriptions.length > 0) {
+          const subscription = subscriptions[0];
+          
+          // Reset usage count for new billing cycle
+          await client.models.UserSubscription.update({
+            id: subscription.id,
+            usageCount: 0, // Fresh start for new billing cycle
+            updatedAt: new Date().toISOString()
+          });
+          
+          console.log(`✅ [${requestId}] Usage reset for subscription ${subscriptionId} - new billing cycle`);
+        } else {
+          console.warn(`⚠️ [${requestId}] No subscription found for subscription ID: ${subscriptionId}`);
+        }
+      } else {
+        console.log(`ℹ️ [${requestId}] No subscription ID found in invoice`);
+      }
+    } else {
+      console.log(`ℹ️ [${requestId}] Invoice billing reason: ${(invoice as any).billing_reason} - not a subscription cycle`);
+    }
   } catch (error) {
     console.error(`❌ [${requestId}] Error handling payment succeeded:`, error);
     throw error;
@@ -254,8 +478,32 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, requestId: string) {
   try {
     const subscriptionId = (invoice as any).subscription as string;
     
-    console.log(`⚠️ [${requestId}] Database operations temporarily disabled - authentication fix in progress`);
-    console.log(`✅ [${requestId}] Webhook received and processed - payment failed: ${invoice.id}`);
+    if (subscriptionId) {
+      // Find subscription by Stripe subscription ID
+      const client = getClient();
+      const { data: subscriptions } = await client.models.UserSubscription.list({
+        filter: {
+          stripeSubscriptionId: { eq: subscriptionId }
+        }
+      });
+      
+      if (subscriptions && subscriptions.length > 0) {
+        const subscription = subscriptions[0];
+        
+        // Mark subscription as past due but don't immediately downgrade
+        await client.models.UserSubscription.update({
+          id: subscription.id,
+          status: 'past_due',
+          updatedAt: new Date().toISOString()
+        });
+        
+        console.log(`⚠️ [${requestId}] Payment failed for subscription ${subscriptionId} - marked as past due`);
+      } else {
+        console.warn(`⚠️ [${requestId}] No subscription found for subscription ID: ${subscriptionId}`);
+      }
+    } else {
+      console.log(`ℹ️ [${requestId}] No subscription ID found in failed invoice`);
+    }
   } catch (error) {
     console.error(`❌ [${requestId}] Error handling payment failed:`, error);
     throw error;
