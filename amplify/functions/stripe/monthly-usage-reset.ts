@@ -2,15 +2,25 @@ import type { ScheduledHandler } from 'aws-lambda';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../data/resource';
 
-// Configure client for IAM auth
-const client = generateClient<Schema>({
-  authMode: 'iam'
-});
+// Lazy initialization to avoid module load time errors
+let client: ReturnType<typeof generateClient<Schema>> | null = null;
+
+const getClient = () => {
+  if (!client) {
+    console.log('🔧 Initializing GraphQL client for monthly reset...');
+    client = generateClient<Schema>({
+      authMode: 'iam'
+    });
+  }
+  return client;
+};
 
 export const handler: ScheduledHandler = async (event) => {
   console.log('Monthly usage reset triggered:', event);
   
   try {
+    const client = getClient();
+    
     // Reset usage for free tier users (those without active Stripe subscriptions)
     const { data: freeUsers } = await client.models.UserSubscription.list({
       filter: {

@@ -2,9 +2,18 @@ import type { APIGatewayProxyHandler } from 'aws-lambda';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../data/resource';
 
-const client = generateClient<Schema>({
-  authMode: 'userPool'
-});
+// Lazy initialization to avoid module load time errors
+let client: ReturnType<typeof generateClient<Schema>> | null = null;
+
+const getClient = () => {
+  if (!client) {
+    console.log('🔧 Initializing GraphQL client for debug subscription...');
+    client = generateClient<Schema>({
+      authMode: 'userPool'
+    });
+  }
+  return client;
+};
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   const headers = {
@@ -31,6 +40,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   }
 
   try {
+    const client = getClient();
+    
     // Get all user subscriptions for debugging
     const { data: subscriptions } = await client.models.UserSubscription.list();
     
