@@ -4,18 +4,42 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../data/resource';
 import { PLAN_LIMITS } from '../../shared/planConfig';
 
+// Configure Amplify for Lambda environment
+import { Amplify } from 'aws-amplify';
+
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-09-30.clover', // Use the required API version
 });
 
-// Initialize client lazily to avoid initialization errors
+// Store client instance but don't initialize until needed
 let client: ReturnType<typeof generateClient<Schema>> | null = null;
 
 const getClient = () => {
   if (!client) {
-    client = generateClient<Schema>({
-      authMode: 'iam'
-    });
+    console.log('🔧 Initializing GraphQL client with IAM auth...');
+    try {
+      // Configure Amplify for server-side environment
+      if (!Amplify.getConfig().API?.GraphQL) {
+        console.log('📋 Configuring Amplify for Lambda environment...');
+        Amplify.configure({
+          API: {
+            GraphQL: {
+              endpoint: process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT || '',
+              region: process.env.AWS_REGION || 'us-east-2',
+              defaultAuthMode: 'iam'
+            }
+          }
+        });
+      }
+      
+      client = generateClient<Schema>({
+        authMode: 'iam'
+      });
+      console.log('✅ GraphQL client initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize GraphQL client:', error);
+      throw error;
+    }
   }
   return client;
 };
