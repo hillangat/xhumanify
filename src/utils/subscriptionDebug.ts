@@ -1,5 +1,6 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
+import { PLAN_CONFIG } from '../config/plans';
 
 let client: ReturnType<typeof generateClient<Schema>> | null = null;
 
@@ -71,15 +72,8 @@ export const fixUserSubscription = async (subscriptionId: string, planName: stri
     
     const client = getClient();
     
-    // Plan limits mapping
-    const planLimits: Record<string, number> = {
-      'lite': 20000,
-      'standard': 50000,
-      'pro': 150000,
-      'free': 1500
-    };
-    
-    const usageLimit = planLimits[planName] || planLimits['lite'];
+    // Get plan limits from centralized config
+    const usageLimit = PLAN_CONFIG[planName as keyof typeof PLAN_CONFIG]?.limits.monthlyWordLimit || PLAN_CONFIG.lite.limits.monthlyWordLimit;
     
     // Update subscription to active status with correct limits
     const { data: updatedSub } = await client.models.UserSubscription.update({
@@ -116,7 +110,7 @@ export const createLiteSubscription = async () => {
       currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
       cancelAtPeriodEnd: false,
       usageCount: 0,
-      usageLimit: 20000, // Lite plan limit
+      usageLimit: PLAN_CONFIG.lite.limits.monthlyWordLimit, // Lite plan limit
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     });

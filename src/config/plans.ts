@@ -1,4 +1,6 @@
 // Unified plan configuration - single source of truth
+import { SHARED_PLAN_CONFIG } from '../../amplify/shared/planConfig';
+
 export const PLAN_CONFIG = {
   free: {
     name: 'Free',
@@ -7,11 +9,7 @@ export const PLAN_CONFIG = {
     yearlyPrice: 0,
     monthlyPriceId: null,
     yearlyPriceId: null,
-    limits: {
-      monthlyWordLimit: 1500,
-      wordsPerRequest: 300,
-      dailyRequestLimit: 5
-    },
+    limits: SHARED_PLAN_CONFIG.free.limits,
     features: [
       '1,500 words / mo.',
       'ALL modes and settings',
@@ -28,11 +26,7 @@ export const PLAN_CONFIG = {
     yearlyPrice: 17100, // $171.00 in cents (25% discount)
     monthlyPriceId: 'price_1SEAui47Knk6vC3kvBiS86dC',
     yearlyPriceId: 'price_1SEBk147Knk6vC3kVV288Vmg',
-    limits: {
-      monthlyWordLimit: 20000,
-      wordsPerRequest: 500,
-      dailyRequestLimit: 999999 // unlimited
-    },
+    limits: SHARED_PLAN_CONFIG.lite.limits,
     features: [
       '20,000 words / mo.',
       'ALL modes and settings',
@@ -51,11 +45,7 @@ export const PLAN_CONFIG = {
     yearlyPrice: 26100, // $261.00 in cents (25% discount)
     monthlyPriceId: 'price_1SECNL47Knk6vC3kGQMZEwCH',
     yearlyPriceId: 'price_1SECNL47Knk6vC3kao99ug2W',
-    limits: {
-      monthlyWordLimit: 50000,
-      wordsPerRequest: 999999, // unlimited
-      dailyRequestLimit: 999999 // unlimited
-    },
+    limits: SHARED_PLAN_CONFIG.standard.limits,
     features: [
       '50,000 words / mo.',
       'ALL modes and settings',
@@ -75,11 +65,7 @@ export const PLAN_CONFIG = {
     yearlyPrice: 71100, // $711.00 in cents (25% discount)
     monthlyPriceId: 'price_1SECQb47Knk6vC3kkvNYxIii',
     yearlyPriceId: 'price_1SECRf47Knk6vC3kaZmpEomz',
-    limits: {
-      monthlyWordLimit: 150000,
-      wordsPerRequest: 999999, // unlimited
-      dailyRequestLimit: 999999 // unlimited
-    },
+    limits: SHARED_PLAN_CONFIG.pro.limits,
     features: [
       '150,000 words / mo.',
       'ALL modes and settings',

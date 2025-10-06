@@ -2,6 +2,7 @@ import type { APIGatewayProxyHandler } from 'aws-lambda';
 import Stripe from 'stripe';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../data/resource';
+import { PLAN_LIMITS } from '../../shared/planConfig';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-09-30.clover', // Use the required API version
@@ -11,14 +12,6 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
 const client = generateClient<Schema>({
   authMode: 'iam'
 });
-
-// Plan limits mapping
-const PLAN_LIMITS: Record<string, { monthlyWordLimit: number; usageLimit: number }> = {
-  'lite': { monthlyWordLimit: 20000, usageLimit: 20000 },
-  'standard': { monthlyWordLimit: 50000, usageLimit: 50000 },
-  'pro': { monthlyWordLimit: 150000, usageLimit: 150000 },
-  'free': { monthlyWordLimit: 1500, usageLimit: 1500 }
-};
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   const headers = {
@@ -147,22 +140,31 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
     const planName = getPlanFromPriceId(stripePriceId);
     const limits = PLAN_LIMITS[planName] || PLAN_LIMITS['free'];
     
-    // Find existing user subscription (could be free tier)
-    const { data: existingSubscriptions } = await client.models.UserSubscription.list({
-      filter: {
-        or: [
-          { stripeCustomerId: { eq: customerId } },
-          { stripeCustomerId: { eq: 'free-tier-user' } }
-        ]
-      }
-    });
+    console.log(`Processing subscription for customer ${customerId}, plan: ${planName}`);
     
-    if (existingSubscriptions && existingSubscriptions.length > 0) {
-      // Update existing subscription (preserve current usage in current billing cycle)
-      const existingSub = existingSubscriptions[0];
+    // Find ALL user subscriptions that could match this customer
+    // This includes both existing Stripe customers and free-tier users
+    const { data: allSubscriptions } = await client.models.UserSubscription.list();
+    
+    // Filter for potential matches
+    const potentialMatches = allSubscriptions?.filter(sub => 
+      sub.stripeCustomerId === customerId || 
+      sub.stripeCustomerId === 'free-tier-user' ||
+      sub.stripeCustomerId?.includes('manual-fix')
+    ) || [];
+    
+    console.log(`Found ${potentialMatches.length} potential subscription matches`);
+    
+    if (potentialMatches.length > 0) {
+      // If multiple matches, prefer the most recent one
+      const targetSub = potentialMatches.sort((a, b) => 
+        new Date(b.updatedAt || '').getTime() - new Date(a.updatedAt || '').getTime()
+      )[0];
+      
+      console.log(`Updating existing subscription ${targetSub.id}`);
       
       await client.models.UserSubscription.update({
-        id: existingSub.id,
+        id: targetSub.id,
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscription.id,
         stripePriceId: stripePriceId,
@@ -175,8 +177,17 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
         // Keep existing usageCount - don't reset until next billing cycle
         updatedAt: new Date().toISOString()
       });
+      
+      // Clean up any duplicate subscriptions for this user
+      const duplicates = potentialMatches.filter(sub => sub.id !== targetSub.id);
+      for (const duplicate of duplicates) {
+        console.log(`Removing duplicate subscription ${duplicate.id}`);
+        await client.models.UserSubscription.delete({ id: duplicate.id });
+      }
+      
     } else {
-      // Create new subscription record
+      // Create new subscription record - this should rarely happen
+      console.log('Creating new subscription record');
       await client.models.UserSubscription.create({
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscription.id,
@@ -193,9 +204,11 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
       });
     }
     
-    console.log(`Subscription created for plan: ${planName}`);
+    console.log(`Subscription created successfully for plan: ${planName}`);
   } catch (error) {
     console.error('Error handling subscription created:', error);
+    // Re-throw to ensure webhook fails and Stripe retries
+    throw error;
   }
 }
 
