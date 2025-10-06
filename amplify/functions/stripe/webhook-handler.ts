@@ -180,9 +180,9 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, requ
       customer: customerId,
       priceId: stripePriceId,
       status: subscription.status,
-      current_period_start: subscription.current_period_start,
-      current_period_end: subscription.current_period_end,
-      cancel_at_period_end: subscription.cancel_at_period_end
+      current_period_start: (subscription as any).current_period_start,
+      current_period_end: (subscription as any).current_period_end,
+      cancel_at_period_end: (subscription as any).cancel_at_period_end
     });
     
     // Determine plan name from price ID

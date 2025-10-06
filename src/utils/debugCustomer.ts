@@ -1,6 +1,6 @@
 // Quick database check script for the webhook issue
 import { generateClient } from 'aws-amplify/data';
-import type { Schema } from '../amplify/data/resource';
+import type { Schema } from '../../amplify/data/resource';
 
 const client = generateClient<Schema>({
   authMode: 'iam'
@@ -69,3 +69,8 @@ export const checkCustomerSubscription = async () => {
     console.error('❌ Error checking customer subscription:', error);
   }
 };
+
+// Run the check if this file is executed directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  checkCustomerSubscription();
+}
