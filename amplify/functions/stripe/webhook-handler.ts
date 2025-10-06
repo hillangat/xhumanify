@@ -14,6 +14,13 @@ const client = generateClient<Schema>({
 });
 
 export const handler: APIGatewayProxyHandler = async (event) => {
+  const startTime = Date.now();
+  const requestId = Math.random().toString(36).substring(2, 15);
+  
+  console.log(`🚀 [${requestId}] Webhook request started at ${new Date().toISOString()}`);
+  console.log(`📥 [${requestId}] Event method: ${event.httpMethod}`);
+  console.log(`📥 [${requestId}] Headers:`, JSON.stringify(event.headers, null, 2));
+  
   const headers = {
     'Access-Control-Allow-Origin': 'https://www.humanizeaicontents.com',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token',
@@ -23,17 +30,20 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
   // Check if Stripe secret keys are configured
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error(`❌ [${requestId}] Stripe configuration missing`);
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({ 
         error: 'Stripe configuration missing',
-        details: 'STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET environment variable is missing'
+        details: 'STRIPE_SECRET_KEY or STRIPE_WEBHOOK_SECRET environment variable is missing',
+        requestId
       })
     };
   }
 
   if (event.httpMethod === 'OPTIONS') {
+    console.log(`✅ [${requestId}] OPTIONS request handled`);
     return {
       statusCode: 200,
       headers,
@@ -42,10 +52,11 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   }
 
   if (event.httpMethod !== 'POST') {
+    console.error(`❌ [${requestId}] Invalid method: ${event.httpMethod}`);
     return {
       statusCode: 405,
       headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
+      body: JSON.stringify({ error: 'Method not allowed', requestId })
     };
   }
 
@@ -53,13 +64,16 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const sig = event.headers['stripe-signature'] || event.headers['Stripe-Signature'];
     
     if (!sig) {
+      console.error(`❌ [${requestId}] Missing Stripe signature`);
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'Missing stripe signature' })
+        body: JSON.stringify({ error: 'Missing stripe signature', requestId })
       };
     }
 
+    console.log(`🔐 [${requestId}] Verifying webhook signature...`);
+    
     // Verify webhook signature
     const webhookEvent = stripe.webhooks.constructEvent(
       event.body || '',
@@ -67,84 +81,122 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
 
-    console.log('Webhook event type:', webhookEvent.type);
+    console.log(`✅ [${requestId}] Webhook signature verified`);
+    console.log(`📋 [${requestId}] Event type: ${webhookEvent.type}`);
+    console.log(`📋 [${requestId}] Event ID: ${webhookEvent.id}`);
+    console.log(`📋 [${requestId}] Event created: ${new Date(webhookEvent.created * 1000).toISOString()}`);
 
     // Handle the event
     switch (webhookEvent.type) {
       case 'checkout.session.completed':
         const session = webhookEvent.data.object as Stripe.Checkout.Session;
-        await handleCheckoutSessionCompleted(session);
+        console.log(`🛒 [${requestId}] Processing checkout.session.completed: ${session.id}`);
+        await handleCheckoutSessionCompleted(session, requestId);
         break;
 
       case 'customer.subscription.created':
         const createdSubscription = webhookEvent.data.object as Stripe.Subscription;
-        await handleSubscriptionCreated(createdSubscription);
+        console.log(`🆕 [${requestId}] Processing customer.subscription.created: ${createdSubscription.id}`);
+        await handleSubscriptionCreated(createdSubscription, requestId);
         break;
 
       case 'customer.subscription.updated':
         const updatedSubscription = webhookEvent.data.object as Stripe.Subscription;
-        await handleSubscriptionUpdated(updatedSubscription);
+        console.log(`🔄 [${requestId}] Processing customer.subscription.updated: ${updatedSubscription.id}`);
+        await handleSubscriptionUpdated(updatedSubscription, requestId);
         break;
 
       case 'customer.subscription.deleted':
         const deletedSubscription = webhookEvent.data.object as Stripe.Subscription;
-        await handleSubscriptionDeleted(deletedSubscription);
+        console.log(`🗑️ [${requestId}] Processing customer.subscription.deleted: ${deletedSubscription.id}`);
+        await handleSubscriptionDeleted(deletedSubscription, requestId);
         break;
 
       case 'invoice.payment_succeeded':
         const invoice = webhookEvent.data.object as Stripe.Invoice;
-        await handlePaymentSucceeded(invoice);
+        console.log(`💰 [${requestId}] Processing invoice.payment_succeeded: ${invoice.id}`);
+        await handlePaymentSucceeded(invoice, requestId);
         break;
 
       case 'invoice.payment_failed':
         const failedInvoice = webhookEvent.data.object as Stripe.Invoice;
-        await handlePaymentFailed(failedInvoice);
+        console.log(`💸 [${requestId}] Processing invoice.payment_failed: ${failedInvoice.id}`);
+        await handlePaymentFailed(failedInvoice, requestId);
         break;
 
       default:
-        console.log(`Unhandled event type: ${webhookEvent.type}`);
+        console.log(`ℹ️ [${requestId}] Unhandled event type: ${webhookEvent.type}`);
     }
+
+    const duration = Date.now() - startTime;
+    console.log(`✅ [${requestId}] Webhook processed successfully in ${duration}ms`);
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ received: true })
+      body: JSON.stringify({ received: true, requestId, duration })
     };
 
   } catch (error) {
-    console.error('Webhook error:', error);
+    const duration = Date.now() - startTime;
+    console.error(`❌ [${requestId}] Webhook error after ${duration}ms:`, error);
+    console.error(`❌ [${requestId}] Error stack:`, error instanceof Error ? error.stack : 'No stack trace');
+    
     return {
       statusCode: 400,
       headers,
       body: JSON.stringify({ 
         error: 'Webhook signature verification failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        requestId,
+        duration
       })
     };
   }
 };
 
-async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
-  console.log('Checkout session completed:', session.id);
+async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session, requestId: string) {
+  console.log(`🛒 [${requestId}] Checkout session completed: ${session.id}`);
+  console.log(`📋 [${requestId}] Session details:`, {
+    customer: session.customer,
+    subscription: session.subscription,
+    mode: session.mode,
+    payment_status: session.payment_status,
+    amount_total: session.amount_total
+  });
   // TODO: Can be implemented if needed for additional checkout processing
 }
 
-async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
-  console.log('Subscription created:', subscription.id);
+async function handleSubscriptionCreated(subscription: Stripe.Subscription, requestId: string) {
+  console.log(`🆕 [${requestId}] === SUBSCRIPTION CREATED HANDLER START ===`);
+  const handlerStartTime = Date.now();
   
   try {
     const customerId = subscription.customer as string;
     const stripePriceId = subscription.items.data[0]?.price.id;
     
+    console.log(`📋 [${requestId}] Subscription details:`, {
+      id: subscription.id,
+      customer: customerId,
+      priceId: stripePriceId,
+      status: subscription.status,
+      current_period_start: subscription.current_period_start,
+      current_period_end: subscription.current_period_end,
+      cancel_at_period_end: subscription.cancel_at_period_end
+    });
+    
     // Determine plan name from price ID
     const planName = getPlanFromPriceId(stripePriceId);
     const limits = PLAN_LIMITS[planName] || PLAN_LIMITS['free'];
     
-    console.log(`Processing subscription for customer ${customerId}, plan: ${planName}`);
+    console.log(`📊 [${requestId}] Plan mapping: priceId=${stripePriceId} -> planName=${planName}`);
+    console.log(`📊 [${requestId}] Plan limits:`, limits);
+    
+    console.log(`🔍 [${requestId}] Searching for existing subscriptions...`);
     
     // Find ALL user subscriptions that could match this customer
-    // This includes both existing Stripe customers and free-tier users
     const { data: allSubscriptions } = await client.models.UserSubscription.list();
+    console.log(`📊 [${requestId}] Total subscriptions in database: ${allSubscriptions?.length || 0}`);
     
     // Filter for potential matches
     const potentialMatches = allSubscriptions?.filter(sub => 
@@ -153,7 +205,18 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
       sub.stripeCustomerId?.includes('manual-fix')
     ) || [];
     
-    console.log(`Found ${potentialMatches.length} potential subscription matches`);
+    console.log(`🎯 [${requestId}] Potential matches found: ${potentialMatches.length}`);
+    potentialMatches.forEach((match, index) => {
+      console.log(`📋 [${requestId}] Match ${index + 1}:`, {
+        id: match.id,
+        stripeCustomerId: match.stripeCustomerId,
+        planName: match.planName,
+        status: match.status,
+        usageCount: match.usageCount,
+        updatedAt: match.updatedAt,
+        owner: match.owner
+      });
+    });
     
     if (potentialMatches.length > 0) {
       // If multiple matches, prefer the most recent one
@@ -161,9 +224,16 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
         new Date(b.updatedAt || '').getTime() - new Date(a.updatedAt || '').getTime()
       )[0];
       
-      console.log(`Updating existing subscription ${targetSub.id}`);
+      console.log(`🎯 [${requestId}] Selected target subscription:`, {
+        id: targetSub.id,
+        stripeCustomerId: targetSub.stripeCustomerId,
+        planName: targetSub.planName,
+        owner: targetSub.owner
+      });
       
-      await client.models.UserSubscription.update({
+      console.log(`🔄 [${requestId}] Updating existing subscription ${targetSub.id}...`);
+      
+      const updateData = {
         id: targetSub.id,
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscription.id,
@@ -174,21 +244,44 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
         currentPeriodEnd: new Date((subscription as any).current_period_end * 1000).toISOString(),
         cancelAtPeriodEnd: (subscription as any).cancel_at_period_end,
         usageLimit: limits.usageLimit,
-        // Keep existing usageCount - don't reset until next billing cycle
         updatedAt: new Date().toISOString()
+      };
+      
+      console.log(`📝 [${requestId}] Update payload:`, updateData);
+      
+      const { data: updatedSub, errors } = await client.models.UserSubscription.update(updateData);
+      
+      if (errors) {
+        console.error(`❌ [${requestId}] Update errors:`, errors);
+        throw new Error(`Database update failed: ${JSON.stringify(errors)}`);
+      }
+      
+      console.log(`✅ [${requestId}] Subscription updated successfully:`, {
+        id: updatedSub?.id,
+        stripeCustomerId: updatedSub?.stripeCustomerId,
+        planName: updatedSub?.planName,
+        status: updatedSub?.status
       });
       
       // Clean up any duplicate subscriptions for this user
       const duplicates = potentialMatches.filter(sub => sub.id !== targetSub.id);
+      console.log(`🧹 [${requestId}] Cleaning up ${duplicates.length} duplicate subscriptions...`);
+      
       for (const duplicate of duplicates) {
-        console.log(`Removing duplicate subscription ${duplicate.id}`);
-        await client.models.UserSubscription.delete({ id: duplicate.id });
+        console.log(`🗑️ [${requestId}] Removing duplicate subscription ${duplicate.id}`);
+        try {
+          await client.models.UserSubscription.delete({ id: duplicate.id });
+          console.log(`✅ [${requestId}] Duplicate ${duplicate.id} removed successfully`);
+        } catch (deleteError) {
+          console.error(`❌ [${requestId}] Failed to delete duplicate ${duplicate.id}:`, deleteError);
+        }
       }
       
     } else {
       // Create new subscription record - this should rarely happen
-      console.log('Creating new subscription record');
-      await client.models.UserSubscription.create({
+      console.log(`🆕 [${requestId}] No existing subscriptions found, creating new record...`);
+      
+      const createData = {
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscription.id,
         stripePriceId: stripePriceId,
@@ -201,19 +294,41 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription) {
         usageLimit: limits.usageLimit,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
+      };
+      
+      console.log(`📝 [${requestId}] Create payload:`, createData);
+      
+      const { data: newSub, errors } = await client.models.UserSubscription.create(createData);
+      
+      if (errors) {
+        console.error(`❌ [${requestId}] Create errors:`, errors);
+        throw new Error(`Database creation failed: ${JSON.stringify(errors)}`);
+      }
+      
+      console.log(`✅ [${requestId}] New subscription created successfully:`, {
+        id: newSub?.id,
+        stripeCustomerId: newSub?.stripeCustomerId,
+        planName: newSub?.planName,
+        status: newSub?.status
       });
     }
     
-    console.log(`Subscription created successfully for plan: ${planName}`);
+    const handlerDuration = Date.now() - handlerStartTime;
+    console.log(`✅ [${requestId}] Subscription creation handler completed successfully in ${handlerDuration}ms for plan: ${planName}`);
+    
   } catch (error) {
-    console.error('Error handling subscription created:', error);
+    const handlerDuration = Date.now() - handlerStartTime;
+    console.error(`❌ [${requestId}] Error in subscription creation handler after ${handlerDuration}ms:`, error);
+    console.error(`❌ [${requestId}] Handler error stack:`, error instanceof Error ? error.stack : 'No stack trace');
     // Re-throw to ensure webhook fails and Stripe retries
     throw error;
   }
+  
+  console.log(`🆕 [${requestId}] === SUBSCRIPTION CREATED HANDLER END ===`);
 }
 
-async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
-  console.log('Subscription updated:', subscription.id);
+async function handleSubscriptionUpdated(subscription: Stripe.Subscription, requestId: string) {
+  console.log(`🔄 [${requestId}] Subscription updated: ${subscription.id}`);
   
   try {
     const customerId = subscription.customer as string;
@@ -250,15 +365,18 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription) {
         updatedAt: new Date().toISOString()
       });
       
-      console.log(`Subscription updated: ${oldPlanName} -> ${planName}, renewal: ${isRenewal}`);
+      console.log(`📊 [${requestId}] Subscription updated: ${oldPlanName} -> ${planName}, renewal: ${isRenewal}`);
+    } else {
+      console.warn(`⚠️ [${requestId}] No existing subscription found for customer: ${customerId}`);
     }
   } catch (error) {
-    console.error('Error handling subscription updated:', error);
+    console.error(`❌ [${requestId}] Error handling subscription updated:`, error);
+    throw error;
   }
 }
 
-async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
-  console.log('Subscription deleted:', subscription.id);
+async function handleSubscriptionDeleted(subscription: Stripe.Subscription, requestId: string) {
+  console.log(`🗑️ [${requestId}] Subscription deleted: ${subscription.id}`);
   
   try {
     const customerId = subscription.customer as string;
@@ -289,15 +407,18 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
         updatedAt: new Date().toISOString()
       });
       
-      console.log(`Subscription cancelled, reverted to free tier with preserved usage: ${existingSub.usageCount}/${PLAN_LIMITS['free'].usageLimit}`);
+      console.log(`✅ [${requestId}] Subscription cancelled, reverted to free tier with preserved usage: ${existingSub.usageCount}/${PLAN_LIMITS['free'].usageLimit}`);
+    } else {
+      console.warn(`⚠️ [${requestId}] No existing subscription found for customer: ${customerId}`);
     }
   } catch (error) {
-    console.error('Error handling subscription deleted:', error);
+    console.error(`❌ [${requestId}] Error handling subscription deleted:`, error);
+    throw error;
   }
 }
 
-async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-  console.log('Payment succeeded:', invoice.id);
+async function handlePaymentSucceeded(invoice: Stripe.Invoice, requestId: string) {
+  console.log(`💰 [${requestId}] Payment succeeded: ${invoice.id}`);
   
   try {
     // Only reset usage on recurring payments (not one-time charges)
@@ -322,17 +443,24 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
             updatedAt: new Date().toISOString()
           });
           
-          console.log(`Usage reset for subscription ${subscriptionId} - new billing cycle`);
+          console.log(`✅ [${requestId}] Usage reset for subscription ${subscriptionId} - new billing cycle`);
+        } else {
+          console.warn(`⚠️ [${requestId}] No subscription found for subscription ID: ${subscriptionId}`);
         }
+      } else {
+        console.log(`ℹ️ [${requestId}] No subscription ID found in invoice`);
       }
+    } else {
+      console.log(`ℹ️ [${requestId}] Invoice billing reason: ${(invoice as any).billing_reason} - not a subscription cycle`);
     }
   } catch (error) {
-    console.error('Error handling payment succeeded:', error);
+    console.error(`❌ [${requestId}] Error handling payment succeeded:`, error);
+    throw error;
   }
 }
 
-async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  console.log('Payment failed:', invoice.id);
+async function handlePaymentFailed(invoice: Stripe.Invoice, requestId: string) {
+  console.log(`💸 [${requestId}] Payment failed: ${invoice.id}`);
   
   try {
     const subscriptionId = (invoice as any).subscription as string;
@@ -355,11 +483,16 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
           updatedAt: new Date().toISOString()
         });
         
-        console.log(`Payment failed for subscription ${subscriptionId} - marked as past due`);
+        console.log(`⚠️ [${requestId}] Payment failed for subscription ${subscriptionId} - marked as past due`);
+      } else {
+        console.warn(`⚠️ [${requestId}] No subscription found for subscription ID: ${subscriptionId}`);
       }
+    } else {
+      console.log(`ℹ️ [${requestId}] No subscription ID found in failed invoice`);
     }
   } catch (error) {
-    console.error('Error handling payment failed:', error);
+    console.error(`❌ [${requestId}] Error handling payment failed:`, error);
+    throw error;
   }
 }
 
