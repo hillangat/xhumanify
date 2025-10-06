@@ -16,6 +16,7 @@ import { TONE_OPTIONS } from './constants/feedbackConstants';
 import { VscFeedback } from "react-icons/vsc";
 import { useSubscription } from './contexts/SubscriptionContext';
 import UsageDisplay from './components/UsageDisplay';
+import { getPlanLimits } from './config/plans';
 
 export default function App() {
   const client = generateClient<Schema>();
@@ -69,11 +70,29 @@ export default function App() {
 
     // Check usage limit before sending
     if (!checkUsageLimit(prompt)) {
+      const inputWords = countWords(prompt);
+      const { usageCount, usageLimit } = useSubscription();
+      
+      const currentPlanLimits = getPlanLimits(currentTier);
+      const wouldExceedMonthly = (usageCount + inputWords) > usageLimit;
+      const exceedsPerRequest = inputWords > currentPlanLimits.wordsPerRequest;
+      
+      let errorDetail = '';
+      if (exceedsPerRequest) {
+        const limitText = currentPlanLimits.wordsPerRequest === 999999 ? 'unlimited' : `${currentPlanLimits.wordsPerRequest}-word`;
+        errorDetail = `Your input (${inputWords} words) exceeds the ${limitText} limit per request for ${currentTier} plan. Please split your content into smaller chunks or upgrade to Standard/Pro for unlimited words per request.`;
+      } else if (wouldExceedMonthly) {
+        const remaining = usageLimit - usageCount;
+        errorDetail = `This request (${inputWords} words) would exceed your monthly limit. You have ${remaining} words remaining. Please upgrade your plan or wait until next month.`;
+      } else {
+        errorDetail = `This request would exceed your ${currentTier} plan limits. Please upgrade your plan or wait until next month.`;
+      }
+      
       toast.current?.show({
         severity: 'warn',
-        summary: 'Usage Limit Exceeded',
-        detail: `This request would exceed your ${currentTier} plan limits. Please upgrade your plan or wait until next month.`,
-        life: 5000
+        summary: exceedsPerRequest ? 'Request Too Large' : 'Monthly Limit Exceeded',
+        detail: errorDetail,
+        life: 7000
       });
       return;
     }
@@ -435,7 +454,6 @@ export default function App() {
                       marginTop: '1rem',
                       padding: '0.75rem',
                       background: 'var(--surface-100)',
-                      borderRadius: '6px',
                       borderLeft: '3px solid var(--primary-color)'
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>

@@ -7,7 +7,7 @@ import { Badge } from 'primereact/badge';
 import { OverlayPanel } from 'primereact/overlaypanel';
 import { Button } from 'primereact/button';
 import { useSubscription } from '../contexts/SubscriptionContext';
-import { countWords } from '../config/plans';
+import { countWords, getPlanLimits } from '../config/plans';
 import './UsageDisplay.scss';
 
 interface UsageDisplayProps {
@@ -125,7 +125,22 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({ compact = false, currentPro
             color: '#856404'
           }}>
             <i className="pi pi-exclamation-triangle" style={{ color: '#ff6b35' }}></i>
-            <span>Request too large for your plan ({countWords(currentPrompt)} words)</span>
+            <span>
+              {(() => {
+                const inputWords = countWords(currentPrompt);
+                const currentPlanLimits = getPlanLimits(currentTier);
+                const exceedsPerRequest = inputWords > currentPlanLimits.wordsPerRequest;
+                
+                if (exceedsPerRequest) {
+                  const limitText = currentPlanLimits.wordsPerRequest === 999999 ? 'unlimited' : `${currentPlanLimits.wordsPerRequest}-word`;
+                  return `Input too large: ${inputWords} words exceeds ${limitText} limit per request. Upgrade to Standard or Pro for unlimited words per request.`;
+                } else {
+                  const remaining = usageLimit - usageCount;
+                  return `Would exceed monthly limit: ${inputWords} words needed, ${remaining} remaining`;
+                }
+              })()
+            }
+            </span>
           </div>
         )}
         
