@@ -8,10 +8,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-09-30.clover', // Use the required API version
 });
 
-// Configure client for IAM auth with Lambda execution role
-const client = generateClient<Schema>({
-  authMode: 'iam'
-});
+// Initialize client lazily to avoid initialization errors
+let client: ReturnType<typeof generateClient<Schema>> | null = null;
+
+const getClient = () => {
+  if (!client) {
+    client = generateClient<Schema>({
+      authMode: 'iam'
+    });
+  }
+  return client;
+};
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   const startTime = Date.now();
@@ -195,6 +202,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, requ
     console.log(`🔍 [${requestId}] Searching for existing subscriptions...`);
     
     // Find ALL user subscriptions that could match this customer
+    const client = getClient();
     const { data: allSubscriptions } = await client.models.UserSubscription.list();
     console.log(`📊 [${requestId}] Total subscriptions in database: ${allSubscriptions?.length || 0}`);
     
@@ -337,6 +345,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, requ
     const limits = PLAN_LIMITS[planName] || PLAN_LIMITS['free'];
     
     // Find existing subscription
+    const client = getClient();
     const { data: existingSubscriptions } = await client.models.UserSubscription.list({
       filter: {
         stripeCustomerId: { eq: customerId }
@@ -382,6 +391,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription, requ
     const customerId = subscription.customer as string;
     
     // Find existing subscription
+    const client = getClient();
     const { data: existingSubscriptions } = await client.models.UserSubscription.list({
       filter: {
         stripeCustomerId: { eq: customerId }
@@ -427,6 +437,7 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice, requestId: string
       
       if (subscriptionId) {
         // Find subscription by Stripe subscription ID
+        const client = getClient();
         const { data: subscriptions } = await client.models.UserSubscription.list({
           filter: {
             stripeSubscriptionId: { eq: subscriptionId }
@@ -467,6 +478,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, requestId: string) {
     
     if (subscriptionId) {
       // Find subscription by Stripe subscription ID
+      const client = getClient();
       const { data: subscriptions } = await client.models.UserSubscription.list({
         filter: {
           stripeSubscriptionId: { eq: subscriptionId }
