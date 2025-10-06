@@ -4,25 +4,62 @@ import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../data/resource';
 import { PLAN_LIMITS } from '../../shared/planConfig';
 
+console.log('🚀 MODULE LOADING: webhook-handler.ts module is being loaded');
+console.log('🔍 MODULE LOADING: Environment variables check:', {
+  NODE_ENV: process.env.NODE_ENV,
+  AWS_REGION: process.env.AWS_REGION,
+  AMPLIFY_DATA_GRAPHQL_ENDPOINT: process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT ? 'SET' : 'NOT_SET',
+  STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? 'SET' : 'NOT_SET',
+  STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET ? 'SET' : 'NOT_SET'
+});
+
+console.log('⚡ MODULE LOADING: Creating Stripe client...');
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-09-30.clover', // Use the required API version
 });
+console.log('✅ MODULE LOADING: Stripe client created successfully');
 
+console.log('🔧 MODULE LOADING: Setting up lazy Amplify client...');
 // Lazy initialization to avoid module load time errors
 let client: ReturnType<typeof generateClient<Schema>> | null = null;
 
 const getClient = () => {
+  console.log('🔧 getClient() called - checking if client exists:', !!client);
   if (!client) {
-    console.log('🔧 Initializing GraphQL client for webhook...');
-    client = generateClient<Schema>({
-      authMode: 'iam'
+    console.log('� CREATING NEW CLIENT: Initializing GraphQL client for webhook...');
+    console.log('🔍 CLIENT INIT: Environment check before creation:', {
+      AWS_REGION: process.env.AWS_REGION,
+      AMPLIFY_DATA_GRAPHQL_ENDPOINT: process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT ? 'SET' : 'NOT_SET'
     });
-    console.log('✅ GraphQL client initialized successfully');
+    
+    try {
+      console.log('⚡ CLIENT INIT: Calling generateClient...');
+      client = generateClient<Schema>({
+        authMode: 'iam'
+      });
+      console.log('✅ CLIENT INIT: GraphQL client initialized successfully');
+    } catch (error) {
+      console.error('❌ CLIENT INIT: Failed to create client:', error);
+      console.error('❌ CLIENT INIT: Error stack:', error instanceof Error ? error.stack : 'No stack');
+      throw error;
+    }
   }
+  console.log('✅ getClient() returning client:', !!client);
   return client;
 };
 
+console.log('✅ MODULE LOADING: webhook-handler.ts module loaded completely');
+
 export const handler: APIGatewayProxyHandler = async (event) => {
+  console.log('🚀🚀🚀 HANDLER ENTRY: Webhook handler function called!');
+  console.log('📥 HANDLER ENTRY: Event received:', {
+    httpMethod: event.httpMethod,
+    headers: Object.keys(event.headers || {}),
+    bodyLength: event.body?.length || 0,
+    pathParameters: event.pathParameters,
+    queryStringParameters: event.queryStringParameters
+  });
+  
   const startTime = Date.now();
   const requestId = Math.random().toString(36).substring(2, 15);
   

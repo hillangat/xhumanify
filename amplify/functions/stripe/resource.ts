@@ -16,7 +16,7 @@ export const createPortalSession = defineFunction({
 
 export const handleWebhook = defineFunction({
   name: 'handleWebhook',
-  entry: './webhook-handler.ts',
+  entry: './webhook-handler-minimal.ts', // Using minimal handler to isolate authentication issues
   timeoutSeconds: 60, // Increased from default 3 seconds to handle complex webhook processing
   memoryMB: 512
 });
