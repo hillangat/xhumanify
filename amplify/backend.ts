@@ -33,6 +33,17 @@ backend.createPortalSession.addEnvironment("STRIPE_SECRET_KEY", process.env.STRI
 backend.handleWebhook.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
 backend.handleWebhook.addEnvironment("STRIPE_WEBHOOK_SECRET", process.env.STRIPE_WEBHOOK_SECRET || "");
 
+// Grant database access to webhook function
+backend.handleWebhook.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      "appsync:GraphQL"
+    ],
+    resources: ["*"]
+  })
+);
+
 backend.generateHaikuFunction.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,

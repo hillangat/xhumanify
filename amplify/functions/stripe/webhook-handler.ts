@@ -8,7 +8,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-09-30.clover', // Use the required API version
 });
 
-// Configure client for IAM auth
+// Configure client for IAM auth with Lambda execution role
 const client = generateClient<Schema>({
   authMode: 'iam'
 });
