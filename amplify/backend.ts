@@ -32,7 +32,6 @@ backend.createCheckoutSession.addEnvironment("NEXT_PUBLIC_APP_URL", process.env.
 backend.createPortalSession.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
 backend.handleWebhook.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
 backend.handleWebhook.addEnvironment("STRIPE_WEBHOOK_SECRET", process.env.STRIPE_WEBHOOK_SECRET || "");
-backend.handleWebhook.addEnvironment("AMPLIFY_DATA_GRAPHQL_ENDPOINT", backend.data.resources.graphqlApi.graphqlUrl);
 
 // Grant database access to webhook function
 backend.handleWebhook.resources.lambda.addToRolePolicy(

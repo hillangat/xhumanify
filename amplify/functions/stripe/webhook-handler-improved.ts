@@ -5,7 +5,7 @@ console.log('🚀 IMPROVED WEBHOOK: Module loading started');
 // Environment variables check at module level (safe)
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
-const AMPLIFY_DATA_GRAPHQL_ENDPOINT = process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT;
+const AMPLIFY_DATA_GRAPHQL_ENDPOINT = process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT || process.env.AMPLIFY_GRAPHQL_ENDPOINT;
 
 console.log('🔍 IMPROVED WEBHOOK: Environment check:', {
   STRIPE_SECRET_KEY: STRIPE_SECRET_KEY ? 'SET' : 'NOT_SET',
@@ -60,11 +60,12 @@ async function initializeStripe() {
 }
 
 async function initializeAmplify() {
-  if (!amplifyClient && AMPLIFY_DATA_GRAPHQL_ENDPOINT) {
+  if (!amplifyClient) {
     try {
       console.log('⚡ IMPROVED WEBHOOK: Initializing Amplify client...');
       const { generateClient } = await import('aws-amplify/data');
       
+      // Use the default configuration that Amplify provides automatically
       amplifyClient = generateClient({
         authMode: 'iam',
       });
