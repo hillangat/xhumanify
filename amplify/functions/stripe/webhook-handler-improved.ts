@@ -17,6 +17,36 @@ console.log('🔍 IMPROVED WEBHOOK: Environment check:', {
 let stripeClient: any = null;
 let amplifyClient: any = null;
 
+// Helper functions for plan mapping
+function getPlanNameFromPriceId(priceId: string): string {
+  // Map Stripe price IDs to plan names based on actual configuration
+  const planMapping: Record<string, string> = {
+    // Lite plan
+    'price_1SEAui47Knk6vC3kvBiS86dC': 'Lite',
+    'price_1SEBk147Knk6vC3kVV288Vmg': 'Lite',
+    // Standard plan  
+    'price_1SECNL47Knk6vC3kGQMZEwCH': 'Standard',
+    'price_1SECNL47Knk6vC3kao99ug2W': 'Standard',
+    // Pro plan
+    'price_1SECQb47Knk6vC3kkvNYxIii': 'Pro',
+    'price_1SECRf47Knk6vC3kaZmpEomz': 'Pro'
+  };
+  
+  return planMapping[priceId] || 'Unknown Plan';
+}
+
+function getUsageLimitForPlan(planName: string): number {
+  // Map plan names to word limits based on actual configuration
+  const usageLimits: Record<string, number> = {
+    'Lite': 20000,      // 20,000 words/month
+    'Standard': 50000,  // 50,000 words/month  
+    'Pro': 150000,      // 150,000 words/month
+    'Unknown Plan': 0
+  };
+  
+  return usageLimits[planName] || 0;
+}
+
 async function initializeStripe() {
   if (!stripeClient && STRIPE_SECRET_KEY) {
     console.log('⚡ IMPROVED WEBHOOK: Initializing Stripe client...');
@@ -200,20 +230,35 @@ async function handleSubscriptionCreated(event: any) {
   
   if (amplify) {
     try {
-      // TODO: Update user subscription in database
-      console.log('💾 Updating subscription in database...');
+      console.log('💾 Creating subscription in database...');
       
-      // Example database update (implement based on your schema):
-      // await amplify.models.UserSubscription.create({
-      //   stripeCustomerId: customerId,
-      //   stripeSubscriptionId: subscription.id,
-      //   status: subscription.status,
-      //   // ... other fields
-      // });
+      // Extract subscription details
+      const planId = subscription.items.data[0]?.price?.id;
+      const planName = getPlanNameFromPriceId(planId);
       
-      console.log('✅ Subscription updated in database');
+      // Create subscription record
+      const subscriptionData = {
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscription.id,
+        stripePriceId: planId,
+        status: subscription.status,
+        planName: planName,
+        currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
+        currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+        cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+        usageCount: 0,
+        usageLimit: getUsageLimitForPlan(planName),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      
+      console.log('📝 Creating subscription with data:', subscriptionData);
+      
+      const result = await amplify.models.UserSubscription.create(subscriptionData);
+      
+      console.log('✅ Subscription created in database:', result);
     } catch (dbError: any) {
-      console.error('❌ Database update failed:', dbError);
+      console.error('❌ Database create failed:', dbError);
       // Don't fail the webhook - Stripe expects 200 OK
     }
   } else {
@@ -232,7 +277,52 @@ async function handleSubscriptionUpdated(event: any) {
     cancelAtPeriodEnd: subscription.cancel_at_period_end
   });
 
-  // TODO: Implement subscription update logic
+  // Initialize Amplify client for database operations
+  const amplify = await initializeAmplify();
+  
+  if (amplify) {
+    try {
+      console.log('💾 Updating subscription in database...');
+      
+      // Find existing subscription
+      const existingSubscriptions = await amplify.models.UserSubscription.list({
+        filter: {
+          stripeSubscriptionId: {
+            eq: subscription.id
+          }
+        }
+      });
+      
+      if (existingSubscriptions.data.length > 0) {
+        const existingSubscription = existingSubscriptions.data[0];
+        
+        // Update subscription data
+        const updateData = {
+          status: subscription.status,
+          currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
+          currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+          cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
+          updatedAt: new Date().toISOString()
+        };
+        
+        console.log('📝 Updating subscription with data:', updateData);
+        
+        const result = await amplify.models.UserSubscription.update({
+          id: existingSubscription.id,
+          ...updateData
+        });
+        
+        console.log('✅ Subscription updated in database:', result);
+      } else {
+        console.log('⚠️ Subscription not found in database for update');
+      }
+    } catch (dbError: any) {
+      console.error('❌ Database update failed:', dbError);
+      // Don't fail the webhook - Stripe expects 200 OK
+    }
+  } else {
+    console.log('⚠️ Skipping database update - Amplify client not available');
+  }
 }
 
 async function handleSubscriptionDeleted(event: any) {
@@ -245,7 +335,43 @@ async function handleSubscriptionDeleted(event: any) {
     customerId: subscription.customer
   });
 
-  // TODO: Implement subscription deletion logic
+  // Initialize Amplify client for database operations
+  const amplify = await initializeAmplify();
+  
+  if (amplify) {
+    try {
+      console.log('💾 Marking subscription as canceled in database...');
+      
+      // Find existing subscription
+      const existingSubscriptions = await amplify.models.UserSubscription.list({
+        filter: {
+          stripeSubscriptionId: {
+            eq: subscription.id
+          }
+        }
+      });
+      
+      if (existingSubscriptions.data.length > 0) {
+        const existingSubscription = existingSubscriptions.data[0];
+        
+        // Update subscription to canceled status
+        const result = await amplify.models.UserSubscription.update({
+          id: existingSubscription.id,
+          status: 'canceled',
+          updatedAt: new Date().toISOString()
+        });
+        
+        console.log('✅ Subscription marked as canceled in database:', result);
+      } else {
+        console.log('⚠️ Subscription not found in database for deletion');
+      }
+    } catch (dbError: any) {
+      console.error('❌ Database deletion failed:', dbError);
+      // Don't fail the webhook - Stripe expects 200 OK
+    }
+  } else {
+    console.log('⚠️ Skipping database update - Amplify client not available');
+  }
 }
 
 async function handlePaymentSucceeded(event: any) {
