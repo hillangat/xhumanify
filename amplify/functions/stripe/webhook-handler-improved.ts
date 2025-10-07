@@ -72,10 +72,11 @@ async function initializeAmplify() {
         accessKey: process.env.AWS_ACCESS_KEY_ID ? 'SET' : 'NOT_SET'
       });
       
-      // Use manual configuration with GraphQL operations instead of models
+      // Use manual configuration with GraphQL operations
       if (process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT) {
         console.log('🔧 IMPROVED WEBHOOK: Using manual Amplify configuration with GraphQL');
         
+        // Configure Amplify first
         Amplify.configure({
           API: {
             GraphQL: {
@@ -86,17 +87,17 @@ async function initializeAmplify() {
           }
         });
         
-        // Instead of using models, we'll use GraphQL operations directly
-        amplifyClient = {
-          graphql: await import('aws-amplify/api').then(m => m.generateClient({
-            authMode: 'iam'
-          }).graphql),
-          endpoint: process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT,
-          region: process.env.AWS_REGION || 'us-east-2'
-        };
+        // Then create the GraphQL client
+        amplifyClient = generateClient({
+          authMode: 'iam'
+        });
         
         console.log('✅ IMPROVED WEBHOOK: Amplify GraphQL client initialized');
-        console.log('🔍 IMPROVED WEBHOOK: Client structure:', amplifyClient);
+        console.log('🔍 IMPROVED WEBHOOK: Client structure:', {
+          hasGraphql: typeof amplifyClient.graphql === 'function',
+          endpoint: process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT,
+          region: process.env.AWS_REGION || 'us-east-2'
+        });
       } else {
         console.log('⚠️ IMPROVED WEBHOOK: No GraphQL endpoint found in environment');
         return null;
@@ -317,12 +318,18 @@ async function handleSubscriptionCreated(event: any) {
       
       const result = await amplify.graphql({
         query: createUserSubscriptionMutation,
-        variables: { input: subscriptionInput }
+        variables: { input: subscriptionInput },
+        authMode: 'iam'
       });
       
       console.log('✅ Subscription created in database:', result);
     } catch (dbError: any) {
       console.error('❌ Database create failed:', dbError);
+      console.error('❌ Error details:', {
+        message: dbError.message,
+        stack: dbError.stack,
+        name: dbError.name
+      });
       // Don't fail the webhook - Stripe expects 200 OK
     }
   } else {
@@ -375,7 +382,8 @@ async function handleSubscriptionUpdated(event: any) {
               eq: subscription.id
             }
           }
-        }
+        },
+        authMode: 'iam'
       });
       
       if (listResult.data?.listUserSubscriptions?.items?.length > 0) {
@@ -413,7 +421,8 @@ async function handleSubscriptionUpdated(event: any) {
         
         const result = await amplify.graphql({
           query: updateUserSubscriptionMutation,
-          variables: { input: updateInput }
+          variables: { input: updateInput },
+          authMode: 'iam'
         });
         
         console.log('✅ Subscription updated in database:', result);
@@ -467,7 +476,8 @@ async function handleSubscriptionDeleted(event: any) {
               eq: subscription.id
             }
           }
-        }
+        },
+        authMode: 'iam'
       });
       
       if (listResult.data?.listUserSubscriptions?.items?.length > 0) {
@@ -494,7 +504,8 @@ async function handleSubscriptionDeleted(event: any) {
         
         const result = await amplify.graphql({
           query: updateUserSubscriptionMutation,
-          variables: { input: updateInput }
+          variables: { input: updateInput },
+          authMode: 'iam'
         });
         
         console.log('✅ Subscription marked as canceled in database:', result);
