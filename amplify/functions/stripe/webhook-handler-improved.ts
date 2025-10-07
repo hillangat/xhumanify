@@ -254,20 +254,25 @@ async function handleSubscriptionCreated(event: any) {
       const planId = subscription.items.data[0]?.price?.id;
       const planName = getPlanNameFromPriceId(planId);
       
-      // Create subscription record
+      // Create subscription record with safe date handling
+      const now = new Date().toISOString();
       const subscriptionData = {
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscription.id,
         stripePriceId: planId,
         status: subscription.status,
         planName: planName,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+        currentPeriodStart: subscription.current_period_start 
+          ? new Date(subscription.current_period_start * 1000).toISOString() 
+          : now,
+        currentPeriodEnd: subscription.current_period_end 
+          ? new Date(subscription.current_period_end * 1000).toISOString() 
+          : now,
         cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
         usageCount: 0,
         usageLimit: getUsageLimitForPlan(planName),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        createdAt: now,
+        updatedAt: now
       };
       
       console.log('📝 Creating subscription with data:', subscriptionData);
@@ -314,13 +319,18 @@ async function handleSubscriptionUpdated(event: any) {
       if (existingSubscriptions.data.length > 0) {
         const existingSubscription = existingSubscriptions.data[0];
         
-        // Update subscription data
+        // Update subscription data with safe date handling
+        const now = new Date().toISOString();
         const updateData = {
           status: subscription.status,
-          currentPeriodStart: new Date(subscription.current_period_start * 1000).toISOString(),
-          currentPeriodEnd: new Date(subscription.current_period_end * 1000).toISOString(),
+          currentPeriodStart: subscription.current_period_start 
+            ? new Date(subscription.current_period_start * 1000).toISOString() 
+            : now,
+          currentPeriodEnd: subscription.current_period_end 
+            ? new Date(subscription.current_period_end * 1000).toISOString() 
+            : now,
           cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
-          updatedAt: new Date().toISOString()
+          updatedAt: now
         };
         
         console.log('📝 Updating subscription with data:', updateData);
