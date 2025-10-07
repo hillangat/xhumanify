@@ -64,15 +64,35 @@ async function initializeAmplify() {
     try {
       console.log('⚡ IMPROVED WEBHOOK: Initializing Amplify client...');
       const { generateClient } = await import('aws-amplify/data');
+      const { Amplify } = await import('aws-amplify');
       
-      // Use the default configuration that Amplify provides automatically
-      amplifyClient = generateClient({
-        authMode: 'iam',
-      });
-      console.log('✅ IMPROVED WEBHOOK: Amplify client initialized');
+      // Configure Amplify with the GraphQL endpoint
+      if (AMPLIFY_DATA_GRAPHQL_ENDPOINT) {
+        console.log('🔧 IMPROVED WEBHOOK: Configuring Amplify with endpoint:', AMPLIFY_DATA_GRAPHQL_ENDPOINT);
+        
+        Amplify.configure({
+          API: {
+            GraphQL: {
+              endpoint: AMPLIFY_DATA_GRAPHQL_ENDPOINT,
+              region: process.env.AWS_REGION || 'us-east-2',
+              defaultAuthMode: 'iam'
+            }
+          }
+        });
+        
+        amplifyClient = generateClient({
+          authMode: 'iam',
+        });
+        
+        console.log('✅ IMPROVED WEBHOOK: Amplify client initialized with custom config');
+      } else {
+        console.log('⚠️ IMPROVED WEBHOOK: No GraphQL endpoint found in environment');
+        return null;
+      }
     } catch (error) {
       console.error('❌ IMPROVED WEBHOOK: Failed to initialize Amplify:', error);
       // Continue without Amplify - webhook will still work for signature verification
+      return null;
     }
   }
   return amplifyClient;
