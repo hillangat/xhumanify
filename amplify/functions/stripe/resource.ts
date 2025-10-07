@@ -16,7 +16,7 @@ export const createPortalSession = defineFunction({
 
 export const handleWebhook = defineFunction({
   name: 'handleWebhook',
-  entry: './webhook-handler-super-minimal.ts', // Super minimal to fix 502 errors
+  entry: './webhook-handler-improved.ts', // Improved handler with proper Stripe integration
   timeoutSeconds: 60, // Increased from default 3 seconds to handle complex webhook processing
   memoryMB: 512
 });
