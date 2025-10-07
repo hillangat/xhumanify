@@ -92,7 +92,18 @@ async function initializeAmplify() {
         });
         
         console.log('✅ IMPROVED WEBHOOK: Amplify client initialized with manual config');
+        console.log('🔍 IMPROVED WEBHOOK: Client object:', amplifyClient);
+        console.log('🔍 IMPROVED WEBHOOK: Client models object:', amplifyClient.models);
         console.log('🔍 IMPROVED WEBHOOK: Client models available:', Object.keys(amplifyClient.models || {}));
+        console.log('🔍 IMPROVED WEBHOOK: UserSubscription model:', amplifyClient.models?.UserSubscription);
+        
+        // Test if the models are accessible
+        if (amplifyClient.models && amplifyClient.models.UserSubscription) {
+          console.log('✅ IMPROVED WEBHOOK: UserSubscription model is accessible');
+        } else {
+          console.log('❌ IMPROVED WEBHOOK: UserSubscription model is NOT accessible');
+          console.log('🔍 IMPROVED WEBHOOK: Available models:', amplifyClient.models ? Object.keys(amplifyClient.models) : 'models object is undefined');
+        }
       } else {
         console.log('⚠️ IMPROVED WEBHOOK: No GraphQL endpoint found in environment');
         return null;
@@ -262,7 +273,7 @@ async function handleSubscriptionCreated(event: any) {
   // Initialize Amplify client for database operations
   const amplify = await initializeAmplify();
   
-  if (amplify) {
+  if (amplify && amplify.models && amplify.models.UserSubscription) {
     try {
       console.log('💾 Creating subscription in database...');
       
@@ -304,7 +315,13 @@ async function handleSubscriptionCreated(event: any) {
       // Don't fail the webhook - Stripe expects 200 OK
     }
   } else {
-    console.log('⚠️ Skipping database update - Amplify client not available');
+    console.log('⚠️ Skipping database update - Amplify client or UserSubscription model not available');
+    if (amplify) {
+      console.log('🔍 Debug: amplify object exists but models may not be loaded');
+      console.log('🔍 Debug: amplify.models:', amplify.models);
+    } else {
+      console.log('🔍 Debug: amplify client is null');
+    }
   }
 }
 
