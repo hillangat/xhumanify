@@ -32,7 +32,8 @@ backend.createCheckoutSession.addEnvironment("NEXT_PUBLIC_APP_URL", process.env.
 backend.createPortalSession.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
 backend.handleWebhook.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
 backend.handleWebhook.addEnvironment("STRIPE_WEBHOOK_SECRET", process.env.STRIPE_WEBHOOK_SECRET || "");
-backend.handleWebhook.addEnvironment("AMPLIFY_DATA_GRAPHQL_ENDPOINT", backend.data.resources.graphqlApi.graphqlEndpoint);
+// Pass the GraphQL API reference to the webhook function so it can access the endpoint automatically
+backend.handleWebhook.addEnvironment("AMPLIFY_DATA_GRAPHQL_ENDPOINT", `https://${backend.data.resources.graphqlApi.apiId}.appsync-api.${Stack.of(backend.data.resources.graphqlApi).region}.amazonaws.com/graphql`);
 
 // Grant database access to webhook function
 backend.handleWebhook.resources.lambda.addToRolePolicy(
