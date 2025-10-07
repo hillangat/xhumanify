@@ -72,9 +72,9 @@ async function initializeAmplify() {
         accessKey: process.env.AWS_ACCESS_KEY_ID ? 'SET' : 'NOT_SET'
       });
       
-      // Use manual configuration since getAmplifyDataClientConfig expects different env structure
+      // Use manual configuration with GraphQL operations instead of models
       if (process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT) {
-        console.log('🔧 IMPROVED WEBHOOK: Using manual Amplify configuration');
+        console.log('🔧 IMPROVED WEBHOOK: Using manual Amplify configuration with GraphQL');
         
         Amplify.configure({
           API: {
@@ -86,24 +86,17 @@ async function initializeAmplify() {
           }
         });
         
-        // Generate client with Schema
-        amplifyClient = generateClient<Schema>({
-          authMode: 'iam'
-        });
+        // Instead of using models, we'll use GraphQL operations directly
+        amplifyClient = {
+          graphql: await import('aws-amplify/api').then(m => m.generateClient({
+            authMode: 'iam'
+          }).graphql),
+          endpoint: process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT,
+          region: process.env.AWS_REGION || 'us-east-2'
+        };
         
-        console.log('✅ IMPROVED WEBHOOK: Amplify client initialized with manual config');
-        console.log('🔍 IMPROVED WEBHOOK: Client object:', amplifyClient);
-        console.log('🔍 IMPROVED WEBHOOK: Client models object:', amplifyClient.models);
-        console.log('🔍 IMPROVED WEBHOOK: Client models available:', Object.keys(amplifyClient.models || {}));
-        console.log('🔍 IMPROVED WEBHOOK: UserSubscription model:', amplifyClient.models?.UserSubscription);
-        
-        // Test if the models are accessible
-        if (amplifyClient.models && amplifyClient.models.UserSubscription) {
-          console.log('✅ IMPROVED WEBHOOK: UserSubscription model is accessible');
-        } else {
-          console.log('❌ IMPROVED WEBHOOK: UserSubscription model is NOT accessible');
-          console.log('🔍 IMPROVED WEBHOOK: Available models:', amplifyClient.models ? Object.keys(amplifyClient.models) : 'models object is undefined');
-        }
+        console.log('✅ IMPROVED WEBHOOK: Amplify GraphQL client initialized');
+        console.log('🔍 IMPROVED WEBHOOK: Client structure:', amplifyClient);
       } else {
         console.log('⚠️ IMPROVED WEBHOOK: No GraphQL endpoint found in environment');
         return null;
@@ -273,9 +266,9 @@ async function handleSubscriptionCreated(event: any) {
   // Initialize Amplify client for database operations
   const amplify = await initializeAmplify();
   
-  if (amplify && amplify.models && amplify.models.UserSubscription) {
+  if (amplify && amplify.graphql) {
     try {
-      console.log('💾 Creating subscription in database...');
+      console.log('💾 Creating subscription in database using GraphQL...');
       
       // Extract subscription details
       const planId = subscription.items.data[0]?.price?.id;
@@ -286,7 +279,22 @@ async function handleSubscriptionCreated(event: any) {
       
       // Create subscription record with safe date handling
       const now = new Date().toISOString();
-      const subscriptionData = {
+      
+      // Create UserSubscription using GraphQL mutation
+      const createUserSubscriptionMutation = /* GraphQL */ `
+        mutation CreateUserSubscription($input: CreateUserSubscriptionInput!) {
+          createUserSubscription(input: $input) {
+            id
+            stripeCustomerId
+            stripeSubscriptionId
+            status
+            planName
+            createdAt
+          }
+        }
+      `;
+      
+      const subscriptionInput = {
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscription.id,
         stripePriceId: planId,
@@ -305,9 +313,12 @@ async function handleSubscriptionCreated(event: any) {
         updatedAt: now
       };
       
-      console.log('📝 Creating subscription with data:', subscriptionData);
+      console.log('📝 Creating subscription with GraphQL input:', subscriptionInput);
       
-      const result = await amplify.models.UserSubscription.create(subscriptionData);
+      const result = await amplify.graphql({
+        query: createUserSubscriptionMutation,
+        variables: { input: subscriptionInput }
+      });
       
       console.log('✅ Subscription created in database:', result);
     } catch (dbError: any) {
@@ -315,10 +326,10 @@ async function handleSubscriptionCreated(event: any) {
       // Don't fail the webhook - Stripe expects 200 OK
     }
   } else {
-    console.log('⚠️ Skipping database update - Amplify client or UserSubscription model not available');
+    console.log('⚠️ Skipping database update - GraphQL client not available');
     if (amplify) {
-      console.log('🔍 Debug: amplify object exists but models may not be loaded');
-      console.log('🔍 Debug: amplify.models:', amplify.models);
+      console.log('🔍 Debug: amplify object exists but GraphQL client may not be loaded');
+      console.log('🔍 Debug: amplify structure:', amplify);
     } else {
       console.log('🔍 Debug: amplify client is null');
     }
@@ -339,26 +350,54 @@ async function handleSubscriptionUpdated(event: any) {
   // Initialize Amplify client for database operations
   const amplify = await initializeAmplify();
   
-  if (amplify) {
+  if (amplify && amplify.graphql) {
     try {
-      console.log('💾 Updating subscription in database...');
+      console.log('💾 Updating subscription in database using GraphQL...');
       
-      // Find existing subscription
-      const existingSubscriptions = await amplify.models.UserSubscription.list({
-        filter: {
-          stripeSubscriptionId: {
-            eq: subscription.id
+      // First, query to find the existing subscription
+      const listUserSubscriptionsQuery = /* GraphQL */ `
+        query ListUserSubscriptions($filter: ModelUserSubscriptionFilterInput) {
+          listUserSubscriptions(filter: $filter) {
+            items {
+              id
+              stripeSubscriptionId
+              status
+            }
+          }
+        }
+      `;
+      
+      const listResult = await amplify.graphql({
+        query: listUserSubscriptionsQuery,
+        variables: {
+          filter: {
+            stripeSubscriptionId: {
+              eq: subscription.id
+            }
           }
         }
       });
       
-      if (existingSubscriptions.data.length > 0) {
-        const existingSubscription = existingSubscriptions.data[0];
+      if (listResult.data?.listUserSubscriptions?.items?.length > 0) {
+        const existingSubscription = listResult.data.listUserSubscriptions.items[0];
         
-        // Update subscription data with safe date handling
+        // Update subscription using GraphQL mutation
+        const updateUserSubscriptionMutation = /* GraphQL */ `
+          mutation UpdateUserSubscription($input: UpdateUserSubscriptionInput!) {
+            updateUserSubscription(input: $input) {
+              id
+              status
+              cancelAtPeriodEnd
+              updatedAt
+            }
+          }
+        `;
+        
         const subscriptionItem = subscription.items.data[0];
         const now = new Date().toISOString();
-        const updateData = {
+        
+        const updateInput = {
+          id: existingSubscription.id,
           status: subscription.status,
           currentPeriodStart: subscriptionItem?.current_period_start 
             ? new Date(subscriptionItem.current_period_start * 1000).toISOString() 
@@ -370,11 +409,11 @@ async function handleSubscriptionUpdated(event: any) {
           updatedAt: now
         };
         
-        console.log('📝 Updating subscription with data:', updateData);
+        console.log('📝 Updating subscription with GraphQL input:', updateInput);
         
-        const result = await amplify.models.UserSubscription.update({
-          id: existingSubscription.id,
-          ...updateData
+        const result = await amplify.graphql({
+          query: updateUserSubscriptionMutation,
+          variables: { input: updateInput }
         });
         
         console.log('✅ Subscription updated in database:', result);
@@ -386,7 +425,7 @@ async function handleSubscriptionUpdated(event: any) {
       // Don't fail the webhook - Stripe expects 200 OK
     }
   } else {
-    console.log('⚠️ Skipping database update - Amplify client not available');
+    console.log('⚠️ Skipping database update - GraphQL client not available');
   }
 }
 
@@ -403,27 +442,59 @@ async function handleSubscriptionDeleted(event: any) {
   // Initialize Amplify client for database operations
   const amplify = await initializeAmplify();
   
-  if (amplify) {
+  if (amplify && amplify.graphql) {
     try {
-      console.log('💾 Marking subscription as canceled in database...');
+      console.log('💾 Marking subscription as canceled in database using GraphQL...');
       
-      // Find existing subscription
-      const existingSubscriptions = await amplify.models.UserSubscription.list({
-        filter: {
-          stripeSubscriptionId: {
-            eq: subscription.id
+      // First, query to find the existing subscription
+      const listUserSubscriptionsQuery = /* GraphQL */ `
+        query ListUserSubscriptions($filter: ModelUserSubscriptionFilterInput) {
+          listUserSubscriptions(filter: $filter) {
+            items {
+              id
+              stripeSubscriptionId
+              status
+            }
+          }
+        }
+      `;
+      
+      const listResult = await amplify.graphql({
+        query: listUserSubscriptionsQuery,
+        variables: {
+          filter: {
+            stripeSubscriptionId: {
+              eq: subscription.id
+            }
           }
         }
       });
       
-      if (existingSubscriptions.data.length > 0) {
-        const existingSubscription = existingSubscriptions.data[0];
+      if (listResult.data?.listUserSubscriptions?.items?.length > 0) {
+        const existingSubscription = listResult.data.listUserSubscriptions.items[0];
         
-        // Update subscription to canceled status
-        const result = await amplify.models.UserSubscription.update({
+        // Update subscription to canceled status using GraphQL mutation
+        const updateUserSubscriptionMutation = /* GraphQL */ `
+          mutation UpdateUserSubscription($input: UpdateUserSubscriptionInput!) {
+            updateUserSubscription(input: $input) {
+              id
+              status
+              updatedAt
+            }
+          }
+        `;
+        
+        const updateInput = {
           id: existingSubscription.id,
           status: 'canceled',
           updatedAt: new Date().toISOString()
+        };
+        
+        console.log('📝 Updating subscription to canceled with GraphQL input:', updateInput);
+        
+        const result = await amplify.graphql({
+          query: updateUserSubscriptionMutation,
+          variables: { input: updateInput }
         });
         
         console.log('✅ Subscription marked as canceled in database:', result);
@@ -435,7 +506,7 @@ async function handleSubscriptionDeleted(event: any) {
       // Don't fail the webhook - Stripe expects 200 OK
     }
   } else {
-    console.log('⚠️ Skipping database update - Amplify client not available');
+    console.log('⚠️ Skipping database update - GraphQL client not available');
   }
 }
 
