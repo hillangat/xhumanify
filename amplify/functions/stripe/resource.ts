@@ -22,7 +22,7 @@ export const createPortalSession = defineFunction({
 
 export const handleWebhook = defineFunction({
   name: 'handleWebhook',
-  entry: './webhook-handler-improved.ts', // Improved handler with proper Stripe integration
+  entry: './webhook-handler-fixed.ts', // Using the working fixed version
   timeoutSeconds: 60, // Increased from default 3 seconds to handle complex webhook processing
   memoryMB: 512,
   resourceGroupName: 'data', // Assign to data stack to resolve circular dependency

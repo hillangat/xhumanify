@@ -6,10 +6,10 @@ import Stripe from 'stripe';
 // @ts-ignore
 import { env } from '$amplify/env/handleWebhook';
 
-console.log('🚀 IMPROVED WEBHOOK: Module loading started');
+console.log('🚀 FIXED WEBHOOK: Module loading started');
 
 // Environment variables accessed through generated env object
-console.log('🔍 IMPROVED WEBHOOK: Environment check:', {
+console.log('🔍 FIXED WEBHOOK: Environment check:', {
   STRIPE_SECRET_KEY: env.STRIPE_SECRET_KEY ? 'SET' : 'NOT_SET',
   STRIPE_WEBHOOK_SECRET: env.STRIPE_WEBHOOK_SECRET ? 'SET' : 'NOT_SET'
 });
@@ -29,33 +29,31 @@ function getPlanNameFromPriceId(priceId: string): string {
     'price_1SECNL47Knk6vC3kGQMZEwCH': 'Standard',
     'price_1SECNL47Knk6vC3kao99ug2W': 'Standard',
     // Pro plan
-    'price_1SECQb47Knk6vC3kkvNYxIii': 'Pro',
-    'price_1SECRf47Knk6vC3kaZmpEomz': 'Pro'
+    'price_1SECXK47Knk6vC3kRiBZvOAZ': 'Pro',
+    'price_1SECXK47Knk6vC3k6hQVrq8S': 'Pro'
   };
   
-  return planMapping[priceId] || 'Unknown Plan';
+  return planMapping[priceId] || 'Unknown';
 }
 
 function getUsageLimitForPlan(planName: string): number {
-  // Map plan names to word limits based on actual configuration
   const usageLimits: Record<string, number> = {
-    'Lite': 20000,      // 20,000 words/month
-    'Standard': 50000,  // 50,000 words/month  
-    'Pro': 150000,      // 150,000 words/month
-    'Unknown Plan': 0
+    'Lite': 20000,
+    'Standard': 100000,
+    'Pro': 500000
   };
   
-  return usageLimits[planName] || 0;
+  return usageLimits[planName] || 20000;
 }
 
 async function initializeStripe() {
   if (!stripeClient && env.STRIPE_SECRET_KEY) {
-    console.log('⚡ IMPROVED WEBHOOK: Initializing Stripe client...');
+    console.log('⚡ FIXED WEBHOOK: Initializing Stripe client...');
     const Stripe = await import('stripe');
     stripeClient = new Stripe.default(env.STRIPE_SECRET_KEY, {
       apiVersion: '2025-09-30.clover',
     });
-    console.log('✅ IMPROVED WEBHOOK: Stripe client initialized');
+    console.log('✅ FIXED WEBHOOK: Stripe client initialized');
   }
   return stripeClient;
 }
@@ -63,20 +61,21 @@ async function initializeStripe() {
 async function initializeAmplify() {
   if (!amplifyClient) {
     try {
-      console.log('⚡ IMPROVED WEBHOOK: Initializing Amplify client...');
+      console.log('⚡ FIXED WEBHOOK: Initializing Amplify client...');
       
-      // Check what environment variables are actually available
-      console.log('🔍 IMPROVED WEBHOOK: Available env vars:', {
-        graphqlEndpoint: process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT ? 'SET' : 'NOT_SET',
+      console.log('🔍 FIXED WEBHOOK: Environment status:', {
+        hasAccessKey: !!process.env.AWS_ACCESS_KEY_ID,
+        hasSecretKey: !!process.env.AWS_SECRET_ACCESS_KEY,
+        hasSessionToken: !!process.env.AWS_SESSION_TOKEN,
         region: process.env.AWS_REGION,
-        accessKey: process.env.AWS_ACCESS_KEY_ID ? 'SET' : 'NOT_SET'
+        hasEndpoint: !!process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT
       });
       
-      // Use manual configuration with GraphQL operations
+      // Use direct configuration with proper AWS credentials
       if (process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT) {
-        console.log('🔧 IMPROVED WEBHOOK: Using manual Amplify configuration with GraphQL');
+        console.log('🔧 FIXED WEBHOOK: Using direct AWS SDK credentials configuration');
         
-        // Configure Amplify with IAM credentials from Lambda environment
+        // Configure Amplify with direct AWS credentials
         Amplify.configure({
           API: {
             GraphQL: {
@@ -102,24 +101,30 @@ async function initializeAmplify() {
           }
         });
         
-        // Then create the GraphQL client
+        // Create the GraphQL client
         amplifyClient = generateClient({
           authMode: 'iam'
         });
         
-        console.log('✅ IMPROVED WEBHOOK: Amplify GraphQL client initialized');
-        console.log('🔍 IMPROVED WEBHOOK: Client structure:', {
+        console.log('✅ FIXED WEBHOOK: Amplify GraphQL client initialized');
+        console.log('🔍 FIXED WEBHOOK: Client structure:', {
           hasGraphql: typeof amplifyClient.graphql === 'function',
           endpoint: process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT,
-          region: process.env.AWS_REGION || 'us-east-2'
+          region: process.env.AWS_REGION
         });
       } else {
-        console.log('⚠️ IMPROVED WEBHOOK: No GraphQL endpoint found in environment');
+        console.log('⚠️ FIXED WEBHOOK: No GraphQL endpoint found in environment');
         return null;
       }
       
     } catch (error) {
-      console.error('❌ IMPROVED WEBHOOK: Failed to initialize Amplify:', error);
+      console.error('❌ FIXED WEBHOOK: Failed to initialize Amplify:', error);
+      console.error('❌ FIXED WEBHOOK: Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack trace',
+        type: typeof error,
+        name: error instanceof Error ? error.name : 'Unknown'
+      });
       // Continue without Amplify - webhook will still work for signature verification
       return null;
     }
@@ -128,8 +133,8 @@ async function initializeAmplify() {
 }
 
 export const handler: APIGatewayProxyHandler = async (event) => {
-  console.log('🎯 IMPROVED WEBHOOK: Handler called');
-  console.log('📝 IMPROVED WEBHOOK: Event method:', event.httpMethod);
+  console.log('🎯 FIXED WEBHOOK: Handler called');
+  console.log('📝 FIXED WEBHOOK: Event method:', event.httpMethod);
   
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -139,7 +144,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
   // Handle preflight requests
   if (event.httpMethod === 'OPTIONS') {
-    console.log('✅ IMPROVED WEBHOOK: OPTIONS handled');
+    console.log('✅ FIXED WEBHOOK: OPTIONS handled');
     return {
       statusCode: 200,
       headers,
@@ -147,49 +152,84 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     };
   }
 
-  // Only handle POST requests
-  if (event.httpMethod !== 'POST') {
-    console.log('❌ IMPROVED WEBHOOK: Invalid method:', event.httpMethod);
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
-    };
-  }
-
   try {
-    const body = event.body;
-    const signature = event.headers['stripe-signature'] || event.headers['Stripe-Signature'];
+    // Validate request body and signature
+    const hasBody = !!event.body;
+    const hasSignature = !!(event.headers['stripe-signature'] || event.headers['Stripe-Signature']);
+    const bodyLength = event.body ? event.body.length : 0;
     
-    console.log('🔍 IMPROVED WEBHOOK: Request details:', {
-      hasBody: !!body,
-      hasSignature: !!signature,
-      bodyLength: body?.length || 0
-    });
-
-    // Basic validation
-    if (!body) {
-      console.log('❌ IMPROVED WEBHOOK: No request body');
+    console.log('🔍 FIXED WEBHOOK: Request details:', { hasBody, hasSignature, bodyLength });
+    
+    if (!hasBody) {
+      console.log('❌ FIXED WEBHOOK: No request body received');
       return {
         statusCode: 400,
         headers,
-        body: JSON.stringify({ error: 'No request body' })
+        body: JSON.stringify({ error: 'Request body is required' })
       };
     }
 
     // Initialize Stripe client
     const stripe = await initializeStripe();
-    
-    let stripeEvent: any = null;
+    if (!stripe) {
+      console.error('❌ FIXED WEBHOOK: Failed to initialize Stripe client');
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'Stripe initialization failed' })
+      };
+    }
 
-    // Verify webhook signature if we have the secret
-    if (env.STRIPE_WEBHOOK_SECRET && signature && stripe) {
+    // Verify webhook signature
+    if (hasSignature && env.STRIPE_WEBHOOK_SECRET) {
+      console.log('🔐 FIXED WEBHOOK: Verifying signature...');
+      const stripeSignature = event.headers['stripe-signature'] || event.headers['Stripe-Signature'];
+      
       try {
-        console.log('🔐 IMPROVED WEBHOOK: Verifying signature...');
-        stripeEvent = stripe.webhooks.constructEvent(body, signature, env.STRIPE_WEBHOOK_SECRET);
-        console.log('✅ IMPROVED WEBHOOK: Signature verified');
-      } catch (err: any) {
-        console.error('❌ IMPROVED WEBHOOK: Signature verification failed:', err.message);
+        const webhookEvent = stripe.webhooks.constructEvent(
+          event.body,
+          stripeSignature!,
+          env.STRIPE_WEBHOOK_SECRET
+        );
+        
+        console.log('✅ FIXED WEBHOOK: Signature verified');
+        console.log('📦 FIXED WEBHOOK: Event type:', webhookEvent.type);
+        console.log('🔍 FIXED WEBHOOK: Event ID:', webhookEvent.id);
+        
+        // Handle different event types
+        switch (webhookEvent.type) {
+          case 'customer.subscription.created':
+            await handleSubscriptionCreated(webhookEvent);
+            break;
+          case 'customer.subscription.updated':
+            await handleSubscriptionUpdated(webhookEvent);
+            break;
+          case 'customer.subscription.deleted':
+            await handleSubscriptionDeleted(webhookEvent);
+            break;
+          case 'invoice.payment_succeeded':
+            await handlePaymentSucceeded(webhookEvent);
+            break;
+          case 'invoice.payment_failed':
+            await handlePaymentFailed(webhookEvent);
+            break;
+          default:
+            console.log(`⚠️ FIXED WEBHOOK: Unhandled event type: ${webhookEvent.type}`);
+        }
+        
+        console.log('✅ FIXED WEBHOOK: Event processed successfully');
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ 
+            received: true,
+            eventType: webhookEvent.type,
+            eventId: webhookEvent.id,
+            timestamp: new Date().toISOString()
+          })
+        };
+      } catch (signatureError: any) {
+        console.error('❌ FIXED WEBHOOK: Signature verification failed:', signatureError.message);
         return {
           statusCode: 400,
           headers,
@@ -197,59 +237,16 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         };
       }
     } else {
-      // Parse JSON manually if no signature verification
-      try {
-        stripeEvent = JSON.parse(body);
-        console.log('⚠️ IMPROVED WEBHOOK: Processing without signature verification');
-      } catch (err) {
-        console.error('❌ IMPROVED WEBHOOK: Invalid JSON:', err);
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({ error: 'Invalid JSON' })
-        };
-      }
+      console.log('⚠️ FIXED WEBHOOK: No signature verification (signature or secret missing)');
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'Signature verification required' })
+      };
     }
-
-    console.log('📦 IMPROVED WEBHOOK: Event type:', stripeEvent.type);
-    console.log('🔍 IMPROVED WEBHOOK: Event ID:', stripeEvent.id);
-
-    // Process different event types
-    switch (stripeEvent.type) {
-      case 'customer.subscription.created':
-        await handleSubscriptionCreated(stripeEvent);
-        break;
-      case 'customer.subscription.updated':
-        await handleSubscriptionUpdated(stripeEvent);
-        break;
-      case 'customer.subscription.deleted':
-        await handleSubscriptionDeleted(stripeEvent);
-        break;
-      case 'invoice.payment_succeeded':
-        await handlePaymentSucceeded(stripeEvent);
-        break;
-      case 'invoice.payment_failed':
-        await handlePaymentFailed(stripeEvent);
-        break;
-      default:
-        console.log('ℹ️ IMPROVED WEBHOOK: Unhandled event type:', stripeEvent.type);
-    }
-
-    console.log('✅ IMPROVED WEBHOOK: Event processed successfully');
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ 
-        success: true, 
-        message: 'Webhook processed successfully',
-        eventType: stripeEvent.type,
-        eventId: stripeEvent.id,
-        timestamp: new Date().toISOString()
-      })
-    };
 
   } catch (error: any) {
-    console.error('💥 IMPROVED WEBHOOK: Error processing webhook:', error);
+    console.error('💥 FIXED WEBHOOK: Error processing webhook:', error);
     return {
       statusCode: 500,
       headers,
@@ -337,7 +334,11 @@ async function handleSubscriptionCreated(event: any) {
         authMode: 'iam'
       });
       
-      console.log('✅ Subscription created in database:', result);
+      if (result.errors && result.errors.length > 0) {
+        console.error('❌ GraphQL errors:', result.errors);
+      } else {
+        console.log('✅ Subscription created in database:', result.data);
+      }
     } catch (dbError: any) {
       console.error('❌ Database create failed:', dbError);
       console.error('❌ Error details:', {
@@ -404,49 +405,38 @@ async function handleSubscriptionUpdated(event: any) {
       if (listResult.data?.listUserSubscriptions?.items?.length > 0) {
         const existingSubscription = listResult.data.listUserSubscriptions.items[0];
         
-        // Update subscription using GraphQL mutation
+        // Update the subscription
         const updateUserSubscriptionMutation = /* GraphQL */ `
           mutation UpdateUserSubscription($input: UpdateUserSubscriptionInput!) {
             updateUserSubscription(input: $input) {
               id
+              stripeSubscriptionId
               status
-              cancelAtPeriodEnd
               updatedAt
             }
           }
         `;
         
-        const subscriptionItem = subscription.items.data[0];
-        const now = new Date().toISOString();
-        
         const updateInput = {
           id: existingSubscription.id,
           status: subscription.status,
-          currentPeriodStart: subscriptionItem?.current_period_start 
-            ? new Date(subscriptionItem.current_period_start * 1000).toISOString() 
-            : (subscription.start_date ? new Date(subscription.start_date * 1000).toISOString() : now),
-          currentPeriodEnd: subscriptionItem?.current_period_end 
-            ? new Date(subscriptionItem.current_period_end * 1000).toISOString() 
-            : now,
           cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
-          updatedAt: now
+          updatedAt: new Date().toISOString()
         };
         
-        console.log('📝 Updating subscription with GraphQL input:', updateInput);
-        
-        const result = await amplify.graphql({
+        const updateResult = await amplify.graphql({
           query: updateUserSubscriptionMutation,
           variables: { input: updateInput },
           authMode: 'iam'
         });
         
-        console.log('✅ Subscription updated in database:', result);
+        console.log('✅ Subscription updated in database:', updateResult);
       } else {
-        console.log('⚠️ Subscription not found in database for update');
+        console.log('⚠️ No existing subscription found to update');
       }
     } catch (dbError: any) {
       console.error('❌ Database update failed:', dbError);
-      // Don't fail the webhook - Stripe expects 200 OK
+      // Don't fail the webhook
     }
   } else {
     console.log('⚠️ Skipping database update - GraphQL client not available');
@@ -458,26 +448,20 @@ async function handleSubscriptionDeleted(event: any) {
   
   const subscription = event.data.object;
   
-  console.log('📋 Deleted subscription:', {
-    subscriptionId: subscription.id,
-    customerId: subscription.customer
-  });
-
   // Initialize Amplify client for database operations
   const amplify = await initializeAmplify();
   
   if (amplify && amplify.graphql) {
     try {
-      console.log('💾 Marking subscription as canceled in database using GraphQL...');
+      console.log('💾 Deleting subscription in database using GraphQL...');
       
-      // First, query to find the existing subscription
+      // First, find the subscription to delete
       const listUserSubscriptionsQuery = /* GraphQL */ `
         query ListUserSubscriptions($filter: ModelUserSubscriptionFilterInput) {
           listUserSubscriptions(filter: $filter) {
             items {
               id
               stripeSubscriptionId
-              status
             }
           }
         }
@@ -498,38 +482,29 @@ async function handleSubscriptionDeleted(event: any) {
       if (listResult.data?.listUserSubscriptions?.items?.length > 0) {
         const existingSubscription = listResult.data.listUserSubscriptions.items[0];
         
-        // Update subscription to canceled status using GraphQL mutation
-        const updateUserSubscriptionMutation = /* GraphQL */ `
-          mutation UpdateUserSubscription($input: UpdateUserSubscriptionInput!) {
-            updateUserSubscription(input: $input) {
+        // Delete the subscription
+        const deleteUserSubscriptionMutation = /* GraphQL */ `
+          mutation DeleteUserSubscription($input: DeleteUserSubscriptionInput!) {
+            deleteUserSubscription(input: $input) {
               id
-              status
-              updatedAt
+              stripeSubscriptionId
             }
           }
         `;
         
-        const updateInput = {
-          id: existingSubscription.id,
-          status: 'canceled',
-          updatedAt: new Date().toISOString()
-        };
-        
-        console.log('📝 Updating subscription to canceled with GraphQL input:', updateInput);
-        
-        const result = await amplify.graphql({
-          query: updateUserSubscriptionMutation,
-          variables: { input: updateInput },
+        const deleteResult = await amplify.graphql({
+          query: deleteUserSubscriptionMutation,
+          variables: { input: { id: existingSubscription.id } },
           authMode: 'iam'
         });
         
-        console.log('✅ Subscription marked as canceled in database:', result);
+        console.log('✅ Subscription deleted from database:', deleteResult);
       } else {
-        console.log('⚠️ Subscription not found in database for deletion');
+        console.log('⚠️ No existing subscription found to delete');
       }
     } catch (dbError: any) {
-      console.error('❌ Database deletion failed:', dbError);
-      // Don't fail the webhook - Stripe expects 200 OK
+      console.error('❌ Database delete failed:', dbError);
+      // Don't fail the webhook
     }
   } else {
     console.log('⚠️ Skipping database update - GraphQL client not available');
@@ -540,29 +515,28 @@ async function handlePaymentSucceeded(event: any) {
   console.log('💰 PAYMENT SUCCEEDED:', event.data.object.id);
   
   const invoice = event.data.object;
-  
   console.log('📋 Payment details:', {
     invoiceId: invoice.id,
-    amount: invoice.amount_paid,
-    currency: invoice.currency,
-    customerId: invoice.customer
+    subscriptionId: invoice.subscription,
+    amountPaid: invoice.amount_paid,
+    status: invoice.status
   });
-
-  // TODO: Implement payment success logic
+  
+  // Could update payment history or reset usage counts here
 }
 
 async function handlePaymentFailed(event: any) {
-  console.log('💳 PAYMENT FAILED:', event.data.object.id);
+  console.log('❌ PAYMENT FAILED:', event.data.object.id);
   
   const invoice = event.data.object;
-  
-  console.log('📋 Failed payment:', {
+  console.log('📋 Failed payment details:', {
     invoiceId: invoice.id,
-    amount: invoice.amount_due,
-    customerId: invoice.customer
+    subscriptionId: invoice.subscription,
+    amountDue: invoice.amount_due,
+    attemptCount: invoice.attempt_count
   });
-
-  // TODO: Implement payment failure logic
+  
+  // Could handle payment failure logic here (suspend access, send notifications, etc.)
 }
 
-console.log('✅ IMPROVED WEBHOOK: Module loaded completely');
+console.log('✅ FIXED WEBHOOK: Module loaded completely');
