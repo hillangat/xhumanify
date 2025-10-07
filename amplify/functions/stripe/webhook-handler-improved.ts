@@ -1,14 +1,18 @@
 import type { APIGatewayProxyHandler } from 'aws-lambda';
-import { env } from '$amplify/env/handleWebhook';
+import { Amplify } from 'aws-amplify';
+import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../data/resource';
+import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
+import Stripe from 'stripe';
+// @ts-ignore
+import { env } from '$amplify/env/handleWebhook';
 
 console.log('🚀 IMPROVED WEBHOOK: Module loading started');
 
 // Environment variables accessed through generated env object
 console.log('🔍 IMPROVED WEBHOOK: Environment check:', {
   STRIPE_SECRET_KEY: env.STRIPE_SECRET_KEY ? 'SET' : 'NOT_SET',
-  STRIPE_WEBHOOK_SECRET: env.STRIPE_WEBHOOK_SECRET ? 'SET' : 'NOT_SET',
-  AMPLIFY_DATA_GRAPHQL_ENDPOINT: process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT ? 'SET' : 'NOT_SET'
+  STRIPE_WEBHOOK_SECRET: env.STRIPE_WEBHOOK_SECRET ? 'SET' : 'NOT_SET'
 });
 
 // Lazy initialization variables (initialized inside handler)
@@ -61,34 +65,18 @@ async function initializeAmplify() {
   if (!amplifyClient) {
     try {
       console.log('⚡ IMPROVED WEBHOOK: Initializing Amplify client...');
-      const { generateClient } = await import('aws-amplify/data');
-      const { Amplify } = await import('aws-amplify');
       
-      // Configure Amplify with the GraphQL endpoint
-      if (process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT) {
-        console.log('🔧 IMPROVED WEBHOOK: Configuring Amplify with endpoint:', process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT);
-        
-        Amplify.configure({
-          API: {
-            GraphQL: {
-              endpoint: process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT,
-              region: process.env.AWS_REGION || 'us-east-2',
-              defaultAuthMode: 'iam'
-            }
-          }
-        });
-        
-        // Generate client with IAM auth mode and Schema
-        amplifyClient = generateClient<Schema>({
-          authMode: 'iam',
-        });
-        
-        console.log('✅ IMPROVED WEBHOOK: Amplify client initialized with custom config');
-        console.log('🔍 IMPROVED WEBHOOK: Client models available:', Object.keys(amplifyClient.models || {}));
-      } else {
-        console.log('⚠️ IMPROVED WEBHOOK: No GraphQL endpoint found in environment');
-        return null;
-      }
+      // Use the official Amplify Gen 2 runtime configuration pattern
+      const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);
+      
+      Amplify.configure(resourceConfig, libraryOptions);
+      
+      // Generate client with Schema
+      amplifyClient = generateClient<Schema>();
+      
+      console.log('✅ IMPROVED WEBHOOK: Amplify client initialized with official Gen 2 pattern');
+      console.log('🔍 IMPROVED WEBHOOK: Client models available:', Object.keys(amplifyClient.models || {}));
+      
     } catch (error) {
       console.error('❌ IMPROVED WEBHOOK: Failed to initialize Amplify:', error);
       // Continue without Amplify - webhook will still work for signature verification
