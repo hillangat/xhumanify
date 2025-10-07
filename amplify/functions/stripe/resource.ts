@@ -1,17 +1,23 @@
-import { defineFunction } from '@aws-amplify/backend';
+import { defineFunction, secret } from '@aws-amplify/backend';
 
 export const createCheckoutSession = defineFunction({
   name: 'createCheckoutSession',
   entry: './create-checkout-session.ts',
   timeoutSeconds: 60,
-  memoryMB: 512
+  memoryMB: 512,
+  environment: {
+    STRIPE_SECRET_KEY: secret('STRIPE_SECRET_KEY')
+  }
 });
 
 export const createPortalSession = defineFunction({
   name: 'createPortalSession', 
   entry: './create-portal-session.ts',
   timeoutSeconds: 60,
-  memoryMB: 512
+  memoryMB: 512,
+  environment: {
+    STRIPE_SECRET_KEY: secret('STRIPE_SECRET_KEY')
+  }
 });
 
 export const handleWebhook = defineFunction({
@@ -21,8 +27,8 @@ export const handleWebhook = defineFunction({
   memoryMB: 512,
   resourceGroupName: 'data', // Assign to data stack to resolve circular dependency
   environment: {
-    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || '',
-    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || ''
+    STRIPE_SECRET_KEY: secret('STRIPE_SECRET_KEY'),
+    STRIPE_WEBHOOK_SECRET: secret('STRIPE_WEBHOOK_SECRET')
   }
 });
 

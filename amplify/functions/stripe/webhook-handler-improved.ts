@@ -1,16 +1,13 @@
 import type { APIGatewayProxyHandler } from 'aws-lambda';
+import { env } from '$amplify/env/handleWebhook';
 
 console.log('🚀 IMPROVED WEBHOOK: Module loading started');
 
-// Environment variables check at module level (safe)
-const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
-const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
-const AMPLIFY_DATA_GRAPHQL_ENDPOINT = process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT || process.env.AMPLIFY_GRAPHQL_ENDPOINT;
-
+// Environment variables accessed through generated env object
 console.log('🔍 IMPROVED WEBHOOK: Environment check:', {
-  STRIPE_SECRET_KEY: STRIPE_SECRET_KEY ? 'SET' : 'NOT_SET',
-  STRIPE_WEBHOOK_SECRET: STRIPE_WEBHOOK_SECRET ? 'SET' : 'NOT_SET',
-  AMPLIFY_DATA_GRAPHQL_ENDPOINT: AMPLIFY_DATA_GRAPHQL_ENDPOINT ? 'SET' : 'NOT_SET'
+  STRIPE_SECRET_KEY: env.STRIPE_SECRET_KEY ? 'SET' : 'NOT_SET',
+  STRIPE_WEBHOOK_SECRET: env.STRIPE_WEBHOOK_SECRET ? 'SET' : 'NOT_SET',
+  AMPLIFY_DATA_GRAPHQL_ENDPOINT: process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT ? 'SET' : 'NOT_SET'
 });
 
 // Lazy initialization variables (initialized inside handler)
@@ -48,10 +45,10 @@ function getUsageLimitForPlan(planName: string): number {
 }
 
 async function initializeStripe() {
-  if (!stripeClient && STRIPE_SECRET_KEY) {
+  if (!stripeClient && env.STRIPE_SECRET_KEY) {
     console.log('⚡ IMPROVED WEBHOOK: Initializing Stripe client...');
     const Stripe = await import('stripe');
-    stripeClient = new Stripe.default(STRIPE_SECRET_KEY, {
+    stripeClient = new Stripe.default(env.STRIPE_SECRET_KEY, {
       apiVersion: '2025-09-30.clover',
     });
     console.log('✅ IMPROVED WEBHOOK: Stripe client initialized');
@@ -67,13 +64,13 @@ async function initializeAmplify() {
       const { Amplify } = await import('aws-amplify');
       
       // Configure Amplify with the GraphQL endpoint
-      if (AMPLIFY_DATA_GRAPHQL_ENDPOINT) {
-        console.log('🔧 IMPROVED WEBHOOK: Configuring Amplify with endpoint:', AMPLIFY_DATA_GRAPHQL_ENDPOINT);
+      if (process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT) {
+        console.log('🔧 IMPROVED WEBHOOK: Configuring Amplify with endpoint:', process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT);
         
         Amplify.configure({
           API: {
             GraphQL: {
-              endpoint: AMPLIFY_DATA_GRAPHQL_ENDPOINT,
+              endpoint: process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT,
               region: process.env.AWS_REGION || 'us-east-2',
               defaultAuthMode: 'iam'
             }
@@ -154,10 +151,10 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     let stripeEvent: any = null;
 
     // Verify webhook signature if we have the secret
-    if (STRIPE_WEBHOOK_SECRET && signature && stripe) {
+    if (env.STRIPE_WEBHOOK_SECRET && signature && stripe) {
       try {
         console.log('🔐 IMPROVED WEBHOOK: Verifying signature...');
-        stripeEvent = stripe.webhooks.constructEvent(body, signature, STRIPE_WEBHOOK_SECRET);
+        stripeEvent = stripe.webhooks.constructEvent(body, signature, env.STRIPE_WEBHOOK_SECRET);
         console.log('✅ IMPROVED WEBHOOK: Signature verified');
       } catch (err: any) {
         console.error('❌ IMPROVED WEBHOOK: Signature verification failed:', err.message);
