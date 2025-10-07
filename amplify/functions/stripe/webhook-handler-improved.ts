@@ -1,5 +1,6 @@
 import type { APIGatewayProxyHandler } from 'aws-lambda';
 import { env } from '$amplify/env/handleWebhook';
+import type { Schema } from '../../data/resource';
 
 console.log('🚀 IMPROVED WEBHOOK: Module loading started');
 
@@ -77,11 +78,13 @@ async function initializeAmplify() {
           }
         });
         
-        amplifyClient = generateClient({
+        // Generate client with IAM auth mode and Schema
+        amplifyClient = generateClient<Schema>({
           authMode: 'iam',
         });
         
         console.log('✅ IMPROVED WEBHOOK: Amplify client initialized with custom config');
+        console.log('🔍 IMPROVED WEBHOOK: Client models available:', Object.keys(amplifyClient.models || {}));
       } else {
         console.log('⚠️ IMPROVED WEBHOOK: No GraphQL endpoint found in environment');
         return null;
