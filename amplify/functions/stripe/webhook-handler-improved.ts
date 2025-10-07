@@ -243,7 +243,11 @@ async function handleSubscriptionCreated(event: any) {
     subscriptionId: subscription.id,
     customerId: customerId,
     status: subscription.status,
-    planId: subscription.items.data[0]?.price?.id
+    planId: subscription.items.data[0]?.price?.id,
+    hasItems: !!subscription.items?.data?.length,
+    itemPeriodStart: subscription.items.data[0]?.current_period_start,
+    itemPeriodEnd: subscription.items.data[0]?.current_period_end,
+    startDate: subscription.start_date
   });
 
   // Initialize Amplify client for database operations
@@ -257,6 +261,9 @@ async function handleSubscriptionCreated(event: any) {
       const planId = subscription.items.data[0]?.price?.id;
       const planName = getPlanNameFromPriceId(planId);
       
+      // Get period dates from subscription items (where they actually exist in Stripe data)
+      const subscriptionItem = subscription.items.data[0];
+      
       // Create subscription record with safe date handling
       const now = new Date().toISOString();
       const subscriptionData = {
@@ -265,11 +272,11 @@ async function handleSubscriptionCreated(event: any) {
         stripePriceId: planId,
         status: subscription.status,
         planName: planName,
-        currentPeriodStart: subscription.current_period_start 
-          ? new Date(subscription.current_period_start * 1000).toISOString() 
-          : now,
-        currentPeriodEnd: subscription.current_period_end 
-          ? new Date(subscription.current_period_end * 1000).toISOString() 
+        currentPeriodStart: subscriptionItem?.current_period_start 
+          ? new Date(subscriptionItem.current_period_start * 1000).toISOString() 
+          : (subscription.start_date ? new Date(subscription.start_date * 1000).toISOString() : now),
+        currentPeriodEnd: subscriptionItem?.current_period_end 
+          ? new Date(subscriptionItem.current_period_end * 1000).toISOString() 
           : now,
         cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
         usageCount: 0,
@@ -323,14 +330,15 @@ async function handleSubscriptionUpdated(event: any) {
         const existingSubscription = existingSubscriptions.data[0];
         
         // Update subscription data with safe date handling
+        const subscriptionItem = subscription.items.data[0];
         const now = new Date().toISOString();
         const updateData = {
           status: subscription.status,
-          currentPeriodStart: subscription.current_period_start 
-            ? new Date(subscription.current_period_start * 1000).toISOString() 
-            : now,
-          currentPeriodEnd: subscription.current_period_end 
-            ? new Date(subscription.current_period_end * 1000).toISOString() 
+          currentPeriodStart: subscriptionItem?.current_period_start 
+            ? new Date(subscriptionItem.current_period_start * 1000).toISOString() 
+            : (subscription.start_date ? new Date(subscription.start_date * 1000).toISOString() : now),
+          currentPeriodEnd: subscriptionItem?.current_period_end 
+            ? new Date(subscriptionItem.current_period_end * 1000).toISOString() 
             : now,
           cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
           updatedAt: now
