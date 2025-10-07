@@ -66,8 +66,18 @@ async function initializeAmplify() {
     try {
       console.log('⚡ IMPROVED WEBHOOK: Initializing Amplify client...');
       
+      // Create extended env object with required AMPLIFY_DATA_DEFAULT_NAME
+      const extendedEnv = {
+        ...env,
+        AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || '',
+        AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || '',
+        AWS_SESSION_TOKEN: process.env.AWS_SESSION_TOKEN || '',
+        AWS_REGION: process.env.AWS_REGION || 'us-east-2',
+        AMPLIFY_DATA_DEFAULT_NAME: 'AmplifyData' // Default data resource name
+      };
+      
       // Use the official Amplify Gen 2 runtime configuration pattern
-      const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(env);
+      const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(extendedEnv);
       
       Amplify.configure(resourceConfig, libraryOptions);
       
