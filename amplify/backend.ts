@@ -30,8 +30,7 @@ const backend = defineBackend({
 backend.createCheckoutSession.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
 backend.createCheckoutSession.addEnvironment("NEXT_PUBLIC_APP_URL", process.env.NEXT_PUBLIC_APP_URL || "https://www.humanizeaicontents.com");
 backend.createPortalSession.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
-backend.handleWebhook.addEnvironment("STRIPE_SECRET_KEY", process.env.STRIPE_SECRET_KEY || "");
-backend.handleWebhook.addEnvironment("STRIPE_WEBHOOK_SECRET", process.env.STRIPE_WEBHOOK_SECRET || "");
+// Webhook function environment variables are now set in its own resource definition
 // Pass the GraphQL API reference to the webhook function so it can access the endpoint automatically
 backend.handleWebhook.addEnvironment("AMPLIFY_DATA_GRAPHQL_ENDPOINT", `https://${backend.data.resources.graphqlApi.apiId}.appsync-api.${Stack.of(backend.data.resources.graphqlApi).region}.amazonaws.com/graphql`);
 

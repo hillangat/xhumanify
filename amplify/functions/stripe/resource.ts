@@ -19,7 +19,11 @@ export const handleWebhook = defineFunction({
   entry: './webhook-handler-improved.ts', // Improved handler with proper Stripe integration
   timeoutSeconds: 60, // Increased from default 3 seconds to handle complex webhook processing
   memoryMB: 512,
-  resourceGroupName: 'data' // Assign to data stack to resolve circular dependency
+  resourceGroupName: 'data', // Assign to data stack to resolve circular dependency
+  environment: {
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY || '',
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET || ''
+  }
 });
 
 // Monthly usage reset function for free tier users
