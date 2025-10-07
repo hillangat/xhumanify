@@ -1,4 +1,5 @@
 import { type ClientSchema, a, defineData, defineFunction } from "@aws-amplify/backend";
+import { handleWebhook } from "../functions/stripe/resource";
 
 /*== STEP 1 ===============================================================
 The section below creates a Todo database table with a "content" field. Try
@@ -58,7 +59,9 @@ const schema = a.schema({
       createdAt: a.datetime(),
       updatedAt: a.datetime(),
     })
-    .authorization((allow) => [allow.owner().identityClaim("sub")]),
+    .authorization((allow) => [
+      allow.owner().identityClaim("sub")
+    ]),
   UsageTracking: a
     .model({
       operation: a.string().required(), // 'humanify', 'analyze', etc.
@@ -73,7 +76,7 @@ const schema = a.schema({
     .returns(a.string())
     .authorization((allow) => [allow.publicApiKey()])
     .handler(a.handler.function(generateHaikuFunction))
-});
+}).authorization((allow) => [allow.resource(handleWebhook)]);
 
 export type Schema = ClientSchema<typeof schema>;
 
