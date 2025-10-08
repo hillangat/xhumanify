@@ -3,6 +3,7 @@ import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../data/resource';
 import Stripe from 'stripe';
+import { PLAN_LIMITS } from '../../shared/planConfig';
 // @ts-ignore
 import { env } from '$amplify/env/handleWebhook';
 
@@ -47,36 +48,40 @@ const client = generateClient<Schema>({
 
 // Helper functions for plan mapping
 function getPlanNameFromPriceId(priceId: string): string {
-  // Map Stripe price IDs to plan names based on actual configuration
+  // Map Stripe price IDs to plan names based on actual configuration from frontend
   // Using lowercase to match database format (existing 'free' plan uses lowercase)
   const planMapping: Record<string, string> = {
     // Lite plan
-    'price_1SEAui47Knk6vC3kvBiS86dC': 'lite',
-    'price_1SEBk147Knk6vC3kVV288Vmg': 'lite',
+    'price_1SEAui47Knk6vC3kvBiS86dC': 'lite',  // monthly
+    'price_1SEBk147Knk6vC3kVV288Vmg': 'lite',  // yearly
     // Standard plan  
-    'price_1SECNL47Knk6vC3kGQMZEwCH': 'standard',
-    'price_1SECNL47Knk6vC3kao99ug2W': 'standard',
-    // Pro plan
-    'price_1SECXK47Knk6vC3kRiBZvOAZ': 'pro',
-    'price_1SECXK47Knk6vC3k6hQVrq8S': 'pro'
+    'price_1SECNL47Knk6vC3kGQMZEwCH': 'standard',  // monthly
+    'price_1SECNL47Knk6vC3kao99ug2W': 'standard',  // yearly
+    // Pro plan - using price IDs from frontend config
+    'price_1SECQb47Knk6vC3kkvNYxIii': 'pro',  // monthly 
+    'price_1SECRf47Knk6vC3kaZmpEomz': 'pro'   // yearly
   };
   
   const planName = planMapping[priceId] || 'unknown';
   console.log(`🔍 Plan mapping: ${priceId} -> ${planName}`);
+  console.log(`🔍 Available price IDs: ${Object.keys(planMapping).join(', ')}`);
   return planName;
 }
 
 function getUsageLimitForPlan(planName: string): number {
-  const usageLimits: Record<string, number> = {
-    'lite': 20000,
-    'standard': 100000,
-    'pro': 500000,
-    'free': 5000  // Add free plan limit
-  };
+  // Use shared plan configuration to ensure consistency across the application
+  const planConfig = PLAN_LIMITS[planName];
   
-  const limit = usageLimits[planName] || 20000;
-  console.log(`🔍 Usage limit for plan "${planName}": ${limit}`);
-  return limit;
+  if (planConfig) {
+    const limit = planConfig.usageLimit;
+    console.log(`🔍 Usage limit for plan "${planName}" from shared config: ${limit}`);
+    return limit;
+  }
+  
+  // Fallback for unknown plans
+  const defaultLimit = 20000;
+  console.log(`⚠️ Unknown plan "${planName}", using default limit: ${defaultLimit}`);
+  return defaultLimit;
 }
 
 // Lazy initialization variables
