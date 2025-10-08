@@ -299,10 +299,10 @@ async function handleSubscriptionCreated(event: any) {
         authMode: 'iam'
       }) as any; // Type assertion to handle GraphQL result types
       
-      if (result.errors && result.errors.length > 0) {
+      if (result?.errors && result.errors.length > 0) {
         console.error('❌ GraphQL errors:', result.errors);
       } else {
-        console.log('✅ Subscription created via GraphQL fallback:', result.data);
+        console.log('✅ Subscription created via GraphQL fallback:', result?.data);
       }
       return;
     }
