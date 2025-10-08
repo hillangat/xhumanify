@@ -48,29 +48,35 @@ const client = generateClient<Schema>({
 // Helper functions for plan mapping
 function getPlanNameFromPriceId(priceId: string): string {
   // Map Stripe price IDs to plan names based on actual configuration
+  // Using lowercase to match database format (existing 'free' plan uses lowercase)
   const planMapping: Record<string, string> = {
     // Lite plan
-    'price_1SEAui47Knk6vC3kvBiS86dC': 'Lite',
-    'price_1SEBk147Knk6vC3kVV288Vmg': 'Lite',
+    'price_1SEAui47Knk6vC3kvBiS86dC': 'lite',
+    'price_1SEBk147Knk6vC3kVV288Vmg': 'lite',
     // Standard plan  
-    'price_1SECNL47Knk6vC3kGQMZEwCH': 'Standard',
-    'price_1SECNL47Knk6vC3kao99ug2W': 'Standard',
+    'price_1SECNL47Knk6vC3kGQMZEwCH': 'standard',
+    'price_1SECNL47Knk6vC3kao99ug2W': 'standard',
     // Pro plan
-    'price_1SECXK47Knk6vC3kRiBZvOAZ': 'Pro',
-    'price_1SECXK47Knk6vC3k6hQVrq8S': 'Pro'
+    'price_1SECXK47Knk6vC3kRiBZvOAZ': 'pro',
+    'price_1SECXK47Knk6vC3k6hQVrq8S': 'pro'
   };
   
-  return planMapping[priceId] || 'Unknown';
+  const planName = planMapping[priceId] || 'unknown';
+  console.log(`🔍 Plan mapping: ${priceId} -> ${planName}`);
+  return planName;
 }
 
 function getUsageLimitForPlan(planName: string): number {
   const usageLimits: Record<string, number> = {
-    'Lite': 20000,
-    'Standard': 100000,
-    'Pro': 500000
+    'lite': 20000,
+    'standard': 100000,
+    'pro': 500000,
+    'free': 5000  // Add free plan limit
   };
   
-  return usageLimits[planName] || 20000;
+  const limit = usageLimits[planName] || 20000;
+  console.log(`🔍 Usage limit for plan "${planName}": ${limit}`);
+  return limit;
 }
 
 // Lazy initialization variables
@@ -237,13 +243,17 @@ async function handleSubscriptionCreated(event: any) {
     
     // Extract subscription details
     const planId = subscription.items.data[0]?.price?.id;
+    console.log(`🔍 Raw price ID from Stripe: ${planId}`);
+    
     const planName = getPlanNameFromPriceId(planId);
+    console.log(`🔍 Mapped plan name: "${planName}"`);
     
     // Get period dates from subscription items (where they actually exist in Stripe data)
     const subscriptionItem = subscription.items.data[0];
     
     // Create subscription record with safe date handling
     const now = new Date().toISOString();
+    const usageLimit = getUsageLimitForPlan(planName);
     
     // Create UserSubscription using Models API
     const subscriptionInput = {
@@ -260,12 +270,12 @@ async function handleSubscriptionCreated(event: any) {
         : now,
       cancelAtPeriodEnd: subscription.cancel_at_period_end || false,
       usageCount: 0,
-      usageLimit: getUsageLimitForPlan(planName),
+      usageLimit: usageLimit,
       createdAt: now,
       updatedAt: now
     };
     
-    console.log('📝 Creating subscription with Models API input:', subscriptionInput);
+    console.log('📝 Creating subscription with Models API input:', JSON.stringify(subscriptionInput, null, 2));
     
     // Debug client structure
     console.log('🔍 Debug client structure:', {
@@ -293,6 +303,7 @@ async function handleSubscriptionCreated(event: any) {
         }
       `;
       
+      console.log('🔄 Attempting GraphQL fallback with mutation...');
       const result = await client.graphql({
         query: createUserSubscriptionMutation,
         variables: { input: subscriptionInput },
@@ -300,17 +311,21 @@ async function handleSubscriptionCreated(event: any) {
       }) as any; // Type assertion to handle GraphQL result types
       
       if (result?.errors && result.errors.length > 0) {
-        console.error('❌ GraphQL errors:', result.errors);
+        console.error('❌ GraphQL errors:', JSON.stringify(result.errors, null, 2));
+        throw new Error(`GraphQL errors: ${JSON.stringify(result.errors)}`);
       } else {
-        console.log('✅ Subscription created via GraphQL fallback:', result?.data);
+        console.log('✅ Subscription created via GraphQL fallback!');
+        console.log('📋 Created record:', JSON.stringify(result?.data?.createUserSubscription, null, 2));
       }
       return;
     }
     
     // Use the Models API instead of raw GraphQL
+    console.log('🔄 Attempting Models API creation...');
     const result = await client.models.UserSubscription.create(subscriptionInput);
     
-    console.log('✅ Subscription created in database:', result);
+    console.log('✅ Subscription created via Models API!');
+    console.log('📋 Created record:', JSON.stringify(result, null, 2));
   } catch (dbError: any) {
     console.error('❌ Database create failed:', dbError);
     console.error('❌ Error details:', {
