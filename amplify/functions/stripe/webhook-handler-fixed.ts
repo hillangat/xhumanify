@@ -301,9 +301,16 @@ async function handleSubscriptionCreated(event: any) {
             id
             stripeCustomerId
             stripeSubscriptionId
+            stripePriceId
             status
             planName
+            currentPeriodStart
+            currentPeriodEnd
+            cancelAtPeriodEnd
+            usageCount
+            usageLimit
             createdAt
+            updatedAt
           }
         }
       `;
@@ -321,6 +328,39 @@ async function handleSubscriptionCreated(event: any) {
       } else {
         console.log('✅ Subscription created via GraphQL fallback!');
         console.log('📋 Created record:', JSON.stringify(result?.data?.createUserSubscription, null, 2));
+        
+        // Verify the record was actually created by querying it back
+        try {
+          console.log('🔍 Verifying record creation by querying back...');
+          const verifyQuery = /* GraphQL */ `
+            query GetUserSubscription($id: ID!) {
+              getUserSubscription(id: $id) {
+                id
+                stripeCustomerId
+                stripeSubscriptionId
+                stripePriceId
+                planName
+                usageCount
+                usageLimit
+                status
+              }
+            }
+          `;
+          
+          const verifyResult = await client.graphql({
+            query: verifyQuery,
+            variables: { id: result?.data?.createUserSubscription?.id },
+            authMode: 'iam'
+          }) as any;
+          
+          if (verifyResult?.data?.getUserSubscription) {
+            console.log('✅ Record verification successful:', JSON.stringify(verifyResult.data.getUserSubscription, null, 2));
+          } else {
+            console.error('❌ Record verification failed - record not found in database');
+          }
+        } catch (verifyError) {
+          console.error('❌ Record verification error:', verifyError);
+        }
       }
       return;
     }
