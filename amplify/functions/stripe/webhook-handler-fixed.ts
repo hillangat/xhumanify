@@ -1,7 +1,6 @@
 import type { APIGatewayProxyHandler } from 'aws-lambda';
 import { Amplify } from 'aws-amplify';
 import { generateClient } from 'aws-amplify/data';
-import { getAmplifyDataClientConfig } from '@aws-amplify/backend/function/runtime';
 import type { Schema } from '../../data/resource';
 import Stripe from 'stripe';
 // @ts-ignore
@@ -15,21 +14,36 @@ console.log('🔍 FIXED WEBHOOK: Environment check:', {
   STRIPE_WEBHOOK_SECRET: env.STRIPE_WEBHOOK_SECRET ? 'SET' : 'NOT_SET'
 });
 
-// Configure Amplify with proper Gen 2 configuration
-const dataClientEnv = {
-  AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID!,
-  AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY!,
-  AWS_SESSION_TOKEN: process.env.AWS_SESSION_TOKEN!,
-  AWS_REGION: process.env.AWS_REGION!,
-  AMPLIFY_DATA_DEFAULT_NAME: process.env.AMPLIFY_DATA_DEFAULT_NAME || 'amplifyData',
-  AMPLIFY_DATA_GRAPHQL_ENDPOINT: process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT!
-};
-
-const { resourceConfig, libraryOptions } = await getAmplifyDataClientConfig(dataClientEnv);
-Amplify.configure(resourceConfig, libraryOptions);
+// Configure Amplify with direct approach that works reliably
+Amplify.configure({
+  API: {
+    GraphQL: {
+      endpoint: process.env.AMPLIFY_DATA_GRAPHQL_ENDPOINT!,
+      region: process.env.AWS_REGION || 'us-east-2',
+      defaultAuthMode: 'iam'
+    }
+  }
+}, {
+  Auth: {
+    credentialsProvider: {
+      getCredentialsAndIdentityId: async () => ({
+        credentials: {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+          sessionToken: process.env.AWS_SESSION_TOKEN
+        }
+      }),
+      clearCredentialsAndIdentityId: () => {
+        // No-op for Lambda environment
+      }
+    }
+  }
+});
 
 // Create typed client for database operations
-const client = generateClient<Schema>();
+const client = generateClient<Schema>({
+  authMode: 'iam'
+});
 
 // Helper functions for plan mapping
 function getPlanNameFromPriceId(priceId: string): string {
