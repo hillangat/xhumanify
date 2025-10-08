@@ -267,6 +267,46 @@ async function handleSubscriptionCreated(event: any) {
     
     console.log('📝 Creating subscription with Models API input:', subscriptionInput);
     
+    // Debug client structure
+    console.log('🔍 Debug client structure:', {
+      hasClient: !!client,
+      hasModels: !!client?.models,
+      hasUserSubscription: !!client?.models?.UserSubscription,
+      clientKeys: client ? Object.keys(client) : 'NO_CLIENT',
+      modelsKeys: client?.models ? Object.keys(client.models) : 'NO_MODELS'
+    });
+    
+    if (!client?.models?.UserSubscription) {
+      console.error('❌ Models API not available - falling back to GraphQL');
+      
+      // Fallback to direct GraphQL mutation
+      const createUserSubscriptionMutation = /* GraphQL */ `
+        mutation CreateUserSubscription($input: CreateUserSubscriptionInput!) {
+          createUserSubscription(input: $input) {
+            id
+            stripeCustomerId
+            stripeSubscriptionId
+            status
+            planName
+            createdAt
+          }
+        }
+      `;
+      
+      const result = await client.graphql({
+        query: createUserSubscriptionMutation,
+        variables: { input: subscriptionInput },
+        authMode: 'iam'
+      }) as any; // Type assertion to handle GraphQL result types
+      
+      if (result.errors && result.errors.length > 0) {
+        console.error('❌ GraphQL errors:', result.errors);
+      } else {
+        console.log('✅ Subscription created via GraphQL fallback:', result.data);
+      }
+      return;
+    }
+    
     // Use the Models API instead of raw GraphQL
     const result = await client.models.UserSubscription.create(subscriptionInput);
     
