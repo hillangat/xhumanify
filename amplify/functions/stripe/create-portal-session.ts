@@ -1,7 +1,9 @@
 import type { APIGatewayProxyHandler } from 'aws-lambda';
 import Stripe from 'stripe';
+// @ts-ignore
+import { env } from '$amplify/env/createPortalSession';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+const stripe = new Stripe(env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-09-30.clover',
 });
 
@@ -20,7 +22,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   });
 
   // Check if Stripe secret key is configured
-  if (!process.env.STRIPE_SECRET_KEY) {
+  if (!env.STRIPE_SECRET_KEY) {
     console.error('Stripe secret key not configured');
     return {
       statusCode: 500,

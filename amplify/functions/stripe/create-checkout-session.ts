@@ -1,7 +1,16 @@
 import type { APIGatewayProxyHandler } from 'aws-lambda';
 import Stripe from 'stripe';
+// @ts-ignore
+import { env } from '$amplify/env/createCheckoutSession';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+console.log('🚀 CHECKOUT SESSION: Module loading started');
+
+// Environment variables accessed through generated env object (same pattern as webhook)
+console.log('🔍 CHECKOUT SESSION: Environment check:', {
+  STRIPE_SECRET_KEY: env.STRIPE_SECRET_KEY ? 'SET' : 'NOT_SET'
+});
+
+const stripe = new Stripe(env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-09-30.clover',
 });
 
@@ -36,7 +45,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   }
 
   // Check if Stripe secret key is configured
-  if (!process.env.STRIPE_SECRET_KEY) {
+  if (!env.STRIPE_SECRET_KEY) {
     console.error('Stripe secret key not configured');
     return {
       statusCode: 500,
