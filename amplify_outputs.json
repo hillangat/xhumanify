@@ -322,6 +322,13 @@
               "isRequired": true,
               "attributes": []
             },
+            "userId": {
+              "name": "userId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
             "stripeCustomerId": {
               "name": "stripeCustomerId",
               "isArray": false,
@@ -425,6 +432,16 @@
                     "ownerField": "owner",
                     "allow": "owner",
                     "identityClaim": "sub",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
                     "operations": [
                       "create",
                       "update",

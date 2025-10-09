@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { generateClient } from 'aws-amplify/data';
+import { getCurrentUser } from 'aws-amplify/auth';
 import type { Schema } from '../../amplify/data/resource';
 import { PlanType } from '../utils/stripe';
 import { countWords, getUserTier, getPlanLimits, type PlanTier as UsageTier } from '../config/plans';
@@ -57,12 +58,31 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
   const loadSubscription = async () => {
     try {
       setLoading(true);
+      
+      // Get current user to filter by userId if needed
+      let currentUser;
+      try {
+        currentUser = await getCurrentUser();
+      } catch (authError) {
+        console.log('User not authenticated');
+        setSubscription(null);
+        setLoading(false);
+        return;
+      }
+
+      // Try to load subscription - first by owner authorization, then by userId
       const { data } = await client.models.UserSubscription.list({
-        limit: 1
+        limit: 10 // Get more in case there are multiple records
       });
       
       if (data && data.length > 0) {
-        setSubscription(data[0] as UserSubscription);
+        // Look for a subscription that belongs to this user
+        // Either through owner authorization or explicit userId field
+        const userSubscription = data.find(sub => 
+          !sub.userId || sub.userId === currentUser.userId
+        ) || data[0]; // Fallback to first subscription if none match userId
+        
+        setSubscription(userSubscription as UserSubscription);
       } else {
         // No subscription found - user is on free tier
         setSubscription(null);

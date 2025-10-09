@@ -46,6 +46,7 @@ const schema = a.schema({
     .authorization((allow) => [allow.owner().identityClaim("sub")]),
   UserSubscription: a
     .model({
+      userId: a.string(), // Added to explicitly link to user
       stripeCustomerId: a.string().required(),
       stripeSubscriptionId: a.string(),
       stripePriceId: a.string(),
@@ -60,7 +61,8 @@ const schema = a.schema({
       updatedAt: a.datetime(),
     })
     .authorization((allow) => [
-      allow.owner().identityClaim("sub")
+      allow.owner().identityClaim("sub"),
+      allow.guest() // Allow unauthenticated access (webhook with IAM)
     ]),
   UsageTracking: a
     .model({

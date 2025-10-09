@@ -243,6 +243,26 @@ async function handleSubscriptionCreated(event: any) {
     startDate: subscription.start_date
   });
 
+  // Extract userId from Stripe Checkout Session
+  let userId = null;
+  try {
+    const stripe = await initializeStripe();
+    // List sessions for this customer, most recent first
+    const sessions = await stripe.checkout.sessions.list({
+      customer: customerId,
+      limit: 1
+    });
+    const session = sessions.data[0];
+    if (session) {
+      userId = session.client_reference_id || session.metadata?.userId || null;
+      console.log('🔗 Found app user ID from Checkout Session:', userId);
+    } else {
+      console.warn('⚠️ No Checkout Session found for customer:', customerId);
+    }
+  } catch (err) {
+    console.error('❌ Error fetching Checkout Session:', err);
+  }
+
   try {
     console.log('💾 Creating subscription in database using Models API...');
     
@@ -262,6 +282,7 @@ async function handleSubscriptionCreated(event: any) {
     
     // Create UserSubscription using Models API
     const subscriptionInput = {
+      userId: userId, // Include userId from checkout session
       stripeCustomerId: customerId,
       stripeSubscriptionId: subscription.id,
       stripePriceId: planId,
