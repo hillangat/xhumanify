@@ -61,8 +61,9 @@ const schema = a.schema({
       updatedAt: a.datetime(),
     })
     .authorization((allow) => [
-      allow.owner().identityClaim("sub"),
-      allow.guest() // Allow unauthenticated access (webhook with IAM)
+      allow.ownerDefinedIn("userId"), // Use userId field for ownership
+      allow.authenticated().to(["read"]), // Allow authenticated users to read
+      allow.guest().to(["create", "update"]) // Allow webhook (IAM) to create/update
     ]),
   UsageTracking: a
     .model({
