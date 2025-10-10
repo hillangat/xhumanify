@@ -321,6 +321,7 @@ async function handleSubscriptionCreated(event: any) {
         mutation CreateUserSubscription($input: CreateUserSubscriptionInput!) {
           createUserSubscription(input: $input) {
             id
+            userId
             stripeCustomerId
             stripeSubscriptionId
             stripePriceId
@@ -358,6 +359,7 @@ async function handleSubscriptionCreated(event: any) {
             query GetUserSubscription($id: ID!) {
               getUserSubscription(id: $id) {
                 id
+                userId
                 stripeCustomerId
                 stripeSubscriptionId
                 stripePriceId
