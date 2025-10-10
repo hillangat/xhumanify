@@ -16,6 +16,8 @@ import { TONE_OPTIONS } from './constants/feedbackConstants';
 import { VscFeedback } from "react-icons/vsc";
 import { useSubscription } from './contexts/SubscriptionContext';
 import UsageDisplay from './components/UsageDisplay';
+import ExpandableDescription from './components/ExpandableDescription';
+import UsageBreakdownPopup from './components/UsageBreakdownPopup';
 import { getPlanLimits } from './config/plans';
 
 export default function App() {
@@ -36,6 +38,7 @@ export default function App() {
   const [showFeedbackDialog, setShowFeedbackDialog] = useState(false);
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [selectedTone, setSelectedTone] = useState<string>('neutral');
+  const [showUsageBreakdown, setShowUsageBreakdown] = useState(false);
   const toast = useRef<Toast>(null);
   const feedbackRef = useRef<UserFeedbackRef>(null);
   const toneMenuRef = useRef<Menu>(null);
@@ -330,10 +333,11 @@ export default function App() {
         <section className='title-section'>
           <div className='title-text'>
             <h1>Humanize AI Generated Content</h1>
-            <h4>Give AI content a human touch with the most advanced tool.</h4>
-          </div>
-          <div className='title-introduction'>
-            <p>Turn stiff, robotic AI text into writing that feels genuinely human. Our tool smooths out the rough edges of AI-generated content, reshaping it into clear, natural, and authentic language that won’t raise red flags. With us, your words will sound like they came straight from a real person—so you can publish or submit your work with confidence.</p>
+            <ExpandableDescription
+              title="Give AI content a human touch with the most advanced tool."
+              description="Turn stiff, robotic AI text into writing that feels genuinely human. Our tool smooths out the rough edges of AI-generated content, reshaping it into clear, natural, and authentic language that won't raise red flags. With us, your words will sound like they came straight from a real person—so you can publish or submit your work with confidence."
+              defaultExpanded={false}
+            />
           </div>
         </section>
         <section className='content-section'>
@@ -448,53 +452,31 @@ export default function App() {
                 <>
                   <pre>{answer}</pre>
                   {usageInfo && (
-                    <div className="token-transparency" style={{
+                    <div className="usage-summary" style={{
                       fontSize: '0.8rem',
                       color: 'var(--text-color-secondary)',
                       marginTop: '1rem',
                       padding: '0.75rem',
                       background: 'var(--surface-100)',
-                      borderLeft: '3px solid var(--primary-color)'
+                      borderLeft: '3px solid var(--primary-color)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
                     }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                      <div>
                         <span style={{ fontWeight: '600' }}>💰 <strong>Usage Charged:</strong> {usageInfo.estimatedWords} words</span>
-                        <span style={{ fontSize: '0.7rem', opacity: 0.8 }}>
+                        <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '0.25rem' }}>
                           ({Math.ceil((usageInfo.inputTokens + usageInfo.outputTokens) / 1.3)} word equivalent)
-                        </span>
-                      </div>
-                      
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
-                        <div>📝 <strong>Your Input:</strong> {countWords(prompt)} words</div>
-                        <div>🤖 <strong>AI Output:</strong> {countWords(answer)} words</div>
-                      </div>
-                      
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.75rem', opacity: 0.8 }}>
-                        <div>⚡ Input tokens: {usageInfo.inputTokens}</div>
-                        <div>⚡ Output tokens: {usageInfo.outputTokens}</div>
-                      </div>
-                      
-                      {usageInfo.systemPromptTokens && (
-                        <div style={{ 
-                          fontSize: '0.7rem', 
-                          opacity: 0.7, 
-                          marginTop: '0.5rem', 
-                          padding: '0.25rem 0.5rem',
-                          background: 'var(--green-50)',
-                          borderRadius: '4px',
-                          border: '1px solid var(--green-200)'
-                        }}>
-                          ✅ System processing: {usageInfo.systemPromptTokens} tokens (FREE - not billed)
                         </div>
-                      )}
-                      
-                      <div style={{ 
-                        fontSize: '0.7rem', 
-                        marginTop: '0.5rem', 
-                        fontStyle: 'italic', 
-                        opacity: 0.6 
-                      }}>
-                        💡 We convert tokens to words for billing (1.3 tokens ≈ 1 word)
                       </div>
+                      <Button
+                        label="Details"
+                        icon="pi pi-info-circle"
+                        onClick={() => setShowUsageBreakdown(true)}
+                        outlined
+                        size="small"
+                        style={{ fontSize: '0.75rem' }}
+                      />
                     </div>
                   )}
                 </>
@@ -602,6 +584,17 @@ export default function App() {
           disabled={isSubmittingFeedback}
         />
       </Dialog>
+      
+      {/* Usage Breakdown Popup */}
+      {usageInfo && (
+        <UsageBreakdownPopup
+          visible={showUsageBreakdown}
+          onHide={() => setShowUsageBreakdown(false)}
+          usageInfo={usageInfo}
+          inputWords={countWords(prompt)}
+          outputWords={countWords(answer)}
+        />
+      )}
       
       {/* Toast Notifications */}
       <Toast ref={toast} position="top-right" />
