@@ -70,9 +70,25 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         return;
       }
 
-      // Try to load subscription - first by owner authorization, then by userId
+      // Try to load subscription - using explicit selection to avoid owner field
       const { data } = await client.models.UserSubscription.list({
-        limit: 10 // Get more in case there are multiple records
+        limit: 10, // Get more in case there are multiple records
+        selectionSet: [
+          'id',
+          'userId',
+          'stripeCustomerId',
+          'stripeSubscriptionId',
+          'stripePriceId',
+          'status',
+          'planName',
+          'currentPeriodStart',
+          'currentPeriodEnd',
+          'cancelAtPeriodEnd',
+          'usageCount',
+          'usageLimit',
+          'createdAt',
+          'updatedAt'
+        ]
       });
       
       if (data && data.length > 0) {
