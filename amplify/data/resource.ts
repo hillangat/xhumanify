@@ -73,6 +73,76 @@ const schema = a.schema({
       timestamp: a.datetime().required(),
     })
     .authorization((allow) => [allow.owner().identityClaim("sub")]),
+  FeatureRequest: a
+    .model({
+      title: a.string().required(),
+      description: a.string().required(),
+      category: a.enum(['text-processing', 'ui-ux', 'billing', 'performance', 'integration', 'other']),
+      
+      // User info
+      submitterId: a.string().required(),
+      submitterDisplayName: a.string(),
+      
+      // Voting stats
+      upvotes: a.integer().default(0),
+      downvotes: a.integer().default(0),
+      totalVotes: a.integer().default(0),
+      voterCount: a.integer().default(0),
+      
+      // Status tracking
+      status: a.enum(['submitted', 'under-review', 'planned', 'in-development', 'testing', 'completed', 'rejected']),
+      priority: a.enum(['low', 'medium', 'high', 'critical']),
+      adminNotes: a.string(),
+      publicResponse: a.string(),
+      
+      // Implementation
+      estimatedEffort: a.enum(['small', 'medium', 'large', 'epic']),
+      targetVersion: a.string(),
+      assignedTo: a.string(),
+      
+      // Metadata
+      tags: a.string().array(),
+      relatedFeatures: a.string().array(),
+      duplicateOf: a.string(),
+      
+      // Timestamps
+      createdAt: a.datetime(),
+      updatedAt: a.datetime(),
+      completedAt: a.datetime(),
+    })
+    .authorization((allow) => [
+      allow.authenticated().to(['read']),
+      allow.ownerDefinedIn('submitterId').to(['read', 'update']),
+      allow.guest().to(['read']) // Allow public read access
+    ]),
+  FeatureVote: a
+    .model({
+      featureRequestId: a.string().required(),
+      userId: a.string().required(),
+      voteType: a.enum(['upvote', 'downvote']),
+      createdAt: a.datetime(),
+      updatedAt: a.datetime(),
+    })
+    .authorization((allow) => [
+      allow.authenticated().to(['read']),
+      allow.ownerDefinedIn('userId').to(['create', 'update', 'delete']),
+      allow.guest().to(['read'])
+    ]),
+  FeatureComment: a
+    .model({
+      featureRequestId: a.string().required(),
+      userId: a.string().required(),
+      userDisplayName: a.string(),
+      content: a.string().required(),
+      isAdminResponse: a.boolean().default(false),
+      createdAt: a.datetime(),
+      updatedAt: a.datetime(),
+    })
+    .authorization((allow) => [
+      allow.authenticated().to(['read']),
+      allow.ownerDefinedIn('userId').to(['create', 'update', 'delete']),
+      allow.guest().to(['read'])
+    ]),
   generateHaiku: a
     .query()
     .arguments({ prompt: a.string().required(), tone: a.string() })

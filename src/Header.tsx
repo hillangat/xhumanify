@@ -34,6 +34,12 @@ export default function Header() {
       className: (location.pathname === '/history' || location.pathname === '/history/') ? 'active-menu-item' : ''
     },
     {
+      label: 'Feature Requests',
+      icon: 'pi pi-lightbulb',
+      url: '/feature-requests',
+      className: (location.pathname === '/feature-requests' || location.pathname === '/feature-requests/') ? 'active-menu-item' : ''
+    },
+    {
       label: 'Pricing',
       icon: 'pi pi-dollar',
       url: '/upgrade',
