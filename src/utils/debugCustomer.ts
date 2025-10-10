@@ -50,7 +50,7 @@ export const checkCustomerSubscription = async () => {
           planName: user.planName,
           status: user.status,
           usageCount: user.usageCount,
-          owner: user.owner,
+          userId: user.userId,
           updatedAt: user.updatedAt
         });
       });
