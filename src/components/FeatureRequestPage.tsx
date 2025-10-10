@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useForm, Controller } from 'react-hook-form';
 import { generateClient } from 'aws-amplify/data';
 import { getCurrentUser } from 'aws-amplify/auth';
 import type { Schema } from '../../amplify/data/resource';
@@ -15,25 +16,29 @@ import { MultiSelect } from 'primereact/multiselect';
 import { Toast } from 'primereact/toast';
 import { Toolbar } from 'primereact/toolbar';
 import { TabView, TabPanel } from 'primereact/tabview';
-import { ProgressBar } from 'primereact/progressbar';
 import { Divider } from 'primereact/divider';
 import { Avatar } from 'primereact/avatar';
-import { Timeline } from 'primereact/timeline';
+import { classNames } from 'primereact/utils';
 import './FeatureRequestPage.scss';
+
+type CategoryType = 'text-processing' | 'ui-ux' | 'billing' | 'performance' | 'integration' | 'other';
+type StatusType = 'submitted' | 'under-review' | 'planned' | 'in-development' | 'testing' | 'completed' | 'rejected';
+type PriorityType = 'low' | 'medium' | 'high' | 'critical';
+type VoteType = 'upvote' | 'downvote';
 
 interface FeatureRequest {
   id: string;
   title: string;
   description: string;
-  category: string;
+  category: CategoryType;
   submitterId: string;
   submitterDisplayName?: string;
   upvotes: number;
   downvotes: number;
   totalVotes: number;
   voterCount: number;
-  status: string;
-  priority: string;
+  status: StatusType;
+  priority: PriorityType;
   adminNotes?: string;
   publicResponse?: string;
   estimatedEffort?: string;
@@ -45,14 +50,6 @@ interface FeatureRequest {
   createdAt: string;
   updatedAt: string;
   completedAt?: string;
-}
-
-interface FeatureVote {
-  id: string;
-  featureRequestId: string;
-  userId: string;
-  voteType: string;
-  createdAt: string;
 }
 
 const FeatureRequestPage: React.FC = () => {
@@ -68,32 +65,31 @@ const FeatureRequestPage: React.FC = () => {
   const [userVotes, setUserVotes] = useState<Map<string, string>>(new Map());
   const [activeTab, setActiveTab] = useState(0);
   
-  // Form state
-  const [newFeature, setNewFeature] = useState({
+  // Form data type
+  type FormData = {
+    title: string;
+    description: string;
+    category: CategoryType | null;
+    tags: string[];
+  };
+  
+  // Form state with react-hook-form
+  const defaultValues: FormData = {
     title: '',
     description: '',
-    category: '',
+    category: null,
     tags: []
-  });
+  };
 
-  const categories = [
+  const { control, formState: { errors }, handleSubmit, reset } = useForm<FormData>({ defaultValues });
+
+  const categories: Array<{ label: string; value: CategoryType; icon: string }> = [
     { label: 'Text Processing', value: 'text-processing', icon: 'pi pi-file-edit' },
     { label: 'UI/UX', value: 'ui-ux', icon: 'pi pi-palette' },
     { label: 'Billing', value: 'billing', icon: 'pi pi-credit-card' },
     { label: 'Performance', value: 'performance', icon: 'pi pi-bolt' },
     { label: 'Integration', value: 'integration', icon: 'pi pi-link' },
     { label: 'Other', value: 'other', icon: 'pi pi-question-circle' }
-  ];
-
-  const statusOptions = [
-    { label: 'All', value: 'all' },
-    { label: 'Submitted', value: 'submitted' },
-    { label: 'Under Review', value: 'under-review' },
-    { label: 'Planned', value: 'planned' },
-    { label: 'In Development', value: 'in-development' },
-    { label: 'Testing', value: 'testing' },
-    { label: 'Completed', value: 'completed' },
-    { label: 'Rejected', value: 'rejected' }
   ];
 
   const tagOptions = [
@@ -130,10 +126,14 @@ const FeatureRequestPage: React.FC = () => {
       
       // Sort by total votes (popularity) and then by creation date
       const sortedFeatures = data.sort((a, b) => {
-        if (b.totalVotes !== a.totalVotes) {
-          return b.totalVotes - a.totalVotes;
+        const aVotes = a.totalVotes || 0;
+        const bVotes = b.totalVotes || 0;
+        if (bVotes !== aVotes) {
+          return bVotes - aVotes;
         }
-        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bDate - aDate;
       });
       
       setFeatures(sortedFeatures as FeatureRequest[]);
@@ -166,7 +166,7 @@ const FeatureRequestPage: React.FC = () => {
     }
   };
 
-  const handleVote = async (featureId: string, voteType: 'upvote' | 'downvote') => {
+  const handleVote = async (featureId: string, voteType: VoteType) => {
     if (!currentUser) {
       toast.current?.show({
         severity: 'warn',
@@ -236,7 +236,7 @@ const FeatureRequestPage: React.FC = () => {
     }
   };
 
-  const handleSubmitFeature = async () => {
+  const handleSubmitFeature = async (data: any) => {
     if (!currentUser) {
       toast.current?.show({
         severity: 'warn',
@@ -247,36 +247,26 @@ const FeatureRequestPage: React.FC = () => {
       return;
     }
 
-    if (!newFeature.title.trim() || !newFeature.description.trim() || !newFeature.category) {
-      toast.current?.show({
-        severity: 'warn',
-        summary: 'Incomplete Form',
-        detail: 'Please fill in all required fields',
-        life: 3000
-      });
-      return;
-    }
-
     try {
       await client.models.FeatureRequest.create({
-        title: newFeature.title.trim(),
-        description: newFeature.description.trim(),
-        category: newFeature.category,
+        title: data.title.trim(),
+        description: data.description.trim(),
+        category: data.category as CategoryType,
         submitterId: currentUser.userId,
         submitterDisplayName: currentUser.signInDetails?.loginId?.split('@')[0] || 'Anonymous',
         upvotes: 0,
         downvotes: 0,
         totalVotes: 0,
         voterCount: 0,
-        status: 'submitted',
-        priority: 'low',
-        tags: newFeature.tags,
+        status: 'submitted' as StatusType,
+        priority: 'low' as PriorityType,
+        tags: data.tags || [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
 
       setShowNewFeatureDialog(false);
-      setNewFeature({ title: '', description: '', category: '', tags: [] });
+      reset();
       
       toast.current?.show({
         severity: 'success',
@@ -298,18 +288,22 @@ const FeatureRequestPage: React.FC = () => {
     }
   };
 
-  const getStatusSeverity = (status: string) => {
+  const getFormErrorMessage = (name: keyof FormData) => {
+    return errors[name] && <small className="p-error">{errors[name]?.message}</small>
+  };
+
+  const getStatusSeverity = (status: StatusType): 'success' | 'info' | 'secondary' | 'warning' | 'danger' => {
     switch (status) {
       case 'completed': return 'success';
       case 'in-development': return 'info';
       case 'planned': return 'warning';
-      case 'under-review': return 'help';
+      case 'under-review': return 'warning';
       case 'rejected': return 'danger';
       default: return 'secondary';
     }
   };
 
-  const getPriorityColor = (priority: string) => {
+  const getPriorityColor = (priority: PriorityType) => {
     switch (priority) {
       case 'critical': return '#f44336';
       case 'high': return '#ff9800';
@@ -319,7 +313,7 @@ const FeatureRequestPage: React.FC = () => {
     }
   };
 
-  const getCategoryIcon = (category: string) => {
+  const getCategoryIcon = (category: CategoryType) => {
     const cat = categories.find(c => c.value === category);
     return cat?.icon || 'pi pi-question-circle';
   };
@@ -414,9 +408,13 @@ const FeatureRequestPage: React.FC = () => {
   const getTabFilteredFeatures = (tabIndex: number) => {
     switch (tabIndex) {
       case 0: // Popular
-        return features.sort((a, b) => b.totalVotes - a.totalVotes);
+        return features.sort((a, b) => (b.totalVotes || 0) - (a.totalVotes || 0));
       case 1: // Recent
-        return features.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        return features.sort((a, b) => {
+          const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return bDate - aDate;
+        });
       case 2: // In Progress
         return features.filter(f => ['planned', 'in-development', 'testing'].includes(f.status));
       case 3: // Completed
@@ -454,7 +452,7 @@ const FeatureRequestPage: React.FC = () => {
 
       <div className="content-container">
         <TabView activeIndex={activeTab} onTabChange={(e) => setActiveTab(e.index)}>
-          <TabPanel header="🔥 Popular" leftIcon="pi pi-star">
+          <TabPanel header="Popular" leftIcon="pi pi-star">
             <DataView
               value={getTabFilteredFeatures(0)}
               itemTemplate={renderFeatureCard}
@@ -465,7 +463,7 @@ const FeatureRequestPage: React.FC = () => {
             />
           </TabPanel>
           
-          <TabPanel header="🆕 Recent" leftIcon="pi pi-clock">
+          <TabPanel header="Recent" leftIcon="pi pi-clock">
             <DataView
               value={getTabFilteredFeatures(1)}
               itemTemplate={renderFeatureCard}
@@ -476,7 +474,7 @@ const FeatureRequestPage: React.FC = () => {
             />
           </TabPanel>
           
-          <TabPanel header="🚧 In Progress" leftIcon="pi pi-cog">
+          <TabPanel header="In Progress" leftIcon="pi pi-cog">
             <DataView
               value={getTabFilteredFeatures(2)}
               itemTemplate={renderFeatureCard}
@@ -487,7 +485,7 @@ const FeatureRequestPage: React.FC = () => {
             />
           </TabPanel>
           
-          <TabPanel header="✅ Completed" leftIcon="pi pi-check">
+          <TabPanel header="Completed" leftIcon="pi pi-check">
             <DataView
               value={getTabFilteredFeatures(3)}
               itemTemplate={renderFeatureCard}
@@ -505,72 +503,111 @@ const FeatureRequestPage: React.FC = () => {
         header="Submit New Feature Request"
         visible={showNewFeatureDialog}
         onHide={() => setShowNewFeatureDialog(false)}
-        style={{ width: '600px' }}
+        style={{ width: '650px', maxWidth: '90vw' }}
         modal
+        className="feature-request-dialog"
         footer={
           <div className="dialog-footer">
             <Button
               label="Cancel"
               outlined
-              onClick={() => setShowNewFeatureDialog(false)}
+              onClick={() => {
+                setShowNewFeatureDialog(false);
+                reset();
+              }}
             />
-            <Button
-              label="Submit"
-              icon="pi pi-send"
-              onClick={handleSubmitFeature}
+            <Button 
+              label="Submit Request" 
+              icon="pi pi-send" 
+              onClick={handleSubmit(handleSubmitFeature)}
             />
           </div>
         }
       >
-        <div className="feature-form">
-          <div className="form-field">
-            <label htmlFor="title">Title *</label>
-            <InputText
-              id="title"
-              value={newFeature.title}
-              onChange={(e) => setNewFeature({...newFeature, title: e.target.value})}
-              placeholder="Brief, descriptive title for your feature"
-              className="w-full"
-            />
+        <form onSubmit={handleSubmit(handleSubmitFeature)} className="feature-form p-fluid">
+          <div className="field">
+            <span className="p-float-label">
+              <Controller 
+                name="title" 
+                control={control} 
+                rules={{ required: 'Title is required.' }} 
+                render={({ field, fieldState }) => (
+                  <InputText 
+                    id={field.name} 
+                    {...field} 
+                    className={classNames({ 'p-invalid': fieldState.invalid })} 
+                  />
+                )} 
+              />
+              <label htmlFor="title" className={classNames({ 'p-error': errors.title })}>Title*</label>
+            </span>
+            {getFormErrorMessage('title')}
           </div>
 
-          <div className="form-field">
-            <label htmlFor="category">Category *</label>
-            <Dropdown
-              id="category"
-              value={newFeature.category}
-              options={categories}
-              onChange={(e) => setNewFeature({...newFeature, category: e.value})}
-              placeholder="Select a category"
-              className="w-full"
-            />
+          <div className="field">
+            <span className="p-float-label">
+              <Controller 
+                name="category" 
+                control={control} 
+                rules={{ required: 'Category is required.' }} 
+                render={({ field, fieldState }) => (
+                  <Dropdown 
+                    id={field.name} 
+                    value={field.value} 
+                    onChange={(e) => field.onChange(e.value)} 
+                    options={categories} 
+                    optionLabel="label"
+                    placeholder="Select a category"
+                    className={classNames({ 'p-invalid': fieldState.invalid })} 
+                  />
+                )} 
+              />
+              <label htmlFor="category" className={classNames({ 'p-error': errors.category })}>Category*</label>
+            </span>
+            {getFormErrorMessage('category')}
           </div>
 
-          <div className="form-field">
-            <label htmlFor="description">Description *</label>
-            <InputTextarea
-              id="description"
-              value={newFeature.description}
-              onChange={(e) => setNewFeature({...newFeature, description: e.target.value})}
-              placeholder="Detailed description of the feature and why it would be valuable"
-              rows={5}
-              className="w-full"
-            />
+          <div className="field">
+            <span className="p-float-label">
+              <Controller 
+                name="description" 
+                control={control} 
+                rules={{ required: 'Description is required.' }} 
+                render={({ field, fieldState }) => (
+                  <InputTextarea 
+                    id={field.name} 
+                    {...field} 
+                    rows={5}
+                    className={classNames({ 'p-invalid': fieldState.invalid })} 
+                  />
+                )} 
+              />
+              <label htmlFor="description" className={classNames({ 'p-error': errors.description })}>Description*</label>
+            </span>
+            {getFormErrorMessage('description')}
           </div>
 
-          <div className="form-field">
-            <label htmlFor="tags">Tags (Optional)</label>
-            <MultiSelect
-              id="tags"
-              value={newFeature.tags}
-              options={tagOptions}
-              onChange={(e) => setNewFeature({...newFeature, tags: e.value})}
-              placeholder="Select relevant tags"
-              className="w-full"
-              maxSelectedLabels={3}
-            />
+          <div className="field">
+            <span className="p-float-label">
+              <Controller 
+                name="tags" 
+                control={control} 
+                render={({ field }) => (
+                  <MultiSelect 
+                    id={field.name} 
+                    value={field.value} 
+                    onChange={(e) => field.onChange(e.value)} 
+                    options={tagOptions} 
+                    optionLabel="label"
+                    placeholder="Select relevant tags"
+                    maxSelectedLabels={3}
+                  />
+                )} 
+              />
+              <label htmlFor="tags">Tags (Optional)</label>
+            </span>
           </div>
-        </div>
+        </form>
       </Dialog>
 
       {/* Feature Detail Dialog */}
