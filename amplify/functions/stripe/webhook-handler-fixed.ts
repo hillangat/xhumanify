@@ -260,7 +260,8 @@ async function handleSubscriptionCreated(event: any) {
       console.warn('⚠️ No Checkout Session found for customer:', customerId);
     }
   } catch (err) {
-    console.error('❌ Error fetching Checkout Session:', err);
+    console.error('❌ Error fetching Checkout Session (continuing without userId):', err instanceof Error ? err.message : 'Unknown error');
+    console.warn('⚠️ Subscription will be created without userId - user may need to re-authenticate to see subscription');
   }
 
   try {
