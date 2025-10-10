@@ -275,7 +275,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, requ
         id: targetSub.id,
         stripeCustomerId: targetSub.stripeCustomerId,
         planName: targetSub.planName,
-        owner: targetSub.owner
+        userId: targetSub.userId
       });
       
       console.log(`🔄 [${requestId}] Updating existing subscription ${targetSub.id}...`);
