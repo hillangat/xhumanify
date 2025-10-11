@@ -114,10 +114,26 @@ const FeatureRequestPage: React.FC = () => {
       await loadUserVotes(user.username);
       await loadFeatures();
     } catch (error) {
-      console.log('No authenticated user');
+      console.log('Authentication failed or user not signed in:', error);
       setCurrentUser(null);
       setLoading(false);
-      // For unauthenticated users, we can't load features due to auth rules
+      
+      // For debugging: show what kind of error this is
+      if (error instanceof Error) {
+        console.log('Error type:', error.name);
+        console.log('Error message:', error.message);
+        
+        // If it's a storage access error, try to continue anyway
+        if (error.message?.includes('Access to storage is not allowed')) {
+          console.log('Storage access denied - continuing with guest mode');
+          // Try to load features anyway for guest users
+          try {
+            await loadFeaturesAsGuest();
+          } catch (guestError) {
+            console.log('Guest access also failed:', guestError);
+          }
+        }
+      }
     }
   };
 
@@ -148,6 +164,52 @@ const FeatureRequestPage: React.FC = () => {
         severity: 'error',
         summary: 'Error',
         detail: 'Failed to load feature requests. Please make sure you are logged in.',
+        life: 5000
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadFeaturesAsGuest = async () => {
+    try {
+      setLoading(true);
+      console.log('Attempting to load features as guest...');
+      
+      // Try with different auth modes for guest access
+      const { data } = await client.models.FeatureRequest.list({
+        limit: 100
+      });
+      
+      console.log('Guest feature loading successful:', data?.length || 0, 'features');
+      
+      // Sort by total votes (popularity) and then by creation date
+      const sortedFeatures = data.sort((a, b) => {
+        const aVotes = a.totalVotes || 0;
+        const bVotes = b.totalVotes || 0;
+        if (bVotes !== aVotes) {
+          return bVotes - aVotes;
+        }
+        const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bDate - aDate;
+      });
+      
+      setFeatures(sortedFeatures as FeatureRequest[]);
+      
+      toast.current?.show({
+        severity: 'info',
+        summary: 'Guest Mode',
+        detail: 'Viewing feature requests in read-only mode. Please log in to vote or submit requests.',
+        life: 5000
+      });
+      
+    } catch (error) {
+      console.error('Error loading features as guest:', error);
+      toast.current?.show({
+        severity: 'warn',
+        summary: 'Authentication Required',
+        detail: 'Please log in to view feature requests.',
         life: 5000
       });
     } finally {

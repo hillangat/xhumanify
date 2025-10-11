@@ -111,7 +111,7 @@ const schema = a.schema({
       completedAt: a.datetime(),
     })
     .authorization((allow) => [
-      allow.authenticated().to(['read']),
+      allow.authenticated().to(['read', 'create']),
       allow.ownerDefinedIn('submitterId').to(['read', 'update']),
       allow.guest().to(['read']) // Allow public read access
     ]),
