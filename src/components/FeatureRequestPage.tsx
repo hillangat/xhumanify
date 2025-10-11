@@ -246,6 +246,8 @@ const FeatureRequestPage: React.FC = () => {
     }
 
     try {
+      console.log('Voting attempt:', { featureId, voteType, userId: currentUser.username });
+      
       const existingVote = userVotes.get(featureId);
       
       if (existingVote === voteType) {
@@ -253,20 +255,21 @@ const FeatureRequestPage: React.FC = () => {
         const votes = await client.models.FeatureVote.list({
           filter: { 
             featureRequestId: { eq: featureId },
-            userId: { eq: currentUser.userId }
+            userId: { eq: currentUser.username }
           }
         });
         
         if (votes.data.length > 0) {
           await client.models.FeatureVote.delete({ id: votes.data[0].id });
           userVotes.delete(featureId);
+          console.log('Vote removed successfully');
         }
       } else {
         // Update or create vote
         const votes = await client.models.FeatureVote.list({
           filter: { 
             featureRequestId: { eq: featureId },
-            userId: { eq: currentUser.userId }
+            userId: { eq: currentUser.username }
           }
         });
         
@@ -275,20 +278,30 @@ const FeatureRequestPage: React.FC = () => {
             id: votes.data[0].id,
             voteType: voteType
           });
+          console.log('Vote updated successfully');
         } else {
           await client.models.FeatureVote.create({
             featureRequestId: featureId,
-            userId: currentUser.userId,
+            userId: currentUser.username,
             voteType: voteType,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           });
+          console.log('Vote created successfully');
         }
         
         userVotes.set(featureId, voteType);
       }
       
       setUserVotes(new Map(userVotes));
+      
+      // Show success feedback
+      toast.current?.show({
+        severity: 'success',
+        summary: 'Vote Submitted',
+        detail: `${voteType === 'upvote' ? 'Upvoted' : 'Downvoted'} successfully!`,
+        life: 2000
+      });
       
       // Refresh feature data to update vote counts
       await loadFeatures();
@@ -298,8 +311,8 @@ const FeatureRequestPage: React.FC = () => {
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
-        detail: 'Failed to submit vote',
-        life: 3000
+        detail: `Failed to submit vote: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        life: 5000
       });
     }
   };
@@ -397,17 +410,17 @@ const FeatureRequestPage: React.FC = () => {
         </div>
         <div className="voting-section">
           <Button
-            icon="pi pi-angle-up"
-            className={`vote-btn upvote ${userVote === 'upvote' ? 'active' : ''}`}
-            onClick={() => handleVote(feature.id, 'upvote')}
+            icon="pi pi-chevron-left"
+            className={`vote-btn downvote ${userVote === 'downvote' ? 'active' : ''}`}
+            onClick={() => handleVote(feature.id, 'downvote')}
             text
             size="small"
           />
           <span className="vote-count">{feature.upvotes - feature.downvotes}</span>
           <Button
-            icon="pi pi-angle-down"
-            className={`vote-btn downvote ${userVote === 'downvote' ? 'active' : ''}`}
-            onClick={() => handleVote(feature.id, 'downvote')}
+            icon="pi pi-chevron-right"
+            className={`vote-btn upvote ${userVote === 'upvote' ? 'active' : ''}`}
+            onClick={() => handleVote(feature.id, 'upvote')}
             text
             size="small"
           />
@@ -703,16 +716,16 @@ const FeatureRequestPage: React.FC = () => {
             <div className="detail-header">
               <div className="voting-section large">
                 <Button
-                  icon="pi pi-angle-up"
-                  className={`vote-btn upvote large ${userVotes.get(selectedFeature.id) === 'upvote' ? 'active' : ''}`}
-                  onClick={() => handleVote(selectedFeature.id, 'upvote')}
+                  icon="pi pi-chevron-left"
+                  className={`vote-btn downvote large ${userVotes.get(selectedFeature.id) === 'downvote' ? 'active' : ''}`}
+                  onClick={() => handleVote(selectedFeature.id, 'downvote')}
                   text
                 />
                 <span className="vote-count large">{selectedFeature.upvotes - selectedFeature.downvotes}</span>
                 <Button
-                  icon="pi pi-angle-down"
-                  className={`vote-btn downvote large ${userVotes.get(selectedFeature.id) === 'downvote' ? 'active' : ''}`}
-                  onClick={() => handleVote(selectedFeature.id, 'downvote')}
+                  icon="pi pi-chevron-right"
+                  className={`vote-btn upvote large ${userVotes.get(selectedFeature.id) === 'upvote' ? 'active' : ''}`}
+                  onClick={() => handleVote(selectedFeature.id, 'upvote')}
                   text
                 />
               </div>

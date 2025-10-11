@@ -124,7 +124,7 @@ const schema = a.schema({
       updatedAt: a.datetime(),
     })
     .authorization((allow) => [
-      allow.authenticated().to(['read']),
+      allow.authenticated().to(['read', 'create']),
       allow.ownerDefinedIn('userId').to(['create', 'update', 'delete']),
       allow.guest().to(['read'])
     ]),
