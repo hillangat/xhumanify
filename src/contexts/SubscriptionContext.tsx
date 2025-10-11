@@ -25,7 +25,7 @@ interface UserSubscription {
   stripeCustomerId: string;
   stripeSubscriptionId?: string;
   stripePriceId?: string;
-  status?: 'active' | 'canceled' | 'past_due' | 'incomplete' | 'trialing';
+  status?: 'active' | 'canceled' | 'pastdue' | 'incomplete' | 'trialing';
   planName?: string;
   currentPeriodStart?: string;
   currentPeriodEnd?: string;

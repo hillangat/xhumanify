@@ -21,8 +21,8 @@ import { Avatar } from 'primereact/avatar';
 import { classNames } from 'primereact/utils';
 import './FeatureRequestPage.scss';
 
-type CategoryType = 'text-processing' | 'ui-ux' | 'billing' | 'performance' | 'integration' | 'other';
-type StatusType = 'submitted' | 'under-review' | 'planned' | 'in-development' | 'testing' | 'completed' | 'rejected';
+type CategoryType = 'textprocessing' | 'uiux' | 'billing' | 'performance' | 'integration' | 'other';
+type StatusType = 'submitted' | 'underreview' | 'planned' | 'indevelopment' | 'testing' | 'completed' | 'rejected';
 type PriorityType = 'low' | 'medium' | 'high' | 'critical';
 type VoteType = 'upvote' | 'downvote';
 
@@ -84,8 +84,8 @@ const FeatureRequestPage: React.FC = () => {
   const { control, formState: { errors }, handleSubmit, reset } = useForm<FormData>({ defaultValues });
 
   const categories: Array<{ label: string; value: CategoryType; icon: string }> = [
-    { label: 'Text Processing', value: 'text-processing', icon: 'pi pi-file-edit' },
-    { label: 'UI/UX', value: 'ui-ux', icon: 'pi pi-palette' },
+    { label: 'Text Processing', value: 'textprocessing', icon: 'pi pi-file-edit' },
+    { label: 'UI/UX', value: 'uiux', icon: 'pi pi-palette' },
     { label: 'Billing', value: 'billing', icon: 'pi pi-credit-card' },
     { label: 'Performance', value: 'performance', icon: 'pi pi-bolt' },
     { label: 'Integration', value: 'integration', icon: 'pi pi-link' },
@@ -295,9 +295,9 @@ const FeatureRequestPage: React.FC = () => {
   const getStatusSeverity = (status: StatusType): 'success' | 'info' | 'secondary' | 'warning' | 'danger' => {
     switch (status) {
       case 'completed': return 'success';
-      case 'in-development': return 'info';
+      case 'indevelopment': return 'info';
       case 'planned': return 'warning';
-      case 'under-review': return 'warning';
+      case 'underreview': return 'warning';
       case 'rejected': return 'danger';
       default: return 'secondary';
     }
@@ -416,7 +416,7 @@ const FeatureRequestPage: React.FC = () => {
           return bDate - aDate;
         });
       case 2: // In Progress
-        return features.filter(f => ['planned', 'in-development', 'testing'].includes(f.status));
+        return features.filter(f => ['planned', 'indevelopment', 'testing'].includes(f.status));
       case 3: // Completed
         return features.filter(f => f.status === 'completed');
       default:

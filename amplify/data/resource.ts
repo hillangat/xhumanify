@@ -50,7 +50,7 @@ const schema = a.schema({
       stripeCustomerId: a.string().required(),
       stripeSubscriptionId: a.string(),
       stripePriceId: a.string(),
-      status: a.enum(['active', 'canceled', 'past_due', 'incomplete', 'trialing']),
+      status: a.enum(['active', 'canceled', 'pastdue', 'incomplete', 'trialing']),
       planName: a.string(), // 'basic', 'pro', 'enterprise'
       currentPeriodStart: a.datetime(),
       currentPeriodEnd: a.datetime(),
@@ -77,7 +77,7 @@ const schema = a.schema({
     .model({
       title: a.string().required(),
       description: a.string().required(),
-      category: a.enum(['text-processing', 'ui-ux', 'billing', 'performance', 'integration', 'other']),
+      category: a.enum(['textprocessing', 'uiux', 'billing', 'performance', 'integration', 'other']),
       
       // User info
       submitterId: a.string().required(),
@@ -90,7 +90,7 @@ const schema = a.schema({
       voterCount: a.integer().default(0),
       
       // Status tracking
-      status: a.enum(['submitted', 'under-review', 'planned', 'in-development', 'testing', 'completed', 'rejected']),
+      status: a.enum(['submitted', 'underreview', 'planned', 'indevelopment', 'testing', 'completed', 'rejected']),
       priority: a.enum(['low', 'medium', 'high', 'critical']),
       adminNotes: a.string(),
       publicResponse: a.string(),

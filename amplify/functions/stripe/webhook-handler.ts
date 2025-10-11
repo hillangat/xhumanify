@@ -530,7 +530,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, requestId: string) {
         // Mark subscription as past due but don't immediately downgrade
         await client.models.UserSubscription.update({
           id: subscription.id,
-          status: 'past_due',
+          status: 'pastdue',
           updatedAt: new Date().toISOString()
         });
         

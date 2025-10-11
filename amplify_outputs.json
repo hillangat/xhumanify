@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "us-east-2_l8yafCojK",
+    "user_pool_id": "us-east-2_tjUejrx7U",
     "aws_region": "us-east-2",
-    "user_pool_client_id": "4tsgpch48pcjhd49pqffv02hcj",
-    "identity_pool_id": "us-east-2:378e41f1-380f-4f07-891e-1f19e5201951",
+    "user_pool_client_id": "2jd2jsjr0if9f5414gosuagobi",
+    "identity_pool_id": "us-east-2:70106958-d254-4701-8996-9e75ff610f1b",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -26,9 +26,9 @@
     "unauthenticated_identities_enabled": true
   },
   "data": {
-    "url": "https://22wtmqe72zhfzdeizh3zkfb7lq.appsync-api.us-east-2.amazonaws.com/graphql",
+    "url": "https://nx4ozgivkfhobbisxwpq6dzfaa.appsync-api.us-east-2.amazonaws.com/graphql",
     "aws_region": "us-east-2",
-    "api_key": "da2-iigfrobnfjaojfophngtorpkga",
+    "api_key": "da2-z5hmqnp2erffhnran74x4vyfuq",
     "default_authorization_type": "AMAZON_COGNITO_USER_POOLS",
     "authorization_types": [
       "API_KEY",
@@ -429,9 +429,9 @@
                 "rules": [
                   {
                     "provider": "userPools",
-                    "ownerField": "owner",
+                    "ownerField": "userId",
                     "allow": "owner",
-                    "identityClaim": "sub",
+                    "identityClaim": "cognito:username",
                     "operations": [
                       "create",
                       "update",
@@ -440,13 +440,17 @@
                     ]
                   },
                   {
+                    "allow": "private",
+                    "operations": [
+                      "read"
+                    ]
+                  },
+                  {
                     "allow": "public",
                     "provider": "iam",
                     "operations": [
                       "create",
-                      "update",
-                      "delete",
-                      "read"
+                      "update"
                     ]
                   }
                 ]
@@ -546,6 +550,423 @@
             "primaryKeyFieldName": "id",
             "sortKeyFieldNames": []
           }
+        },
+        "FeatureRequest": {
+          "name": "FeatureRequest",
+          "fields": {
+            "id": {
+              "name": "id",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "title": {
+              "name": "title",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "description": {
+              "name": "description",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "category": {
+              "name": "category",
+              "isArray": false,
+              "type": {
+                "enum": "FeatureRequestCategory"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "submitterId": {
+              "name": "submitterId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "submitterDisplayName": {
+              "name": "submitterDisplayName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "upvotes": {
+              "name": "upvotes",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "downvotes": {
+              "name": "downvotes",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "totalVotes": {
+              "name": "totalVotes",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "voterCount": {
+              "name": "voterCount",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false,
+              "attributes": []
+            },
+            "status": {
+              "name": "status",
+              "isArray": false,
+              "type": {
+                "enum": "FeatureRequestStatus"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "priority": {
+              "name": "priority",
+              "isArray": false,
+              "type": {
+                "enum": "FeatureRequestPriority"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "adminNotes": {
+              "name": "adminNotes",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "publicResponse": {
+              "name": "publicResponse",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "estimatedEffort": {
+              "name": "estimatedEffort",
+              "isArray": false,
+              "type": {
+                "enum": "FeatureRequestEstimatedEffort"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "targetVersion": {
+              "name": "targetVersion",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "assignedTo": {
+              "name": "assignedTo",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "tags": {
+              "name": "tags",
+              "isArray": true,
+              "type": "String",
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true
+            },
+            "relatedFeatures": {
+              "name": "relatedFeatures",
+              "isArray": true,
+              "type": "String",
+              "isRequired": false,
+              "attributes": [],
+              "isArrayNullable": true
+            },
+            "duplicateOf": {
+              "name": "duplicateOf",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "completedAt": {
+              "name": "completedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            }
+          },
+          "syncable": true,
+          "pluralName": "FeatureRequests",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "read"
+                    ]
+                  },
+                  {
+                    "provider": "userPools",
+                    "ownerField": "submitterId",
+                    "allow": "owner",
+                    "operations": [
+                      "read",
+                      "update"
+                    ],
+                    "identityClaim": "cognito:username"
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": false,
+            "primaryKeyFieldName": "id",
+            "sortKeyFieldNames": []
+          }
+        },
+        "FeatureVote": {
+          "name": "FeatureVote",
+          "fields": {
+            "id": {
+              "name": "id",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "featureRequestId": {
+              "name": "featureRequestId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "userId": {
+              "name": "userId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "voteType": {
+              "name": "voteType",
+              "isArray": false,
+              "type": {
+                "enum": "FeatureVoteVoteType"
+              },
+              "isRequired": false,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            }
+          },
+          "syncable": true,
+          "pluralName": "FeatureVotes",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "read"
+                    ]
+                  },
+                  {
+                    "provider": "userPools",
+                    "ownerField": "userId",
+                    "allow": "owner",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete"
+                    ],
+                    "identityClaim": "cognito:username"
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": false,
+            "primaryKeyFieldName": "id",
+            "sortKeyFieldNames": []
+          }
+        },
+        "FeatureComment": {
+          "name": "FeatureComment",
+          "fields": {
+            "id": {
+              "name": "id",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "featureRequestId": {
+              "name": "featureRequestId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "userId": {
+              "name": "userId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "userDisplayName": {
+              "name": "userDisplayName",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "content": {
+              "name": "content",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "isAdminResponse": {
+              "name": "isAdminResponse",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            }
+          },
+          "syncable": true,
+          "pluralName": "FeatureComments",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "read"
+                    ]
+                  },
+                  {
+                    "provider": "userPools",
+                    "ownerField": "userId",
+                    "allow": "owner",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete"
+                    ],
+                    "identityClaim": "cognito:username"
+                  },
+                  {
+                    "allow": "public",
+                    "provider": "iam",
+                    "operations": [
+                      "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": false,
+            "primaryKeyFieldName": "id",
+            "sortKeyFieldNames": []
+          }
         }
       },
       "enums": {
@@ -554,9 +975,57 @@
           "values": [
             "active",
             "canceled",
-            "past_due",
+            "pastdue",
             "incomplete",
             "trialing"
+          ]
+        },
+        "FeatureRequestCategory": {
+          "name": "FeatureRequestCategory",
+          "values": [
+            "textprocessing",
+            "uiux",
+            "billing",
+            "performance",
+            "integration",
+            "other"
+          ]
+        },
+        "FeatureRequestStatus": {
+          "name": "FeatureRequestStatus",
+          "values": [
+            "submitted",
+            "underreview",
+            "planned",
+            "indevelopment",
+            "testing",
+            "completed",
+            "rejected"
+          ]
+        },
+        "FeatureRequestPriority": {
+          "name": "FeatureRequestPriority",
+          "values": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        },
+        "FeatureRequestEstimatedEffort": {
+          "name": "FeatureRequestEstimatedEffort",
+          "values": [
+            "small",
+            "medium",
+            "large",
+            "epic"
+          ]
+        },
+        "FeatureVoteVoteType": {
+          "name": "FeatureVoteVoteType",
+          "values": [
+            "upvote",
+            "downvote"
           ]
         }
       },
@@ -589,7 +1058,7 @@
   "custom": {
     "API": {
       "myRestApi": {
-        "endpoint": "https://kkvzaxfqai.execute-api.us-east-2.amazonaws.com/dev/",
+        "endpoint": "https://ksr2arplo3.execute-api.us-east-2.amazonaws.com/dev/",
         "region": "us-east-2",
         "apiName": "myRestApi"
       }
