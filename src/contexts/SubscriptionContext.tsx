@@ -130,6 +130,14 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         await client.models.UserSubscription.update({
           id: subscription.id,
           usageCount: subscription.usageCount + totalWords
+        }, {
+          selectionSet: [
+            'id',
+            'userId', 
+            'usageCount',
+            'usageLimit',
+            'updatedAt'
+          ]
         });
       } else {
         // Create a free tier subscription record for tracking
@@ -186,6 +194,14 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         await client.models.UserSubscription.update({
           id: subscription.id,
           usageCount: subscription.usageCount + estimatedWords
+        }, {
+          selectionSet: [
+            'id',
+            'userId',
+            'usageCount', 
+            'usageLimit',
+            'updatedAt'
+          ]
         });
       } else {
         // Create a free tier subscription record for tracking
