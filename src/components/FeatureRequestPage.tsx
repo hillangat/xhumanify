@@ -110,26 +110,20 @@ const FeatureRequestPage: React.FC = () => {
     try {
       const user = await getCurrentUser();
       setCurrentUser(user);
-      loadUserVotes(user.userId);
-      // Only load features after user is authenticated
-      loadFeatures();
+      // Load user-specific data after authentication succeeds
+      await loadUserVotes(user.username);
+      await loadFeatures();
     } catch (error) {
       console.log('No authenticated user');
+      setCurrentUser(null);
       setLoading(false);
       // For unauthenticated users, we can't load features due to auth rules
-      // You might want to show a login prompt here
     }
   };
 
   const loadFeatures = async () => {
     try {
       setLoading(true);
-      
-      // Check if user is authenticated first
-      if (!currentUser) {
-        console.log('User not authenticated, cannot load features');
-        return;
-      }
       
       const { data } = await client.models.FeatureRequest.list({
         limit: 100
@@ -174,6 +168,7 @@ const FeatureRequestPage: React.FC = () => {
       setUserVotes(votesMap);
     } catch (error) {
       console.error('Error loading user votes:', error);
+      // Don't show error to user for vote loading failures as it's not critical
     }
   };
 
