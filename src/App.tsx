@@ -11,6 +11,7 @@ import { ButtonGroup } from 'primereact/buttongroup';
 import { Dialog } from 'primereact/dialog';
 import { Menu } from 'primereact/menu';
 import { Toast } from 'primereact/toast';
+import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup';
 import UserFeedback, { UserFeedbackRef } from './UserFeedback';
 import { TONE_OPTIONS } from './constants/feedbackConstants';
 import { VscFeedback } from "react-icons/vsc";
@@ -22,7 +23,7 @@ import { getPlanLimits } from './config/plans';
 
 export default function App() {
   const client = generateClient<Schema>();
-  const { trackUsage, trackUsageWithTokens, checkUsageLimit, canUseService, currentTier, loading } = useSubscription();
+  const { trackUsage, trackUsageWithTokens, checkUsageLimit, canUseService, currentTier, loading, usageCount, usageLimit } = useSubscription();
   
   const [prompt, setPrompt] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
@@ -67,35 +68,6 @@ export default function App() {
         summary: 'Loading',
         detail: 'Please wait while we load your usage data...',
         life: 3000
-      });
-      return;
-    }
-
-    // Check usage limit before sending
-    if (!checkUsageLimit(prompt)) {
-      const inputWords = countWords(prompt);
-      const { usageCount, usageLimit } = useSubscription();
-      
-      const currentPlanLimits = getPlanLimits(currentTier);
-      const wouldExceedMonthly = (usageCount + inputWords) > usageLimit;
-      const exceedsPerRequest = inputWords > currentPlanLimits.wordsPerRequest;
-      
-      let errorDetail = '';
-      if (exceedsPerRequest) {
-        const limitText = currentPlanLimits.wordsPerRequest === 999999 ? 'unlimited' : `${currentPlanLimits.wordsPerRequest}-word`;
-        errorDetail = `Your input (${inputWords} words) exceeds the ${limitText} limit per request for ${currentTier} plan. Please split your content into smaller chunks or upgrade to Standard/Pro for unlimited words per request.`;
-      } else if (wouldExceedMonthly) {
-        const remaining = usageLimit - usageCount;
-        errorDetail = `This request (${inputWords} words) would exceed your monthly limit. You have ${remaining} words remaining. Please upgrade your plan or wait until next month.`;
-      } else {
-        errorDetail = `This request would exceed your ${currentTier} plan limits. Please upgrade your plan or wait until next month.`;
-      }
-      
-      toast.current?.show({
-        severity: 'warn',
-        summary: exceedsPerRequest ? 'Request Too Large' : 'Monthly Limit Exceeded',
-        detail: errorDetail,
-        life: 7000
       });
       return;
     }
@@ -154,6 +126,48 @@ export default function App() {
 
   const handleButtonClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
+    
+    // Check usage limit before sending and show confirmation if exceeded
+    if (!checkUsageLimit(prompt)) {
+      const inputWords = countWords(prompt);
+      
+      const currentPlanLimits = getPlanLimits(currentTier);
+      const wouldExceedMonthly = (usageCount + inputWords) > usageLimit;
+      const exceedsPerRequest = inputWords > currentPlanLimits.wordsPerRequest;
+      
+      let confirmMessage = '';
+      
+      if (exceedsPerRequest) {
+        const limitText = currentPlanLimits.wordsPerRequest === 999999 ? 'unlimited' : `${currentPlanLimits.wordsPerRequest}-word`;
+        confirmMessage = `Your input (${inputWords} words) exceeds the ${limitText} limit per request for ${currentTier} plan. Please split your content into smaller chunks or upgrade to Standard/Pro for unlimited words per request.`;
+      } else if (wouldExceedMonthly) {
+        const remaining = usageLimit - usageCount;
+        confirmMessage = `This request (${inputWords} words) would exceed your monthly limit. You have ${remaining} words remaining. Please upgrade your plan or wait until next month.`;
+      } else {
+        confirmMessage = `This request would exceed your ${currentTier} plan limits. Please upgrade your plan or wait until next month.`;
+      }
+      
+      confirmPopup({
+        target: event.currentTarget,
+        message: confirmMessage,
+        icon: 'pi pi-exclamation-triangle',
+        defaultFocus: 'accept',
+        acceptClassName: 'p-button-danger',
+        rejectClassName: 'p-button-outlined',
+        acceptLabel: 'Upgrade Plan',
+        rejectLabel: 'OK',
+        style: { maxWidth: '450px' },
+        accept: () => {
+          // Navigate to upgrade page
+          window.location.href = '/upgrade';
+        },
+        reject: () => {
+          // User acknowledged, do nothing
+        }
+      });
+      return;
+    }
+    
     await sendPrompt();
   };
 
@@ -390,9 +404,9 @@ export default function App() {
                     loadingIcon={<FaSpinner className='spin' />}
                     icon={<FaGooglePlay />}
                     onClick={handleButtonClick}
-                    disabled={loading || !prompt || isRunning || !canUseService || (!!prompt && !checkUsageLimit(prompt))}
-                    severity={!canUseService || (prompt && !checkUsageLimit(prompt)) ? 'danger' : undefined}
-                    style={!canUseService || (prompt && !checkUsageLimit(prompt)) ? {
+                    disabled={loading || !prompt || isRunning || !canUseService}
+                    severity={!canUseService ? 'danger' : undefined}
+                    style={!canUseService ? {
                       backgroundColor: '#f44336',
                       borderColor: '#f44336',
                       color: 'white'
@@ -598,6 +612,7 @@ export default function App() {
       
       {/* Toast Notifications */}
       <Toast ref={toast} position="top-right" />
+      <ConfirmPopup />
     </>
   );
 }
