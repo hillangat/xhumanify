@@ -406,7 +406,7 @@ export default function App() {
                     onClick={handleButtonClick}
                     disabled={loading || !prompt || isRunning || !canUseService}
                     severity={!canUseService ? 'danger' : undefined}
-                    style={!canUseService ? {
+                    style={!canUseService || (!!prompt && !checkUsageLimit(prompt)) ? {
                       backgroundColor: '#f44336',
                       borderColor: '#f44336',
                       color: 'white'
