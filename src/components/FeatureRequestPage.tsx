@@ -103,7 +103,6 @@ const FeatureRequestPage: React.FC = () => {
   ];
 
   useEffect(() => {
-    loadFeatures();
     loadCurrentUser();
   }, []);
 
@@ -112,14 +111,26 @@ const FeatureRequestPage: React.FC = () => {
       const user = await getCurrentUser();
       setCurrentUser(user);
       loadUserVotes(user.userId);
+      // Only load features after user is authenticated
+      loadFeatures();
     } catch (error) {
       console.log('No authenticated user');
+      setLoading(false);
+      // For unauthenticated users, we can't load features due to auth rules
+      // You might want to show a login prompt here
     }
   };
 
   const loadFeatures = async () => {
     try {
       setLoading(true);
+      
+      // Check if user is authenticated first
+      if (!currentUser) {
+        console.log('User not authenticated, cannot load features');
+        return;
+      }
+      
       const { data } = await client.models.FeatureRequest.list({
         limit: 100
       });
@@ -142,8 +153,8 @@ const FeatureRequestPage: React.FC = () => {
       toast.current?.show({
         severity: 'error',
         summary: 'Error',
-        detail: 'Failed to load feature requests',
-        life: 3000
+        detail: 'Failed to load feature requests. Please make sure you are logged in.',
+        life: 5000
       });
     } finally {
       setLoading(false);
@@ -444,24 +455,36 @@ const FeatureRequestPage: React.FC = () => {
     <div className="feature-request-page">
       <Toast ref={toast} />
       
-      <Toolbar 
-        start={toolbarStartContent}
-        end={toolbarEndContent}
-        className="page-toolbar"
-      />
+      {!currentUser && !loading ? (
+        <div className="auth-required-message">
+          <Card>
+            <div style={{ textAlign: 'center', padding: '2rem' }}>
+              <i className="pi pi-lock" style={{ fontSize: '3rem', color: 'var(--primary-color)', marginBottom: '1rem' }}></i>
+              <h3>Authentication Required</h3>
+              <p>Please log in to view and submit feature requests.</p>
+            </div>
+          </Card>
+        </div>
+      ) : (
+        <>
+          <Toolbar 
+            start={toolbarStartContent}
+            end={toolbarEndContent}
+            className="page-toolbar"
+          />
 
-      <div className="content-container">
-        <TabView activeIndex={activeTab} onTabChange={(e) => setActiveTab(e.index)}>
-          <TabPanel header="Popular" leftIcon="pi pi-star">
-            <DataView
-              value={getTabFilteredFeatures(0)}
-              itemTemplate={renderFeatureCard}
-              layout="grid"
-              loading={loading}
-              emptyMessage="No feature requests found"
-              className="features-grid"
-            />
-          </TabPanel>
+          <div className="content-container">
+            <TabView activeIndex={activeTab} onTabChange={(e) => setActiveTab(e.index)}>
+              <TabPanel header="Popular" leftIcon="pi pi-star">
+                <DataView
+                  value={getTabFilteredFeatures(0)}
+                  itemTemplate={renderFeatureCard}
+                  layout="grid"
+                  loading={loading}
+                  emptyMessage="No feature requests found"
+                  className="features-grid"
+                />
+              </TabPanel>
           
           <TabPanel header="Recent" leftIcon="pi pi-clock">
             <DataView
@@ -710,6 +733,8 @@ const FeatureRequestPage: React.FC = () => {
             </div>
           </div>
         </Dialog>
+      )}
+      </>
       )}
     </div>
   );
