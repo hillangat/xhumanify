@@ -58,7 +58,10 @@ const FeatureRequestPage: React.FC = () => {
   
   const [features, setFeatures] = useState<FeatureRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [votingLoading, setVotingLoading] = useState<Set<string>>(new Set());
   const [showNewFeatureDialog, setShowNewFeatureDialog] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [featureToDelete, setFeatureToDelete] = useState<{id: string, title: string} | null>(null);
   const [selectedFeature, setSelectedFeature] = useState<FeatureRequest | null>(null);
   const [showFeatureDetail, setShowFeatureDetail] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -234,6 +237,118 @@ const FeatureRequestPage: React.FC = () => {
     }
   };
 
+  const handleDeleteFeature = async (featureId: string, featureTitle: string) => {
+    if (!currentUser) {
+      toast.current?.show({
+        severity: 'warn',
+        summary: 'Authentication Required',
+        detail: 'Please sign in to delete features',
+        life: 3000
+      });
+      return;
+    }
+
+    try {
+      console.log('Deleting feature:', { featureId, userId: currentUser.username });
+      
+      // Delete all votes for this feature first
+      const { data: votes } = await client.models.FeatureVote.list({
+        filter: { featureRequestId: { eq: featureId } }
+      });
+      
+      // Delete all votes
+      for (const vote of votes) {
+        await client.models.FeatureVote.delete({ id: vote.id });
+      }
+      
+      // Delete the feature request
+      await client.models.FeatureRequest.delete({ id: featureId });
+      
+      console.log('Feature deleted successfully');
+      
+      // Close detail dialog if it's open
+      setShowFeatureDetail(false);
+      setSelectedFeature(null);
+      
+      // Show success message
+      toast.current?.show({
+        severity: 'success',
+        summary: 'Feature Deleted',
+        detail: `"${featureTitle}" has been deleted successfully.`,
+        life: 3000
+      });
+      
+      // Refresh the features list
+      await loadFeatures();
+      
+    } catch (error) {
+      console.error('Error deleting feature:', error);
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Delete Failed',
+        detail: `Failed to delete feature: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        life: 5000
+      });
+    }
+  };
+
+  const confirmDelete = (featureId: string, featureTitle: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    setFeatureToDelete({ id: featureId, title: featureTitle });
+    setShowConfirmDelete(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (featureToDelete) {
+      handleDeleteFeature(featureToDelete.id, featureToDelete.title);
+      setShowConfirmDelete(false);
+      setFeatureToDelete(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setShowConfirmDelete(false);
+    setFeatureToDelete(null);
+  };
+
+  const updateFeatureRequestCounts = async (featureId: string) => {
+    try {
+      // Get fresh vote counts from database (handles concurrent votes from multiple users)
+      const { data: allVotes } = await client.models.FeatureVote.list({
+        filter: { featureRequestId: { eq: featureId } }
+      });
+      
+      // Calculate counts based on fresh data
+      const upvotes = allVotes.filter(vote => vote.voteType === 'upvote').length;
+      const downvotes = allVotes.filter(vote => vote.voteType === 'downvote').length;
+      const totalVotes = upvotes + downvotes;
+      const voterCount = allVotes.length;
+      
+      console.log('Fresh vote counts from database:', { featureId, upvotes, downvotes, totalVotes, voterCount });
+      
+      // Get current feature to ensure we have the latest version
+      const { data: currentFeature } = await client.models.FeatureRequest.get({ id: featureId });
+      
+      if (currentFeature) {
+        // Update with fresh counts and preserve other fields
+        await client.models.FeatureRequest.update({
+          id: featureId,
+          upvotes,
+          downvotes,
+          totalVotes,
+          voterCount,
+          updatedAt: new Date().toISOString()
+        });
+        
+        console.log('Vote counts updated successfully with fresh data');
+      } else {
+        console.error('Feature not found when updating counts');
+      }
+    } catch (error) {
+      console.error('Error updating feature request counts:', error);
+    }
+  };
+
   const handleVote = async (featureId: string, voteType: VoteType) => {
     if (!currentUser) {
       toast.current?.show({
@@ -245,55 +360,57 @@ const FeatureRequestPage: React.FC = () => {
       return;
     }
 
+    // Prevent double-clicking by checking if this feature is already being voted on
+    if (votingLoading.has(featureId)) {
+      console.log('Vote already in progress for feature:', featureId);
+      return;
+    }
+
     try {
       console.log('Voting attempt:', { featureId, voteType, userId: currentUser.username });
+      
+      // Add feature to loading set
+      setVotingLoading(prev => new Set(prev).add(featureId));
       
       const existingVote = userVotes.get(featureId);
       
       if (existingVote === voteType) {
-        // Remove vote if clicking same vote type
-        const votes = await client.models.FeatureVote.list({
-          filter: { 
-            featureRequestId: { eq: featureId },
-            userId: { eq: currentUser.username }
-          }
-        });
-        
-        if (votes.data.length > 0) {
-          await client.models.FeatureVote.delete({ id: votes.data[0].id });
-          userVotes.delete(featureId);
-          console.log('Vote removed successfully');
-        }
-      } else {
-        // Update or create vote
-        const votes = await client.models.FeatureVote.list({
-          filter: { 
-            featureRequestId: { eq: featureId },
-            userId: { eq: currentUser.username }
-          }
-        });
-        
-        if (votes.data.length > 0) {
-          await client.models.FeatureVote.update({
-            id: votes.data[0].id,
-            voteType: voteType
-          });
-          console.log('Vote updated successfully');
-        } else {
-          await client.models.FeatureVote.create({
-            featureRequestId: featureId,
-            userId: currentUser.username,
-            voteType: voteType,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          });
-          console.log('Vote created successfully');
-        }
-        
-        userVotes.set(featureId, voteType);
+        // Do nothing if clicking the same vote type
+        console.log('Same vote type clicked, no action taken');
+        return;
       }
       
+      // Update or create vote (always switch to the new vote type)
+      const votes = await client.models.FeatureVote.list({
+        filter: { 
+          featureRequestId: { eq: featureId },
+          userId: { eq: currentUser.username }
+        }
+      });
+      
+      if (votes.data.length > 0) {
+        await client.models.FeatureVote.update({
+          id: votes.data[0].id,
+          voteType: voteType
+        });
+        console.log('Vote updated successfully');
+      } else {
+        await client.models.FeatureVote.create({
+          featureRequestId: featureId,
+          userId: currentUser.username,
+          voteType: voteType,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        });
+        console.log('Vote created successfully');
+      }
+      
+      userVotes.set(featureId, voteType);
+      
       setUserVotes(new Map(userVotes));
+      
+      // Update the feature request vote counts
+      await updateFeatureRequestCounts(featureId);
       
       // Show success feedback
       toast.current?.show({
@@ -303,7 +420,7 @@ const FeatureRequestPage: React.FC = () => {
         life: 2000
       });
       
-      // Refresh feature data to update vote counts
+      // Refresh feature data to show updated counts
       await loadFeatures();
       
     } catch (error) {
@@ -313,6 +430,13 @@ const FeatureRequestPage: React.FC = () => {
         summary: 'Error',
         detail: `Failed to submit vote: ${error instanceof Error ? error.message : 'Unknown error'}`,
         life: 5000
+      });
+    } finally {
+      // Remove feature from loading set
+      setVotingLoading(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(featureId);
+        return newSet;
       });
     }
   };
@@ -333,7 +457,7 @@ const FeatureRequestPage: React.FC = () => {
         title: data.title.trim(),
         description: data.description.trim(),
         category: data.category as CategoryType,
-        submitterId: currentUser.userId,
+        submitterId: currentUser.username,
         submitterDisplayName: currentUser.signInDetails?.loginId?.split('@')[0] || 'Anonymous',
         upvotes: 0,
         downvotes: 0,
@@ -409,20 +533,20 @@ const FeatureRequestPage: React.FC = () => {
           <span>{categories.find(c => c.value === feature.category)?.label}</span>
         </div>
         <div className="voting-section">
-          <Button
-            icon="pi pi-chevron-left"
-            className={`vote-btn downvote ${userVote === 'downvote' ? 'active' : ''}`}
-            onClick={() => handleVote(feature.id, 'downvote')}
-            text
-            size="small"
+          <i
+            className={`pi pi-chevron-left vote-icon downvote ${userVote === 'downvote' ? 'active' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleVote(feature.id, 'downvote');
+            }}
           />
-          <span className="vote-count">{feature.upvotes - feature.downvotes}</span>
-          <Button
-            icon="pi pi-chevron-right"
-            className={`vote-btn upvote ${userVote === 'upvote' ? 'active' : ''}`}
-            onClick={() => handleVote(feature.id, 'upvote')}
-            text
-            size="small"
+          <span className="vote-count">{Math.max(0, feature.upvotes - feature.downvotes)}</span>
+          <i
+            className={`pi pi-chevron-right vote-icon upvote ${userVote === 'upvote' ? 'active' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleVote(feature.id, 'upvote');
+            }}
           />
         </div>
       </div>
@@ -430,24 +554,40 @@ const FeatureRequestPage: React.FC = () => {
 
     const footer = (
       <div className="feature-card-footer">
-        <div className="status-info">
-          <Tag 
-            value={feature.status} 
-            severity={getStatusSeverity(feature.status)} 
-            className="status-tag"
-          />
-          {feature.priority && (
-            <Badge 
-              value={feature.priority} 
-              style={{ backgroundColor: getPriorityColor(feature.priority) }}
-            />
-          )}
-        </div>
         <div className="meta-info">
-          <small>
-            by {feature.submitterDisplayName || 'Anonymous'} • 
-            {new Date(feature.createdAt).toLocaleDateString()}
-          </small>
+          {currentUser && feature.submitterId === currentUser.username && (
+            <div className="submitter-info">
+              <small>by {feature.submitterDisplayName || 'Anonymous'} • {new Date(feature.createdAt).toLocaleDateString()}</small>
+            </div>
+          )}
+          <div className="status-actions-row">
+            <div className="status-priority-group">
+              <Tag 
+                value={feature.status} 
+                severity={getStatusSeverity(feature.status)} 
+                className="status-tag"
+              />
+              {feature.priority && (
+                <Badge 
+                  value={feature.priority} 
+                  style={{ backgroundColor: getPriorityColor(feature.priority) }}
+                />
+              )}
+            </div>
+            {currentUser && feature.submitterId !== currentUser.username && (<small>by {feature.submitterDisplayName || 'Anonymous'} • {new Date(feature.createdAt).toLocaleDateString()}</small>)}
+            {currentUser && feature.submitterId === currentUser.username && (
+              <Button
+                icon="pi pi-trash"
+                label="Delete Request"
+                className="delete-btn"
+                onClick={(e) => confirmDelete(feature.id, feature.title, e)}
+                size="small"
+                severity="danger"
+                tooltip="Delete this feature request"
+                tooltipOptions={{ position: 'bottom' }}
+              />
+            )}
+          </div>
         </div>
       </div>
     );
@@ -706,7 +846,22 @@ const FeatureRequestPage: React.FC = () => {
       {/* Feature Detail Dialog */}
       {selectedFeature && (
         <Dialog
-          header={selectedFeature.title}
+          header={
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+              <span>{selectedFeature.title}</span>
+              {currentUser && selectedFeature.submitterId === currentUser.username && (
+                <Button
+                  icon="pi pi-trash"
+                  onClick={(e) => confirmDelete(selectedFeature.id, selectedFeature.title, e)}
+                  text
+                  severity="danger"
+                  tooltip="Delete this feature request"
+                  tooltipOptions={{ position: 'left' }}
+                  style={{ marginLeft: '1rem' }}
+                />
+              )}
+            </div>
+          }
           visible={showFeatureDetail}
           onHide={() => setShowFeatureDetail(false)}
           style={{ width: '800px' }}
@@ -715,18 +870,20 @@ const FeatureRequestPage: React.FC = () => {
           <div className="feature-detail">
             <div className="detail-header">
               <div className="voting-section large">
-                <Button
-                  icon="pi pi-chevron-left"
-                  className={`vote-btn downvote large ${userVotes.get(selectedFeature.id) === 'downvote' ? 'active' : ''}`}
-                  onClick={() => handleVote(selectedFeature.id, 'downvote')}
-                  text
+                <i
+                  className={`pi pi-chevron-left vote-icon downvote large ${userVotes.get(selectedFeature.id) === 'downvote' ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleVote(selectedFeature.id, 'downvote');
+                  }}
                 />
-                <span className="vote-count large">{selectedFeature.upvotes - selectedFeature.downvotes}</span>
-                <Button
-                  icon="pi pi-chevron-right"
-                  className={`vote-btn upvote large ${userVotes.get(selectedFeature.id) === 'upvote' ? 'active' : ''}`}
-                  onClick={() => handleVote(selectedFeature.id, 'upvote')}
-                  text
+                <span className="vote-count large">{Math.max(0, selectedFeature.upvotes - selectedFeature.downvotes)}</span>
+                <i
+                  className={`pi pi-chevron-right vote-icon upvote large ${userVotes.get(selectedFeature.id) === 'upvote' ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleVote(selectedFeature.id, 'upvote');
+                  }}
                 />
               </div>
               
@@ -804,6 +961,40 @@ const FeatureRequestPage: React.FC = () => {
           </div>
         </Dialog>
       )}
+      
+      {/* Confirm Delete Dialog */}
+      <Dialog
+        header="Confirm Delete"
+        visible={showConfirmDelete}
+        onHide={handleCancelDelete}
+        style={{ width: '450px' }}
+        modal
+        footer={
+          <div className="dialog-footer">
+            <Button
+              label="Cancel"
+              outlined
+              onClick={handleCancelDelete}
+            />
+            <Button 
+              label="Delete" 
+              icon="pi pi-trash" 
+              severity="danger"
+              onClick={handleConfirmDelete}
+            />
+          </div>
+        }
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <i className="pi pi-exclamation-triangle" style={{ fontSize: '2rem', color: 'var(--red-500)' }}></i>
+          <div>
+            <p>Are you sure you want to delete <strong>"{featureToDelete?.title}"</strong>?</p>
+            <p style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem', margin: '0.5rem 0 0 0' }}>
+              This action cannot be undone.
+            </p>
+          </div>
+        </div>
+      </Dialog>
       </>
       )}
     </div>

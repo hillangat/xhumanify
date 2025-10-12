@@ -112,7 +112,7 @@ const schema = a.schema({
     })
     .authorization((allow) => [
       allow.authenticated().to(['read', 'create']),
-      allow.ownerDefinedIn('submitterId').to(['read', 'update']),
+      allow.ownerDefinedIn('submitterId').to(['read', 'update', 'delete']),
       allow.guest().to(['read']) // Allow public read access
     ]),
   FeatureVote: a
