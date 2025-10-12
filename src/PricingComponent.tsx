@@ -416,6 +416,22 @@ const PricingComponent: React.FC = () => {
         </p>
       </div>
 
+      {/* Current Subscription Status */}
+      {hasActiveSubscription && (
+        <Card className="current-subscription" style={{ marginBottom: '2rem', padding: '1rem' }}>
+          <div className="subscription-info">
+            <h3>Current Subscription: {currentPlan && PRICING_PLANS[currentPlan]?.name}</h3>
+            <p>Usage: {subscription?.usageCount} / {subscription?.usageLimit === -1 ? 'Unlimited' : subscription?.usageLimit}</p>
+            <Button 
+              label="Manage Subscription"
+              icon="pi pi-cog"
+              className="p-button-outlined"
+              onClick={handleManageSubscription}
+            />
+          </div>
+        </Card>
+      )}
+
       {/* Billing Toggle */}
       <div className="billing-toggle">
         <div className="toggle-container">
@@ -435,25 +451,9 @@ const PricingComponent: React.FC = () => {
         </div>
       </div>
 
-      {/* Current Subscription Status */}
-      {hasActiveSubscription && (
-        <Card className="current-subscription" style={{ marginBottom: '2rem', padding: '1rem' }}>
-          <div className="subscription-info">
-            <h3>Current Subscription: {currentPlan && PRICING_PLANS[currentPlan]?.name}</h3>
-            <p>Usage: {subscription?.usageCount} / {subscription?.usageLimit === -1 ? 'Unlimited' : subscription?.usageLimit}</p>
-            <Button 
-              label="Manage Subscription"
-              icon="pi pi-cog"
-              className="p-button-outlined"
-              onClick={handleManageSubscription}
-            />
-          </div>
-        </Card>
-      )}
-
       {/* Pricing Cards */}
       <div className="pricing-grid">
-        {plans.map((plan) => (
+        {plans.filter(plan => !plan.free).concat(plans.filter(plan => plan.free)).map((plan) => (
           <Card 
             key={plan.id} 
             className={`pricing-card ${plan.popular ? 'popular' : ''} ${plan.free ? 'free' : ''}`}

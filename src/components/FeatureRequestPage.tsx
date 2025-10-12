@@ -14,10 +14,12 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { Dropdown } from 'primereact/dropdown';
 import { MultiSelect } from 'primereact/multiselect';
 import { Toast } from 'primereact/toast';
+import { ProgressSpinner } from 'primereact/progressspinner';
 import { Toolbar } from 'primereact/toolbar';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Divider } from 'primereact/divider';
 import { Avatar } from 'primereact/avatar';
+import { Tooltip } from 'primereact/tooltip';
 import { classNames } from 'primereact/utils';
 import './FeatureRequestPage.scss';
 
@@ -539,14 +541,22 @@ const FeatureRequestPage: React.FC = () => {
               e.stopPropagation();
               handleVote(feature.id, 'downvote');
             }}
+            data-pr-tooltip="Downvote this feature"
+            data-pr-position="top"
           />
-          <span className="vote-count">{Math.max(0, feature.upvotes - feature.downvotes)}</span>
+          {votingLoading.has(feature.id) ? (
+            <ProgressSpinner style={{ width: '20px', height: '20px' }} strokeWidth="4" />
+          ) : (
+            <span className="vote-count">{Math.max(0, feature.upvotes - feature.downvotes)}</span>
+          )}
           <i
             className={`pi pi-chevron-right vote-icon upvote ${userVote === 'upvote' ? 'active' : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               handleVote(feature.id, 'upvote');
             }}
+            data-pr-tooltip="Upvote this feature"
+            data-pr-position="top"
           />
         </div>
       </div>
@@ -876,14 +886,22 @@ const FeatureRequestPage: React.FC = () => {
                     e.stopPropagation();
                     handleVote(selectedFeature.id, 'downvote');
                   }}
+                  data-pr-tooltip="Downvote this feature"
+                  data-pr-position="top"
                 />
-                <span className="vote-count large">{Math.max(0, selectedFeature.upvotes - selectedFeature.downvotes)}</span>
+                {votingLoading.has(selectedFeature.id) ? (
+                  <ProgressSpinner style={{ width: '24px', height: '24px' }} strokeWidth="4" />
+                ) : (
+                  <span className="vote-count large">{Math.max(0, selectedFeature.upvotes - selectedFeature.downvotes)}</span>
+                )}
                 <i
                   className={`pi pi-chevron-right vote-icon upvote large ${userVotes.get(selectedFeature.id) === 'upvote' ? 'active' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleVote(selectedFeature.id, 'upvote');
                   }}
+                  data-pr-tooltip="Upvote this feature"
+                  data-pr-position="top"
                 />
               </div>
               
