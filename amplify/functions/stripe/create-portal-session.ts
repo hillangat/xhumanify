@@ -9,7 +9,7 @@ const stripe = new Stripe(env.STRIPE_SECRET_KEY!, {
 
 export const handler: APIGatewayProxyHandler = async (event) => {
   const headers = {
-    'Access-Control-Allow-Origin': 'https://www.humanizeaicontents.com',
+    'Access-Control-Allow-Origin': '*', // Allow all origins for development
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Amz-Date, X-Api-Key, X-Amz-Security-Token',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Credentials': 'true'
@@ -71,6 +71,8 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://www.humanizeaicontents.com'}/upgrade`,
+      // Optional: specify your portal configuration
+      // configuration: 'bpc_YOUR_CONFIGURATION_ID_HERE', // Uncomment and add your bpc_ code if needed
     });
 
     console.log('Portal session created successfully:', session.id);
