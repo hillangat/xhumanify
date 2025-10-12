@@ -75,6 +75,7 @@ export default function Header() {
     {
       label: 'About',
       icon: 'pi pi-info-circle',
+      url: '/about',
       className: (location.pathname === '/about' || location.pathname === '/about/') ? 'active-menu-item' : ''
     },
     {
