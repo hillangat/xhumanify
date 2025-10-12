@@ -36,8 +36,8 @@ export default function Header() {
     {
       label: 'Feature Requests',
       icon: 'pi pi-lightbulb',
-      url: '/feature-requests',
-      className: (location.pathname === '/feature-requests' || location.pathname === '/feature-requests/') ? 'active-menu-item' : ''
+      url: '/features',
+      className: (location.pathname === '/features' || location.pathname === '/features/') ? 'active-menu-item' : ''
     },
     {
       label: 'Pricing',
