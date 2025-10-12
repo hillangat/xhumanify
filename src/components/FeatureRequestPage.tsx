@@ -19,7 +19,6 @@ import { Toolbar } from 'primereact/toolbar';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Divider } from 'primereact/divider';
 import { Avatar } from 'primereact/avatar';
-import { Tooltip } from 'primereact/tooltip';
 import { classNames } from 'primereact/utils';
 import './FeatureRequestPage.scss';
 
