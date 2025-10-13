@@ -521,6 +521,11 @@ const PricingComponent: React.FC = () => {
         </Accordion>
       </div>
       
+      {/* Legal Footer */}
+      <div className="legal-footer">
+        <p>By subscribing, you agree to our <a href="/terms" target="_blank" rel="noopener">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>.</p>
+      </div>
+      
       {/* Toast Notifications */}
       <Toast ref={toast} position="top-right" />
     </div>

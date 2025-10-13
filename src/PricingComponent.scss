@@ -420,6 +420,29 @@
   }
 }
 
+/* Legal Footer */
+.legal-footer {
+  text-align: center;
+  margin: 2rem 0 1rem 0;
+  padding: 1rem;
+  border-top: 1px solid var(--surface-border);
+  
+  p {
+    color: var(--text-color-secondary);
+    font-size: 0.9rem;
+    margin: 0;
+    
+    a {
+      color: var(--primary-color);
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+}
+
 /* Dark mode support */
 [data-theme="dark"] {
   .pricing-component {

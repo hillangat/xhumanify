@@ -79,6 +79,12 @@ export default function Header() {
       className: (location.pathname === '/about' || location.pathname === '/about/') ? 'active-menu-item' : ''
     },
     {
+      label: 'Terms',
+      icon: 'pi pi-file-text',
+      url: '/terms',
+      className: (location.pathname === '/terms' || location.pathname === '/terms/') ? 'active-menu-item' : ''
+    },
+    {
       label: 'Contact',
       icon: 'pi pi-envelope',
       className: (location.pathname === '/contact' || location.pathname === '/contact/') ? 'active-menu-item' : ''

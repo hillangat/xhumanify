@@ -62,8 +62,7 @@ const schema = a.schema({
     })
     .authorization((allow) => [
       allow.ownerDefinedIn("userId"), // Use userId field for ownership
-      allow.authenticated().to(["read"]), // Allow authenticated users to read
-      allow.guest().to(["create", "update"]) // Allow webhook (IAM) to create/update
+      allow.guest().to(["create", "update", "read", "delete"]) // Allow webhook (IAM) full access
     ]),
   UsageTracking: a
     .model({
@@ -111,8 +110,8 @@ const schema = a.schema({
       completedAt: a.datetime(),
     })
     .authorization((allow) => [
-      allow.authenticated().to(['read', 'create']),
-      allow.ownerDefinedIn('submitterId').to(['read', 'update', 'delete']),
+      allow.authenticated().to(['read', 'create', 'update']), // Allow authenticated users to vote
+      allow.ownerDefinedIn('submitterId').to(['read', 'update', 'delete']), // Owner has full control
       allow.guest().to(['read']) // Allow public read access
     ]),
   FeatureVote: a

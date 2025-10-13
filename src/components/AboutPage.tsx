@@ -350,6 +350,21 @@ const AboutPage: React.FC = () => {
               onClick={() => window.location.href = 'mailto:support@humanizeaicontents.com'}
             />
           </div>
+          
+          <div className="legal-links">
+            <Button 
+              label="Terms of Service" 
+              link 
+              className="legal-link"
+              onClick={() => window.location.href = '/terms'}
+            />
+            <Button 
+              label="Privacy Policy" 
+              link 
+              className="legal-link"
+              onClick={() => window.location.href = '/privacy'}
+            />
+          </div>
         </div>
       </section>
     </div>

@@ -9,6 +9,7 @@ import PricingComponent from "./PricingComponent.tsx";
 import PaymentSuccess from "./PaymentSuccess.tsx";
 import FeatureRequestPage from "./components/FeatureRequestPage.tsx";
 import AboutPage from "./components/AboutPage.tsx";
+import TermsOfService from "./components/TermsOfService.tsx";
 import Layout from "./Layout.tsx";
 import { SubscriptionProvider } from "./contexts/SubscriptionContext.tsx";
 import "./index.scss";
@@ -64,6 +65,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               <Route path="/payment/success" element={<PaymentSuccess />} />
               <Route path="/features" element={<FeatureRequestPage />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/terms" element={<TermsOfService />} />
             </Routes>
           </Layout>
         </BrowserRouter>

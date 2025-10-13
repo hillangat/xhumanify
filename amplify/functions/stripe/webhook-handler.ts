@@ -231,6 +231,20 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, requ
       cancel_at_period_end: (subscription as any).cancel_at_period_end
     });
     
+    // Get customer details to extract userId from metadata
+    let userId: string | null = null;
+    try {
+      const customer = await stripe.customers.retrieve(customerId) as Stripe.Customer;
+      if (customer && !customer.deleted && customer.metadata?.userId) {
+        userId = customer.metadata.userId;
+        console.log(`👤 [${requestId}] Found userId in customer metadata: ${userId}`);
+      } else {
+        console.warn(`⚠️ [${requestId}] Customer ${customerId} has no userId in metadata`);
+      }
+    } catch (customerError) {
+      console.error(`❌ [${requestId}] Failed to retrieve customer ${customerId}:`, customerError);
+    }
+    
     // Determine plan name from price ID
     const planName = getPlanFromPriceId(stripePriceId);
     const limits = PLAN_LIMITS[planName] || PLAN_LIMITS['free'];
@@ -240,17 +254,47 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, requ
     
     console.log(`🔍 [${requestId}] Searching for existing subscriptions...`);
     
-    // Find ALL user subscriptions that could match this customer
+    // Find user subscriptions that match this customer using IAM auth
+    // The webhook runs with IAM permissions, so it can bypass user authorization
     const client = getClient();
-    const { data: allSubscriptions } = await client.models.UserSubscription.list();
-    console.log(`📊 [${requestId}] Total subscriptions in database: ${allSubscriptions?.length || 0}`);
+    const { data: allSubscriptions } = await client.models.UserSubscription.list({
+      authMode: 'iam', // Use IAM auth to bypass user-level authorization
+      filter: {
+        stripeCustomerId: {
+          eq: customerId
+        }
+      },
+      limit: 100 // Get all potential matches
+    });
     
-    // Filter for potential matches
-    const potentialMatches = allSubscriptions?.filter((sub: any) => 
-      sub.stripeCustomerId === customerId || 
-      sub.stripeCustomerId === 'free-tier-user' ||
-      sub.stripeCustomerId?.includes('manual-fix')
-    ) || [];
+    console.log(`📊 [${requestId}] Subscriptions found for customer ${customerId}: ${allSubscriptions?.length || 0}`);
+    
+    // Also check for free-tier or manual-fix subscriptions with same userId if we have it
+    let additionalMatches: any[] = [];
+    if (userId) {
+      try {
+        const { data: userSubscriptions } = await client.models.UserSubscription.list({
+          authMode: 'iam',
+          filter: {
+            userId: {
+              eq: userId
+            }
+          },
+          limit: 50
+        });
+        additionalMatches = userSubscriptions || [];
+        console.log(`📊 [${requestId}] Additional subscriptions found for userId ${userId}: ${additionalMatches.length}`);
+      } catch (userSearchError) {
+        console.warn(`⚠️ [${requestId}] Could not search by userId:`, userSearchError);
+      }
+    }
+    
+    // Combine and deduplicate matches
+    const allMatches = [...(allSubscriptions || []), ...additionalMatches];
+    const potentialMatches = allMatches.filter((sub: any, index: number, arr: any[]) => {
+      // Deduplicate by id
+      return arr.findIndex(s => s.id === sub.id) === index;
+    });
     
     console.log(`🎯 [${requestId}] Potential matches found: ${potentialMatches.length}`);
     potentialMatches.forEach((match: any, index: number) => {
@@ -282,6 +326,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, requ
       
       const updateData = {
         id: targetSub.id,
+        userId: userId || targetSub.userId, // Preserve or set userId
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscription.id,
         stripePriceId: stripePriceId,
@@ -296,7 +341,9 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, requ
       
       console.log(`📝 [${requestId}] Update payload:`, updateData);
       
-      const { data: updatedSub, errors } = await client.models.UserSubscription.update(updateData);
+      const { data: updatedSub, errors } = await client.models.UserSubscription.update(updateData, {
+        authMode: 'iam' // Use IAM auth for webhook operations
+      });
       
       if (errors) {
         console.error(`❌ [${requestId}] Update errors:`, errors);
@@ -317,7 +364,9 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, requ
       for (const duplicate of duplicates) {
         console.log(`🗑️ [${requestId}] Removing duplicate subscription ${duplicate.id}`);
         try {
-          await client.models.UserSubscription.delete({ id: duplicate.id });
+          await client.models.UserSubscription.delete({ id: duplicate.id }, {
+            authMode: 'iam' // Use IAM auth for webhook operations
+          });
           console.log(`✅ [${requestId}] Duplicate ${duplicate.id} removed successfully`);
         } catch (deleteError) {
           console.error(`❌ [${requestId}] Failed to delete duplicate ${duplicate.id}:`, deleteError);
@@ -329,6 +378,7 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, requ
       console.log(`🆕 [${requestId}] No existing subscriptions found, creating new record...`);
       
       const createData = {
+        userId: userId, // Set userId for proper ownership
         stripeCustomerId: customerId,
         stripeSubscriptionId: subscription.id,
         stripePriceId: stripePriceId,
@@ -345,7 +395,14 @@ async function handleSubscriptionCreated(subscription: Stripe.Subscription, requ
       
       console.log(`📝 [${requestId}] Create payload:`, createData);
       
-      const { data: newSub, errors } = await client.models.UserSubscription.create(createData);
+      // Warn if userId is missing
+      if (!userId) {
+        console.warn(`⚠️ [${requestId}] Creating subscription without userId - this may cause ownership issues`);
+      }
+      
+      const { data: newSub, errors } = await client.models.UserSubscription.create(createData, {
+        authMode: 'iam' // Use IAM auth for webhook operations
+      });
       
       if (errors) {
         console.error(`❌ [${requestId}] Create errors:`, errors);
@@ -400,6 +457,7 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, requ
       
       await client.models.UserSubscription.update({
         id: existingSub.id,
+        userId: existingSub.userId, // Preserve existing userId
         stripeSubscriptionId: subscription.id,
         stripePriceId: stripePriceId,
         status: subscription.status as any,
@@ -411,6 +469,8 @@ async function handleSubscriptionUpdated(subscription: Stripe.Subscription, requ
         // Reset usage only on renewal or upgrade, not on downgrades
         usageCount: isRenewal ? 0 : existingSub.usageCount,
         updatedAt: new Date().toISOString()
+      }, {
+        authMode: 'iam' // Use IAM auth for webhook operations
       });
       
       console.log(`📊 [${requestId}] Subscription updated: ${oldPlanName} -> ${planName}, renewal: ${isRenewal}`);
@@ -443,6 +503,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription, requ
       // Revert to free tier but PRESERVE current usage count
       await client.models.UserSubscription.update({
         id: existingSub.id,
+        userId: existingSub.userId, // Preserve existing userId
         stripeCustomerId: 'free-tier-user', // Revert to free tier marker
         stripeSubscriptionId: undefined,
         stripePriceId: undefined,
@@ -454,6 +515,8 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription, requ
         usageLimit: PLAN_LIMITS['free'].usageLimit,
         // CRITICAL: Keep existing usage count - don't reset!
         updatedAt: new Date().toISOString()
+      }, {
+        authMode: 'iam' // Use IAM auth for webhook operations
       });
       
       console.log(`✅ [${requestId}] Subscription cancelled, reverted to free tier with preserved usage: ${existingSub.usageCount}/${PLAN_LIMITS['free'].usageLimit}`);
@@ -475,9 +538,10 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice, requestId: string
       const subscriptionId = (invoice as any).subscription as string;
       
       if (subscriptionId) {
-        // Find subscription by Stripe subscription ID
+        // Find subscription by Stripe subscription ID using IAM auth
         const client = getClient();
         const { data: subscriptions } = await client.models.UserSubscription.list({
+          authMode: 'iam', // Use IAM auth to bypass user authorization
           filter: {
             stripeSubscriptionId: { eq: subscriptionId }
           }
@@ -489,8 +553,11 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice, requestId: string
           // Reset usage count for new billing cycle
           await client.models.UserSubscription.update({
             id: subscription.id,
+            userId: subscription.userId, // Preserve existing userId
             usageCount: 0, // Fresh start for new billing cycle
             updatedAt: new Date().toISOString()
+          }, {
+            authMode: 'iam' // Use IAM auth for webhook operations
           });
           
           console.log(`✅ [${requestId}] Usage reset for subscription ${subscriptionId} - new billing cycle`);
@@ -516,9 +583,10 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, requestId: string) {
     const subscriptionId = (invoice as any).subscription as string;
     
     if (subscriptionId) {
-      // Find subscription by Stripe subscription ID
+      // Find subscription by Stripe subscription ID using IAM auth
       const client = getClient();
       const { data: subscriptions } = await client.models.UserSubscription.list({
+        authMode: 'iam', // Use IAM auth to bypass user authorization
         filter: {
           stripeSubscriptionId: { eq: subscriptionId }
         }
@@ -530,8 +598,11 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, requestId: string) {
         // Mark subscription as past due but don't immediately downgrade
         await client.models.UserSubscription.update({
           id: subscription.id,
+          userId: subscription.userId, // Preserve existing userId
           status: 'pastdue',
           updatedAt: new Date().toISOString()
+        }, {
+          authMode: 'iam' // Use IAM auth for webhook operations
         });
         
         console.log(`⚠️ [${requestId}] Payment failed for subscription ${subscriptionId} - marked as past due`);

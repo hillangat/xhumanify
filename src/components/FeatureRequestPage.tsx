@@ -342,7 +342,7 @@ const FeatureRequestPage: React.FC = () => {
       const { data: currentFeature } = await client.models.FeatureRequest.get({ id: featureId });
 
       if (currentFeature) {
-        // Update with fresh counts and preserve other fields
+        // Only update vote-related fields to maintain security
         await client.models.FeatureRequest.update({
           id: featureId,
           upvotes,

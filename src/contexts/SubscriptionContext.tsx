@@ -70,9 +70,14 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         return;
       }
 
-      // Try to load subscription - using explicit selection to avoid owner field
+      // Load subscription with proper user filtering
       const { data } = await client.models.UserSubscription.list({
-        limit: 10, // Get more in case there are multiple records
+        filter: {
+          userId: {
+            eq: currentUser.userId
+          }
+        },
+        limit: 1, // Only need one subscription per user
         selectionSet: [
           'id',
           'userId',
@@ -92,13 +97,16 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       });
       
       if (data && data.length > 0) {
-        // Look for a subscription that belongs to this user
-        // Either through owner authorization or explicit userId field
-        const userSubscription = data.find(sub => 
-          !sub.userId || sub.userId === currentUser.userId
-        ) || data[0]; // Fallback to first subscription if none match userId
+        // Use the first (and should be only) subscription for this user
+        const userSubscription = data[0];
         
-        setSubscription(userSubscription as UserSubscription);
+        // Security check: ensure subscription belongs to current user
+        if (userSubscription.userId === currentUser.userId) {
+          setSubscription(userSubscription as UserSubscription);
+        } else {
+          console.error('Security violation: Subscription userId mismatch');
+          setSubscription(null);
+        }
       } else {
         // No subscription found - user is on free tier
         setSubscription(null);
@@ -140,8 +148,12 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
           ]
         });
       } else {
+        // Get current user for ownership
+        const currentUser = await getCurrentUser();
+        
         // Create a free tier subscription record for tracking
         await client.models.UserSubscription.create({
+          userId: currentUser.userId,
           stripeCustomerId: 'free-tier-user',
           stripeSubscriptionId: undefined,
           stripePriceId: undefined,
@@ -204,8 +216,12 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
           ]
         });
       } else {
+        // Get current user for ownership
+        const currentUser = await getCurrentUser();
+        
         // Create a free tier subscription record for tracking
         await client.models.UserSubscription.create({
+          userId: currentUser.userId,
           stripeCustomerId: 'free-tier-user',
           stripeSubscriptionId: undefined,
           stripePriceId: undefined,

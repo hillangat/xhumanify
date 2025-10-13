@@ -92,9 +92,36 @@ export const handler: APIGatewayProxyHandler = async (event) => {
 
     console.log('Creating Stripe checkout session...');
 
+    // First, try to find existing customer by email
+    let customerId: string | undefined;
+    try {
+      const existingCustomers = await stripe.customers.list({
+        email: userEmail,
+        limit: 1,
+      });
+      
+      if (existingCustomers.data.length > 0) {
+        const customer = existingCustomers.data[0];
+        customerId = customer.id;
+        
+        // Update customer metadata with userId if not set
+        if (!customer.metadata?.userId || customer.metadata.userId !== userId) {
+          await stripe.customers.update(customerId, {
+            metadata: {
+              userId: userId,
+            },
+          });
+          console.log(`Updated customer ${customerId} with userId ${userId}`);
+        }
+      }
+    } catch (customerError) {
+      console.warn('Error checking for existing customer:', customerError);
+    }
+
     // Create Stripe checkout session
     const session = await stripe.checkout.sessions.create({
-      customer_email: userEmail,
+      customer: customerId, // Use existing customer if found
+      customer_email: customerId ? undefined : userEmail, // Only set email if no customer ID
       client_reference_id: userId,
       payment_method_types: ['card'],
       mode: 'subscription',
@@ -109,6 +136,15 @@ export const handler: APIGatewayProxyHandler = async (event) => {
       metadata: {
         userId: userId,
       },
+      subscription_data: {
+        metadata: {
+          userId: userId,
+        },
+      },
+      customer_creation: customerId ? undefined : 'always',
+      customer_update: customerId ? {
+        metadata: 'update',
+      } : undefined,
     });
 
     console.log('Checkout session created successfully:', session.id);
