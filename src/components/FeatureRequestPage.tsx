@@ -19,6 +19,7 @@ import { Toolbar } from 'primereact/toolbar';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Divider } from 'primereact/divider';
 import { Avatar } from 'primereact/avatar';
+import { Sidebar } from 'primereact/sidebar';
 import { classNames } from 'primereact/utils';
 import './FeatureRequestPage.scss';
 
@@ -56,19 +57,19 @@ interface FeatureRequest {
 const FeatureRequestPage: React.FC = () => {
   const client = generateClient<Schema>();
   const toast = useRef<Toast>(null);
-  
+
   const [features, setFeatures] = useState<FeatureRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [votingLoading, setVotingLoading] = useState<Set<string>>(new Set());
   const [showNewFeatureDialog, setShowNewFeatureDialog] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
-  const [featureToDelete, setFeatureToDelete] = useState<{id: string, title: string} | null>(null);
+  const [featureToDelete, setFeatureToDelete] = useState<{ id: string, title: string } | null>(null);
   const [selectedFeature, setSelectedFeature] = useState<FeatureRequest | null>(null);
   const [showFeatureDetail, setShowFeatureDetail] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [userVotes, setUserVotes] = useState<Map<string, string>>(new Map());
   const [activeTab, setActiveTab] = useState(0);
-  
+
   // Form data type
   type FormData = {
     title: string;
@@ -76,7 +77,7 @@ const FeatureRequestPage: React.FC = () => {
     category: CategoryType | null;
     tags: string[];
   };
-  
+
   // Form state with react-hook-form
   const defaultValues: FormData = {
     title: '',
@@ -121,12 +122,12 @@ const FeatureRequestPage: React.FC = () => {
       console.log('Authentication failed or user not signed in:', error);
       setCurrentUser(null);
       setLoading(false);
-      
+
       // For debugging: show what kind of error this is
       if (error instanceof Error) {
         console.log('Error type:', error.name);
         console.log('Error message:', error.message);
-        
+
         // If it's a storage access error, try to continue anyway
         if (error.message?.includes('Access to storage is not allowed')) {
           console.log('Storage access denied - continuing with guest mode');
@@ -144,11 +145,11 @@ const FeatureRequestPage: React.FC = () => {
   const loadFeatures = async () => {
     try {
       setLoading(true);
-      
+
       const { data } = await client.models.FeatureRequest.list({
         limit: 100
       });
-      
+
       // Sort by total votes (popularity) and then by creation date
       const sortedFeatures = data.sort((a, b) => {
         const aVotes = a.totalVotes || 0;
@@ -160,7 +161,7 @@ const FeatureRequestPage: React.FC = () => {
         const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return bDate - aDate;
       });
-      
+
       setFeatures(sortedFeatures as FeatureRequest[]);
     } catch (error) {
       console.error('Error loading features:', error);
@@ -179,14 +180,14 @@ const FeatureRequestPage: React.FC = () => {
     try {
       setLoading(true);
       console.log('Attempting to load features as guest...');
-      
+
       // Try with different auth modes for guest access
       const { data } = await client.models.FeatureRequest.list({
         limit: 100
       });
-      
+
       console.log('Guest feature loading successful:', data?.length || 0, 'features');
-      
+
       // Sort by total votes (popularity) and then by creation date
       const sortedFeatures = data.sort((a, b) => {
         const aVotes = a.totalVotes || 0;
@@ -198,16 +199,16 @@ const FeatureRequestPage: React.FC = () => {
         const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return bDate - aDate;
       });
-      
+
       setFeatures(sortedFeatures as FeatureRequest[]);
-      
+
       toast.current?.show({
         severity: 'info',
         summary: 'Guest Mode',
         detail: 'Viewing feature requests in read-only mode. Please log in to vote or submit requests.',
         life: 5000
       });
-      
+
     } catch (error) {
       console.error('Error loading features as guest:', error);
       toast.current?.show({
@@ -226,7 +227,7 @@ const FeatureRequestPage: React.FC = () => {
       const { data } = await client.models.FeatureVote.list({
         filter: { userId: { eq: userId } }
       });
-      
+
       const votesMap = new Map();
       data.forEach(vote => {
         votesMap.set(vote.featureRequestId, vote.voteType);
@@ -251,26 +252,26 @@ const FeatureRequestPage: React.FC = () => {
 
     try {
       console.log('Deleting feature:', { featureId, userId: currentUser.username });
-      
+
       // Delete all votes for this feature first
       const { data: votes } = await client.models.FeatureVote.list({
         filter: { featureRequestId: { eq: featureId } }
       });
-      
+
       // Delete all votes
       for (const vote of votes) {
         await client.models.FeatureVote.delete({ id: vote.id });
       }
-      
+
       // Delete the feature request
       await client.models.FeatureRequest.delete({ id: featureId });
-      
+
       console.log('Feature deleted successfully');
-      
+
       // Close detail dialog if it's open
       setShowFeatureDetail(false);
       setSelectedFeature(null);
-      
+
       // Show success message
       toast.current?.show({
         severity: 'success',
@@ -278,10 +279,10 @@ const FeatureRequestPage: React.FC = () => {
         detail: `"${featureTitle}" has been deleted successfully.`,
         life: 3000
       });
-      
+
       // Refresh the features list
       await loadFeatures();
-      
+
     } catch (error) {
       console.error('Error deleting feature:', error);
       toast.current?.show({
@@ -318,18 +319,18 @@ const FeatureRequestPage: React.FC = () => {
       const { data: allVotes } = await client.models.FeatureVote.list({
         filter: { featureRequestId: { eq: featureId } }
       });
-      
+
       // Calculate counts based on fresh data
       const upvotes = allVotes.filter(vote => vote.voteType === 'upvote').length;
       const downvotes = allVotes.filter(vote => vote.voteType === 'downvote').length;
       const totalVotes = upvotes + downvotes;
       const voterCount = allVotes.length;
-      
+
       console.log('Fresh vote counts from database:', { featureId, upvotes, downvotes, totalVotes, voterCount });
-      
+
       // Get current feature to ensure we have the latest version
       const { data: currentFeature } = await client.models.FeatureRequest.get({ id: featureId });
-      
+
       if (currentFeature) {
         // Update with fresh counts and preserve other fields
         await client.models.FeatureRequest.update({
@@ -340,7 +341,7 @@ const FeatureRequestPage: React.FC = () => {
           voterCount,
           updatedAt: new Date().toISOString()
         });
-        
+
         console.log('Vote counts updated successfully with fresh data');
       } else {
         console.error('Feature not found when updating counts');
@@ -369,26 +370,26 @@ const FeatureRequestPage: React.FC = () => {
 
     try {
       console.log('Voting attempt:', { featureId, voteType, userId: currentUser.username });
-      
+
       // Add feature to loading set
       setVotingLoading(prev => new Set(prev).add(featureId));
-      
+
       const existingVote = userVotes.get(featureId);
-      
+
       if (existingVote === voteType) {
         // Do nothing if clicking the same vote type
         console.log('Same vote type clicked, no action taken');
         return;
       }
-      
+
       // Update or create vote (always switch to the new vote type)
       const votes = await client.models.FeatureVote.list({
-        filter: { 
+        filter: {
           featureRequestId: { eq: featureId },
           userId: { eq: currentUser.username }
         }
       });
-      
+
       if (votes.data.length > 0) {
         await client.models.FeatureVote.update({
           id: votes.data[0].id,
@@ -405,14 +406,14 @@ const FeatureRequestPage: React.FC = () => {
         });
         console.log('Vote created successfully');
       }
-      
+
       userVotes.set(featureId, voteType);
-      
+
       setUserVotes(new Map(userVotes));
-      
+
       // Update the feature request vote counts
       await updateFeatureRequestCounts(featureId);
-      
+
       // Show success feedback
       toast.current?.show({
         severity: 'success',
@@ -420,10 +421,10 @@ const FeatureRequestPage: React.FC = () => {
         detail: `${voteType === 'upvote' ? 'Upvoted' : 'Downvoted'} successfully!`,
         life: 2000
       });
-      
+
       // Refresh feature data to show updated counts
       await loadFeatures();
-      
+
     } catch (error) {
       console.error('Error voting:', error);
       toast.current?.show({
@@ -473,16 +474,16 @@ const FeatureRequestPage: React.FC = () => {
 
       setShowNewFeatureDialog(false);
       reset();
-      
+
       toast.current?.show({
         severity: 'success',
         summary: 'Success',
         detail: 'Feature request submitted successfully!',
         life: 3000
       });
-      
+
       await loadFeatures();
-      
+
     } catch (error) {
       console.error('Error submitting feature:', error);
       toast.current?.show({
@@ -526,7 +527,7 @@ const FeatureRequestPage: React.FC = () => {
 
   const renderFeatureCard = (feature: FeatureRequest) => {
     const userVote = userVotes.get(feature.id);
-    
+
     const header = (
       <div className="feature-card-header">
         <div className="category-info">
@@ -571,14 +572,14 @@ const FeatureRequestPage: React.FC = () => {
           )}
           <div className="status-actions-row">
             <div className="status-priority-group">
-              <Tag 
-                value={feature.status} 
-                severity={getStatusSeverity(feature.status)} 
+              <Tag
+                value={feature.status}
+                severity={getStatusSeverity(feature.status)}
                 className="status-tag"
               />
               {feature.priority && (
-                <Badge 
-                  value={feature.priority} 
+                <Badge
+                  value={feature.priority}
                   style={{ backgroundColor: getPriorityColor(feature.priority) }}
                 />
               )}
@@ -614,12 +615,12 @@ const FeatureRequestPage: React.FC = () => {
         <div className="feature-content">
           <h3>{feature.title}</h3>
           <p className="description">
-            {feature.description.length > 150 
-              ? `${feature.description.substring(0, 150)}...` 
+            {feature.description.length > 150
+              ? `${feature.description.substring(0, 150)}...`
               : feature.description
             }
           </p>
-          
+
           {feature.tags && feature.tags.length > 0 && (
             <div className="tags-section">
               {feature.tags.slice(0, 3).map((tag, index) => (
@@ -673,7 +674,7 @@ const FeatureRequestPage: React.FC = () => {
   return (
     <div className="feature-request-page">
       <Toast ref={toast} />
-      
+
       {!currentUser && !loading ? (
         <div className="auth-required-message">
           <Card>
@@ -686,7 +687,7 @@ const FeatureRequestPage: React.FC = () => {
         </div>
       ) : (
         <>
-          <Toolbar 
+          <Toolbar
             start={toolbarStartContent}
             end={toolbarEndContent}
             className="page-toolbar"
@@ -704,315 +705,317 @@ const FeatureRequestPage: React.FC = () => {
                   className="features-grid"
                 />
               </TabPanel>
-          
-          <TabPanel header="Recent" leftIcon="pi pi-clock">
-            <DataView
-              value={getTabFilteredFeatures(1)}
-              itemTemplate={renderFeatureCard}
-              layout="grid"
-              loading={loading}
-              emptyMessage="No feature requests found"
-              className="features-grid"
-            />
-          </TabPanel>
-          
-          <TabPanel header="In Progress" leftIcon="pi pi-cog">
-            <DataView
-              value={getTabFilteredFeatures(2)}
-              itemTemplate={renderFeatureCard}
-              layout="grid"
-              loading={loading}
-              emptyMessage="No features in progress"
-              className="features-grid"
-            />
-          </TabPanel>
-          
-          <TabPanel header="Completed" leftIcon="pi pi-check">
-            <DataView
-              value={getTabFilteredFeatures(3)}
-              itemTemplate={renderFeatureCard}
-              layout="grid"
-              loading={loading}
-              emptyMessage="No completed features"
-              className="features-grid"
-            />
-          </TabPanel>
-        </TabView>
-      </div>
 
-      {/* Submit New Feature Dialog */}
-      <Dialog
-        header="Submit New Feature Request"
-        visible={showNewFeatureDialog}
-        onHide={() => setShowNewFeatureDialog(false)}
-        style={{ width: '650px', maxWidth: '90vw' }}
-        modal
-        className="feature-request-dialog"
-        footer={
-          <div className="dialog-footer">
-            <Button
-              label="Cancel"
-              outlined
-              onClick={() => {
-                setShowNewFeatureDialog(false);
-                reset();
-              }}
-            />
-            <Button 
-              label="Submit Request" 
-              icon="pi pi-send" 
-              onClick={handleSubmit(handleSubmitFeature)}
-            />
-          </div>
-        }
-      >
-        <form onSubmit={handleSubmit(handleSubmitFeature)} className="feature-form p-fluid">
-          <div className="field">
-            <span className="p-float-label">
-              <Controller 
-                name="title" 
-                control={control} 
-                rules={{ required: 'Title is required.' }} 
-                render={({ field, fieldState }) => (
-                  <InputText 
-                    id={field.name} 
-                    {...field} 
-                    className={classNames({ 'p-invalid': fieldState.invalid })} 
-                  />
-                )} 
-              />
-              <label htmlFor="title" className={classNames({ 'p-error': errors.title })}>Title*</label>
-            </span>
-            {getFormErrorMessage('title')}
+              <TabPanel header="Recent" leftIcon="pi pi-clock">
+                <DataView
+                  value={getTabFilteredFeatures(1)}
+                  itemTemplate={renderFeatureCard}
+                  layout="grid"
+                  loading={loading}
+                  emptyMessage="No feature requests found"
+                  className="features-grid"
+                />
+              </TabPanel>
+
+              <TabPanel header="In Progress" leftIcon="pi pi-cog">
+                <DataView
+                  value={getTabFilteredFeatures(2)}
+                  itemTemplate={renderFeatureCard}
+                  layout="grid"
+                  loading={loading}
+                  emptyMessage="No features in progress"
+                  className="features-grid"
+                />
+              </TabPanel>
+
+              <TabPanel header="Completed" leftIcon="pi pi-check">
+                <DataView
+                  value={getTabFilteredFeatures(3)}
+                  itemTemplate={renderFeatureCard}
+                  layout="grid"
+                  loading={loading}
+                  emptyMessage="No completed features"
+                  className="features-grid"
+                />
+              </TabPanel>
+            </TabView>
           </div>
 
-          <div className="field">
-            <span className="p-float-label">
-              <Controller 
-                name="category" 
-                control={control} 
-                rules={{ required: 'Category is required.' }} 
-                render={({ field, fieldState }) => (
-                  <Dropdown 
-                    id={field.name} 
-                    value={field.value} 
-                    onChange={(e) => field.onChange(e.value)} 
-                    options={categories} 
-                    optionLabel="label"
-                    placeholder="Select a category"
-                    className={classNames({ 'p-invalid': fieldState.invalid })} 
-                  />
-                )} 
-              />
-              <label htmlFor="category" className={classNames({ 'p-error': errors.category })}>Category*</label>
-            </span>
-            {getFormErrorMessage('category')}
-          </div>
-
-          <div className="field">
-            <span className="p-float-label">
-              <Controller 
-                name="description" 
-                control={control} 
-                rules={{ required: 'Description is required.' }} 
-                render={({ field, fieldState }) => (
-                  <InputTextarea 
-                    id={field.name} 
-                    {...field} 
-                    rows={5}
-                    className={classNames({ 'p-invalid': fieldState.invalid })} 
-                  />
-                )} 
-              />
-              <label htmlFor="description" className={classNames({ 'p-error': errors.description })}>Description*</label>
-            </span>
-            {getFormErrorMessage('description')}
-          </div>
-
-          <div className="field">
-            <span className="p-float-label">
-              <Controller 
-                name="tags" 
-                control={control} 
-                render={({ field }) => (
-                  <MultiSelect 
-                    id={field.name} 
-                    value={field.value} 
-                    onChange={(e) => field.onChange(e.value)} 
-                    options={tagOptions} 
-                    optionLabel="label"
-                    placeholder="Select relevant tags"
-                    maxSelectedLabels={3}
-                  />
-                )} 
-              />
-              <label htmlFor="tags">Tags (Optional)</label>
-            </span>
-          </div>
-        </form>
-      </Dialog>
-
-      {/* Feature Detail Dialog */}
-      {selectedFeature && (
-        <Dialog
-          header={
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-              <span>{selectedFeature.title}</span>
-              {currentUser && selectedFeature.submitterId === currentUser.username && (
+          {/* Submit New Feature Dialog */}
+          <Dialog
+            header="Submit New Feature Request"
+            visible={showNewFeatureDialog}
+            onHide={() => setShowNewFeatureDialog(false)}
+            style={{ width: '650px', maxWidth: '90vw' }}
+            modal
+            className="feature-request-dialog"
+            footer={
+              <div className="dialog-footer">
                 <Button
+                  label="Cancel"
+                  outlined
+                  onClick={() => {
+                    setShowNewFeatureDialog(false);
+                    reset();
+                  }}
+                />
+                <Button
+                  label="Submit Request"
+                  icon="pi pi-send"
+                  onClick={handleSubmit(handleSubmitFeature)}
+                />
+              </div>
+            }
+          >
+            <form onSubmit={handleSubmit(handleSubmitFeature)} className="feature-form p-fluid">
+              <div className="field">
+                <span className="p-float-label">
+                  <Controller
+                    name="title"
+                    control={control}
+                    rules={{ required: 'Title is required.' }}
+                    render={({ field, fieldState }) => (
+                      <InputText
+                        id={field.name}
+                        {...field}
+                        className={classNames({ 'p-invalid': fieldState.invalid })}
+                      />
+                    )}
+                  />
+                  <label htmlFor="title" className={classNames({ 'p-error': errors.title })}>Title*</label>
+                </span>
+                {getFormErrorMessage('title')}
+              </div>
+
+              <div className="field">
+                <span className="p-float-label">
+                  <Controller
+                    name="category"
+                    control={control}
+                    rules={{ required: 'Category is required.' }}
+                    render={({ field, fieldState }) => (
+                      <Dropdown
+                        id={field.name}
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.value)}
+                        options={categories}
+                        optionLabel="label"
+                        placeholder="Select a category"
+                        className={classNames({ 'p-invalid': fieldState.invalid })}
+                      />
+                    )}
+                  />
+                  <label htmlFor="category" className={classNames({ 'p-error': errors.category })}>Category*</label>
+                </span>
+                {getFormErrorMessage('category')}
+              </div>
+
+              <div className="field">
+                <span className="p-float-label">
+                  <Controller
+                    name="description"
+                    control={control}
+                    rules={{ required: 'Description is required.' }}
+                    render={({ field, fieldState }) => (
+                      <InputTextarea
+                        id={field.name}
+                        {...field}
+                        rows={5}
+                        className={classNames({ 'p-invalid': fieldState.invalid })}
+                      />
+                    )}
+                  />
+                  <label htmlFor="description" className={classNames({ 'p-error': errors.description })}>Description*</label>
+                </span>
+                {getFormErrorMessage('description')}
+              </div>
+
+              <div className="field">
+                <span className="p-float-label">
+                  <Controller
+                    name="tags"
+                    control={control}
+                    render={({ field }) => (
+                      <MultiSelect
+                        id={field.name}
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.value)}
+                        options={tagOptions}
+                        optionLabel="label"
+                        placeholder="Select relevant tags"
+                        maxSelectedLabels={3}
+                      />
+                    )}
+                  />
+                  <label htmlFor="tags">Tags (Optional)</label>
+                </span>
+              </div>
+            </form>
+          </Dialog>
+
+          {/* Feature Detail Sidebar */}
+          {selectedFeature && (
+            <Sidebar
+              visible={showFeatureDetail}
+              onHide={() => setShowFeatureDetail(false)}
+              position="right"
+              className="feature-detail-sidebar"
+              modal
+              dismissable
+            >
+              <div className="feature-detail-content">
+                <div className="detail-header">
+                  <div className="feature-title-section">
+                    <h2>{selectedFeature.title}</h2>
+                    {currentUser && selectedFeature.submitterId === currentUser.username && (
+                      <Button
+                        icon="pi pi-trash"
+                        label="Delete Request"
+                        onClick={(e) => confirmDelete(selectedFeature.id, selectedFeature.title, e)}
+                        size="small"
+                        severity="danger"
+                        tooltip="Delete this feature request"
+                        tooltipOptions={{ position: 'bottom' }}
+                      />
+                    )}
+                  </div>
+
+                  <div className="voting-section large">
+                    <i
+                      className={`pi pi-chevron-left vote-icon downvote large ${userVotes.get(selectedFeature.id) === 'downvote' ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleVote(selectedFeature.id, 'downvote');
+                      }}
+                      data-pr-tooltip="Downvote this feature"
+                      data-pr-position="top"
+                    />
+                    {votingLoading.has(selectedFeature.id) ? (
+                      <ProgressSpinner style={{ width: '24px', height: '24px' }} strokeWidth="4" />
+                    ) : (
+                      <span className="vote-count large">{Math.max(0, selectedFeature.upvotes - selectedFeature.downvotes)}</span>
+                    )}
+                    <i
+                      className={`pi pi-chevron-right vote-icon upvote large ${userVotes.get(selectedFeature.id) === 'upvote' ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleVote(selectedFeature.id, 'upvote');
+                      }}
+                      data-pr-tooltip="Upvote this feature"
+                      data-pr-position="top"
+                    />
+                  </div>
+                </div>
+
+                <Divider />
+
+                <div className="status-badges">
+                  <Tag
+                    value={selectedFeature.status}
+                    severity={getStatusSeverity(selectedFeature.status)}
+                    className="status-tag large"
+                  />
+                  <Badge
+                    value={selectedFeature.priority}
+                    style={{ backgroundColor: getPriorityColor(selectedFeature.priority) }}
+                    className="priority-badge"
+                  />
+                  <Tag
+                    value={categories.find(c => c.value === selectedFeature.category)?.label}
+                    icon={getCategoryIcon(selectedFeature.category)}
+                    className="category-tag"
+                  />
+                </div>
+
+                <div className="detail-content">
+                  <h4>📝 Description</h4>
+                  <p>{selectedFeature.description}</p>
+
+                  {selectedFeature.publicResponse && (
+                    <>
+                      <Divider />
+                      <h4>💬 Team Response</h4>
+                      <div className="admin-response">
+                        <Avatar icon="pi pi-users" className="admin-avatar" />
+                        <p>{selectedFeature.publicResponse}</p>
+                      </div>
+                    </>
+                  )}
+
+                  {selectedFeature.tags && selectedFeature.tags.length > 0 && (
+                    <>
+                      <Divider />
+                      <h4>🏷️ Tags</h4>
+                      <div className="tags-section">
+                        {selectedFeature.tags.map((tag, index) => (
+                          <Tag key={index} value={tag} className="feature-tag" />
+                        ))}
+                      </div>
+                    </>
+                  )}
+
+                  <Divider />
+                  <div className="meta-information">
+                    <h4>📊 Details</h4>
+                    <div className="meta-grid">
+                      <div className="meta-item">
+                        <strong>Submitted by:</strong> {selectedFeature.submitterDisplayName || 'Anonymous'}
+                      </div>
+                      <div className="meta-item">
+                        <strong>Created:</strong> {new Date(selectedFeature.createdAt).toLocaleDateString()}
+                      </div>
+                      <div className="meta-item">
+                        <strong>Last updated:</strong> {new Date(selectedFeature.updatedAt).toLocaleDateString()}
+                      </div>
+                      {selectedFeature.estimatedEffort && (
+                        <div className="meta-item">
+                          <strong>Estimated effort:</strong> {selectedFeature.estimatedEffort}
+                        </div>
+                      )}
+                      {selectedFeature.targetVersion && (
+                        <div className="meta-item">
+                          <strong>Target version:</strong> {selectedFeature.targetVersion}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Sidebar>
+          )}      {/* Confirm Delete Dialog */}
+          <Dialog
+            header="Confirm Delete"
+            visible={showConfirmDelete}
+            onHide={handleCancelDelete}
+            style={{ width: '450px' }}
+            modal
+            footer={
+              <div className="dialog-footer">
+                <Button
+                  label="Cancel"
+                  outlined
+                  onClick={handleCancelDelete}
+                />
+                <Button
+                  label="Delete"
                   icon="pi pi-trash"
-                  onClick={(e) => confirmDelete(selectedFeature.id, selectedFeature.title, e)}
-                  text
                   severity="danger"
-                  tooltip="Delete this feature request"
-                  tooltipOptions={{ position: 'left' }}
-                  style={{ marginLeft: '1rem' }}
-                />
-              )}
-            </div>
-          }
-          visible={showFeatureDetail}
-          onHide={() => setShowFeatureDetail(false)}
-          style={{ width: '800px' }}
-          modal
-        >
-          <div className="feature-detail">
-            <div className="detail-header">
-              <div className="voting-section large">
-                <i
-                  className={`pi pi-chevron-left vote-icon downvote large ${userVotes.get(selectedFeature.id) === 'downvote' ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleVote(selectedFeature.id, 'downvote');
-                  }}
-                  data-pr-tooltip="Downvote this feature"
-                  data-pr-position="top"
-                />
-                {votingLoading.has(selectedFeature.id) ? (
-                  <ProgressSpinner style={{ width: '24px', height: '24px' }} strokeWidth="4" />
-                ) : (
-                  <span className="vote-count large">{Math.max(0, selectedFeature.upvotes - selectedFeature.downvotes)}</span>
-                )}
-                <i
-                  className={`pi pi-chevron-right vote-icon upvote large ${userVotes.get(selectedFeature.id) === 'upvote' ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleVote(selectedFeature.id, 'upvote');
-                  }}
-                  data-pr-tooltip="Upvote this feature"
-                  data-pr-position="top"
+                  onClick={handleConfirmDelete}
                 />
               </div>
-              
-              <div className="status-badges">
-                <Tag 
-                  value={selectedFeature.status} 
-                  severity={getStatusSeverity(selectedFeature.status)} 
-                  className="status-tag large"
-                />
-                <Badge 
-                  value={selectedFeature.priority} 
-                  style={{ backgroundColor: getPriorityColor(selectedFeature.priority) }}
-                  className="priority-badge"
-                />
-                <Tag 
-                  value={categories.find(c => c.value === selectedFeature.category)?.label} 
-                  icon={getCategoryIcon(selectedFeature.category)}
-                  className="category-tag"
-                />
+            }
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <i className="pi pi-exclamation-triangle" style={{ fontSize: '2rem', color: 'var(--red-500)' }}></i>
+              <div>
+                <p>Are you sure you want to delete <strong>"{featureToDelete?.title}"</strong>?</p>
+                <p style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem', margin: '0.5rem 0 0 0' }}>
+                  This action cannot be undone.
+                </p>
               </div>
             </div>
-
-            <Divider />
-
-            <div className="detail-content">
-              <h4>Description</h4>
-              <p>{selectedFeature.description}</p>
-
-              {selectedFeature.publicResponse && (
-                <>
-                  <Divider />
-                  <h4>Team Response</h4>
-                  <div className="admin-response">
-                    <Avatar icon="pi pi-users" className="admin-avatar" />
-                    <p>{selectedFeature.publicResponse}</p>
-                  </div>
-                </>
-              )}
-
-              {selectedFeature.tags && selectedFeature.tags.length > 0 && (
-                <>
-                  <Divider />
-                  <h4>Tags</h4>
-                  <div className="tags-section">
-                    {selectedFeature.tags.map((tag, index) => (
-                      <Tag key={index} value={tag} className="feature-tag" />
-                    ))}
-                  </div>
-                </>
-              )}
-
-              <Divider />
-              <div className="meta-information">
-                <div className="meta-item">
-                  <strong>Submitted by:</strong> {selectedFeature.submitterDisplayName || 'Anonymous'}
-                </div>
-                <div className="meta-item">
-                  <strong>Created:</strong> {new Date(selectedFeature.createdAt).toLocaleDateString()}
-                </div>
-                <div className="meta-item">
-                  <strong>Last updated:</strong> {new Date(selectedFeature.updatedAt).toLocaleDateString()}
-                </div>
-                {selectedFeature.estimatedEffort && (
-                  <div className="meta-item">
-                    <strong>Estimated effort:</strong> {selectedFeature.estimatedEffort}
-                  </div>
-                )}
-                {selectedFeature.targetVersion && (
-                  <div className="meta-item">
-                    <strong>Target version:</strong> {selectedFeature.targetVersion}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </Dialog>
-      )}
-      
-      {/* Confirm Delete Dialog */}
-      <Dialog
-        header="Confirm Delete"
-        visible={showConfirmDelete}
-        onHide={handleCancelDelete}
-        style={{ width: '450px' }}
-        modal
-        footer={
-          <div className="dialog-footer">
-            <Button
-              label="Cancel"
-              outlined
-              onClick={handleCancelDelete}
-            />
-            <Button 
-              label="Delete" 
-              icon="pi pi-trash" 
-              severity="danger"
-              onClick={handleConfirmDelete}
-            />
-          </div>
-        }
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <i className="pi pi-exclamation-triangle" style={{ fontSize: '2rem', color: 'var(--red-500)' }}></i>
-          <div>
-            <p>Are you sure you want to delete <strong>"{featureToDelete?.title}"</strong>?</p>
-            <p style={{ color: 'var(--text-color-secondary)', fontSize: '0.9rem', margin: '0.5rem 0 0 0' }}>
-              This action cannot be undone.
-            </p>
-          </div>
-        </div>
-      </Dialog>
-      </>
+          </Dialog>
+        </>
       )}
     </div>
   );
