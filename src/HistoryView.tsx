@@ -33,7 +33,15 @@ export default function HistoryView() {
       const { data } = await client.models.UserContentHistory.list({
         limit: 50
       });
-      setHistory((data || []) as HistoryItem[]);
+      
+      // Sort by createdAt date in descending order (most recent first)
+      const sortedHistory = (data || []).sort((a, b) => {
+        const dateA = new Date(a.createdAt || '').getTime();
+        const dateB = new Date(b.createdAt || '').getTime();
+        return dateB - dateA; // Descending order (newest first)
+      });
+      
+      setHistory(sortedHistory as HistoryItem[]);
     } catch (error) {
       console.error('Failed to load history:', error);
     } finally {

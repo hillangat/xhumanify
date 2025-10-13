@@ -111,6 +111,16 @@ const FeatureRequestPage: React.FC = () => {
     loadCurrentUser();
   }, []);
 
+  // Update selectedFeature when features list changes (after voting)
+  useEffect(() => {
+    if (selectedFeature && features.length > 0) {
+      const updatedFeature = features.find(f => f.id === selectedFeature.id);
+      if (updatedFeature) {
+        setSelectedFeature(updatedFeature);
+      }
+    }
+  }, [features]);
+
   const loadCurrentUser = async () => {
     try {
       const user = await getCurrentUser();
@@ -425,6 +435,14 @@ const FeatureRequestPage: React.FC = () => {
       // Refresh feature data to show updated counts
       await loadFeatures();
 
+      // Update selectedFeature if sidebar is open
+      if (selectedFeature && selectedFeature.id === featureId) {
+        const updatedFeature = features.find(f => f.id === featureId);
+        if (updatedFeature) {
+          setSelectedFeature(updatedFeature);
+        }
+      }
+
     } catch (error) {
       console.error('Error voting:', error);
       toast.current?.show({
@@ -657,18 +675,29 @@ const FeatureRequestPage: React.FC = () => {
 
   const toolbarStartContent = (
     <div className="toolbar-start">
-      <h2>Feature Requests</h2>
-      <Badge value={features.length} className="feature-count" />
+      <div className="header-content">
+        <div className="title-section">
+          <h2>Shape the Future of AI Content Humanization</h2>
+          <p className="subtitle">Your voice drives our innovation. Explore community ideas, vote on features that matter to you, and share your own vision to help us build the tools that will revolutionize your content creation workflow.</p>
+        </div>
+        <div className="stats-section">
+          <Badge value={features.length} className="feature-count" />
+          <span className="stats-label">Community Ideas</span>
+        </div>
+      </div>
     </div>
   );
 
   const toolbarEndContent = (
-    <Button
-      label="Submit Feature"
-      icon="pi pi-plus"
-      onClick={() => setShowNewFeatureDialog(true)}
-      className="submit-feature-btn"
-    />
+    <div className="toolbar-end">
+      <Button
+        label="Share Your Vision"
+        icon="pi pi-lightbulb"
+        onClick={() => setShowNewFeatureDialog(true)}
+        className="submit-feature-btn"
+        size="large"
+      />
+    </div>
   );
 
   return (
