@@ -6,6 +6,7 @@ import { Divider } from 'primereact/divider';
 import { Accordion, AccordionTab } from 'primereact/accordion';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Toast } from 'primereact/toast';
+import FeaturePage from './components/FeaturePage';
 import { useSubscription } from './contexts/SubscriptionContext';
 import { PRICING_PLANS, PlanType } from './utils/stripe';
 import { useAuthenticator } from '@aws-amplify/ui-react';
@@ -407,30 +408,91 @@ const PricingComponent: React.FC = () => {
   };
 
   return (
-    <div className="pricing-component">
-      <div className="pricing-header">
-        <h1>Get the most undetectable AI paraphrasing tool</h1>
-        <p className="guarantee-text">
-          <i className="pi pi-shield-check"></i>
-          Money back guarantee. If anything we produce is flagged as not human, we will refund the cost of humanization.
-        </p>
-      </div>
-
-      {/* Current Subscription Status */}
-      {hasActiveSubscription && (
-        <Card className="current-subscription" style={{ marginBottom: '2rem', padding: '1rem' }}>
-          <div className="subscription-info">
-            <h3>Current Subscription: {currentPlan && PRICING_PLANS[currentPlan]?.name}</h3>
-            <p>Usage: {subscription?.usageCount} / {subscription?.usageLimit === -1 ? 'Unlimited' : subscription?.usageLimit}</p>
-            <Button 
-              label="Manage Subscription"
-              icon="pi pi-cog"
-              className="p-button-outlined"
-              onClick={handleManageSubscription}
-            />
-          </div>
-        </Card>
-      )}
+    <FeaturePage
+      title="Pricing Plans"
+      subtitle="Get the most undetectable AI paraphrasing tool"
+      description="Money back guarantee. If anything we produce is flagged as not human, we will refund the cost of humanization."
+      icon="pi-credit-card"
+      badge={{
+        text: "Money Back Guarantee",
+        severity: "success"
+      }}
+      stats={hasActiveSubscription ? [
+        {
+          label: "Current Plan",
+          value: currentPlan ? PRICING_PLANS[currentPlan]?.name || "Unknown" : "None",
+          icon: "pi-star",
+          color: "success"
+        },
+        {
+          label: "Usage",
+          value: `${subscription?.usageCount || 0}`,
+          icon: "pi-chart-line",
+          color: "info"
+        },
+        {
+          label: "Limit",
+          value: subscription?.usageLimit === -1 ? "Unlimited" : (subscription?.usageLimit?.toString() || "0"),
+          icon: "pi-gauge",
+          color: "warning"
+        }
+      ] : [
+        {
+          label: "Plans Available",
+          value: "4",
+          icon: "pi-list",
+          color: "info"
+        },
+        {
+          label: "Money Back",
+          value: "100%",
+          icon: "pi-shield",
+          color: "success"
+        },
+        {
+          label: "Yearly Savings",
+          value: "25%",
+          icon: "pi-percentage",
+          color: "warning"
+        }
+      ]}
+      breadcrumbs={[
+        { label: 'Home', url: '/' },
+        { label: 'Pricing', url: '/upgrade' }
+      ]}
+      actions={hasActiveSubscription ? [
+        {
+          label: "Manage Subscription",
+          icon: "pi-cog",
+          onClick: handleManageSubscription,
+          outlined: true
+        }
+      ] : [
+        {
+          label: "Start Free Trial",
+          icon: "pi-play",
+          onClick: () => window.location.href = '/',
+          variant: "primary"
+        }
+      ]}
+      className="pricing-page"
+    >
+      <div className="pricing-component">
+        {/* Current Subscription Status */}
+        {hasActiveSubscription && (
+          <Card className="current-subscription" style={{ marginBottom: '2rem', padding: '1rem' }}>
+            <div className="subscription-info">
+              <h3>Current Subscription: {currentPlan && PRICING_PLANS[currentPlan]?.name}</h3>
+              <p>Usage: {subscription?.usageCount} / {subscription?.usageLimit === -1 ? 'Unlimited' : subscription?.usageLimit}</p>
+              <Button 
+                label="Manage Subscription"
+                icon="pi pi-cog"
+                className="p-button-outlined"
+                onClick={handleManageSubscription}
+              />
+            </div>
+          </Card>
+        )}
 
       {/* Billing Toggle */}
       <div className="billing-toggle">
@@ -528,7 +590,8 @@ const PricingComponent: React.FC = () => {
       
       {/* Toast Notifications */}
       <Toast ref={toast} position="top-right" />
-    </div>
+      </div>
+    </FeaturePage>
   );
 };
 

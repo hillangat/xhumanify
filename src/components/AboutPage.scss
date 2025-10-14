@@ -1,4 +1,39 @@
-// AboutPage.scss - Professional styling for the About page
+// AboutPage.scss - Professional styling for the About page wrapped in FeaturePage
+.about-page-feature {
+  .about-page-content {
+    section {
+      padding: 3rem 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 3rem;
+      
+      h2 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-color-text));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      
+      p {
+        font-size: 1.2rem;
+        color: var(--text-color-secondary);
+        max-width: 600px;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+    }
+  }
+}
+
+// Legacy support for any remaining .about-page references
 .about-page {
   padding-top: 6.5rem;
   min-height: 100vh;
@@ -31,85 +66,6 @@
       max-width: 600px;
       margin: 0 auto;
       line-height: 1.6;
-    }
-  }
-}
-
-// Hero Section
-.hero-section {
-  background: linear-gradient(135deg, var(--primary-color) 50%, var(--primary-color) 50%);
-  border-radius: 8px;
-  color: white;
-  text-align: center;
-  padding: 5rem 2rem;
-  margin-bottom: 0;
-  
-  .hero-content {
-    max-width: 900px;
-    margin: 0 auto;
-  }
-  
-  .hero-title {
-    font-size: 3.5rem;
-    font-weight: 800;
-    margin-bottom: 1.5rem;
-    line-height: 1.2;
-    
-    .gradient-text {
-      background: linear-gradient(45deg, #FFD700, #FFA500);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-  }
-  
-  .hero-subtitle {
-    font-size: 1.3rem;
-    margin-bottom: 3rem;
-    line-height: 1.7;
-    opacity: 0.95;
-    max-width: 750px;
-    margin-left: auto;
-    margin-right: auto;
-  }
-  
-  .hero-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 2rem;
-    margin-top: 3rem;
-    
-    .stat-item {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 1rem;
-      padding: 1.5rem;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 16px;
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      
-      i {
-        font-size: 2rem;
-        color: #FFD700;
-      }
-      
-      .stat-content {
-        text-align: left;
-        
-        .stat-value {
-          font-size: 2rem;
-          font-weight: 700;
-          line-height: 1;
-        }
-        
-        .stat-label {
-          font-size: 0.9rem;
-          opacity: 0.8;
-          margin-top: 0.25rem;
-        }
-      }
     }
   }
 }

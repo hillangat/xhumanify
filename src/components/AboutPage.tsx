@@ -4,6 +4,7 @@ import { Button } from 'primereact/button';
 import { Divider } from 'primereact/divider';
 import { Tag } from 'primereact/tag';
 import { Timeline } from 'primereact/timeline';
+import FeaturePage from './FeaturePage';
 import './AboutPage.scss';
 
 const AboutPage: React.FC = () => {
@@ -89,39 +90,63 @@ const AboutPage: React.FC = () => {
     }
   ];
 
-  const stats = [
-    { value: '99.8%', label: 'Undetection Rate', icon: 'pi pi-shield' },
-    { value: '2.3s', label: 'Average Processing Time', icon: 'pi pi-clock' },
-    { value: '50M+', label: 'Words Processed', icon: 'pi pi-file-edit' },
-    { value: '10K+', label: 'Active Users', icon: 'pi pi-users' }
-  ];
-
   return (
-    <div className="about-page">
-      {/* Hero Section */}
-      <section className="hero-section">
-        <div className="hero-content">
-          <h1 className="hero-title">
-            Revolutionizing AI Content with
-            <span className="gradient-text"> Human Intelligence</span>
-          </h1>
-          <p className="hero-subtitle">
-            Transform artificial, robotic AI-generated text into authentic, natural content that reads like it was written by a human expert. Our cutting-edge platform bridges the gap between AI efficiency and human authenticity.
-          </p>
-          <div className="hero-stats">
-            {stats.map((stat, index) => (
-              <div key={index} className="stat-item">
-                <i className={stat.icon}></i>
-                <div className="stat-content">
-                  <div className="stat-value">{stat.value}</div>
-                  <div className="stat-label">{stat.label}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
+    <FeaturePage
+      title="About XHumanify"
+      subtitle="Revolutionizing AI Content with Human Intelligence"
+      description="Transform artificial, robotic AI-generated text into authentic, natural content that reads like it was written by a human expert. Our cutting-edge platform bridges the gap between AI efficiency and human authenticity."
+      icon="pi-info-circle"
+      badge={{
+        text: "Advanced AI Platform",
+        severity: "info"
+      }}
+      stats={[
+        {
+          label: "Undetection Rate",
+          value: "99.8%",
+          icon: "pi-shield",
+          color: "success"
+        },
+        {
+          label: "Processing Speed",
+          value: "2.3s",
+          icon: "pi-clock",
+          color: "info"
+        },
+        {
+          label: "Words Processed",
+          value: "50M+",
+          icon: "pi-file-edit",
+          color: "warning"
+        },
+        {
+          label: "Active Users",
+          value: "10K+",
+          icon: "pi-users",
+          color: "primary"
+        }
+      ]}
+      breadcrumbs={[
+        { label: 'Home', url: '/' },
+        { label: 'About', url: '/about' }
+      ]}
+      actions={[
+        {
+          label: "Start Humanizing",
+          icon: "pi-play",
+          onClick: () => window.location.href = '/',
+          variant: "primary"
+        },
+        {
+          label: "View Pricing",
+          icon: "pi-credit-card",
+          onClick: () => window.location.href = '/upgrade',
+          outlined: true
+        }
+      ]}
+      className="about-page-feature"
+    >
+      <div className="about-page-content">
       {/* Mission Statement */}
       <section className="mission-section">
         <Card className="mission-card">
@@ -367,7 +392,8 @@ const AboutPage: React.FC = () => {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </FeaturePage>
   );
 };
 
