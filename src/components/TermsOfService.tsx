@@ -2,6 +2,7 @@ import React from 'react';
 import { Card } from 'primereact/card';
 import { Divider } from 'primereact/divider';
 import { Button } from 'primereact/button';
+import FeaturePage from './FeaturePage';
 import './TermsOfService.scss';
 
 const TermsOfService: React.FC = () => {
@@ -9,12 +10,56 @@ const TermsOfService: React.FC = () => {
   const effectiveDate = "October 13, 2025";
 
   return (
-    <div className="terms-of-service">
-      <div className="terms-header">
-        <h1>Terms of Service</h1>
-        <p className="last-updated">Last Updated: {lastUpdated}</p>
-        <p className="effective-date">Effective Date: {effectiveDate}</p>
-      </div>
+    <FeaturePage
+      title="Terms of Service"
+      subtitle="Legal Terms and Conditions"
+      description="Please read these terms carefully. They constitute a legally binding agreement between you and Humanize AI Content. By using our service, you agree to be bound by these terms."
+      icon="pi pi-file-text"
+      badge={{
+        text: `Updated ${lastUpdated}`,
+        severity: "info"
+      }}
+      stats={[
+        {
+          label: "Effective Date",
+          value: effectiveDate,
+          icon: "pi pi-calendar",
+          color: "info"
+        },
+        {
+          label: "Sections",
+          value: "15",
+          icon: "pi pi-list",
+          color: "primary"
+        },
+        {
+          label: "Legal Protection",
+          value: "Full",
+          icon: "pi pi-shield",
+          color: "success"
+        }
+      ]}
+      breadcrumbs={[
+        { label: 'Home', url: '/' },
+        { label: 'Terms of Service', url: '/terms' }
+      ]}
+      actions={[
+        {
+          label: "Return to Application",
+          icon: "pi pi-arrow-left",
+          onClick: () => window.location.href = '/',
+          outlined: true
+        },
+        {
+          label: "Contact Support",
+          icon: "pi pi-envelope",
+          onClick: () => window.location.href = 'mailto:support@humanizeaicontents.com',
+          variant: "secondary"
+        }
+      ]}
+      className="terms-of-service-page"
+    >
+      <div className="terms-of-service-content">
 
       <Card className="terms-content">
         <div className="terms-section">
@@ -378,7 +423,8 @@ const TermsOfService: React.FC = () => {
           </div>
         </div>
       </Card>
-    </div>
+      </div>
+    </FeaturePage>
   );
 };
 
