@@ -680,7 +680,7 @@ const FeatureRequestPage: React.FC = () => {
       title="Feature Requests"
       subtitle="Shape the Future of AI Content Humanization"
       description="Your voice drives our innovation. Explore community ideas, vote on features that matter to you, and share your own vision to help us build the tools that will revolutionize your content creation workflow."
-      icon="pi-lightbulb"
+      icon="pi pi-lightbulb"
       badge={{
         text: "Community Driven",
         severity: "info"
@@ -689,25 +689,25 @@ const FeatureRequestPage: React.FC = () => {
         {
           label: "Total Requests",
           value: features.length.toString(),
-          icon: "pi-list",
+          icon: "pi pi-list",
           color: "info"
         },
         {
           label: "In Progress",
           value: features.filter(f => ['planned', 'indevelopment', 'testing'].includes(f.status)).length.toString(),
-          icon: "pi-cog",
+          icon: "pi pi-cog",
           color: "warning"
         },
         {
           label: "Completed",
           value: features.filter(f => f.status === 'completed').length.toString(),
-          icon: "pi-check",
+          icon: "pi pi-check",
           color: "success"
         },
         {
           label: "Popular Features",
           value: features.filter(f => (f.totalVotes || 0) > 5).length.toString(),
-          icon: "pi-star",
+          icon: "pi pi-star",
           color: "primary"
         }
       ]}
@@ -718,7 +718,7 @@ const FeatureRequestPage: React.FC = () => {
       actions={[
         {
           label: "Share Your Vision",
-          icon: "pi-lightbulb",
+          icon: "pi pi-lightbulb",
           onClick: () => setShowNewFeatureDialog(true),
           variant: "primary"
         }
