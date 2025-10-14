@@ -1,4 +1,119 @@
-/* Modern History View Styles */
+/* Modern History View Styles - Updated for FeaturePage wrapper */
+.history-view-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  
+  .history-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+    gap: 1.5rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .history-card {
+      border: 1px solid var(--surface-border);
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      overflow: hidden;
+      background: var(--surface-0);
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border-color: var(--primary-color);
+      }
+
+      .p-card-body {
+        padding: 0;
+      }
+
+      .p-card-content {
+        padding: 0;
+      }
+
+      .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--surface-border);
+        background: var(--surface-50);
+
+        .date-info {
+          .date {
+            font-size: 0.9rem;
+            color: var(--text-color-secondary);
+            font-weight: 500;
+          }
+        }
+
+        .card-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          .p-button {
+            &.p-button-danger:hover {
+              background: var(--red-50);
+              color: var(--red-500);
+            }
+
+            svg {
+              width: 1rem;
+              height: 1rem;
+            }
+          }
+        }
+      }
+
+      .card-content {
+        padding: 1.5rem;
+
+        .description {
+          font-size: 1.125rem;
+          font-weight: 600;
+          color: var(--text-color);
+          margin: 0 0 0.75rem 0;
+          line-height: 1.4;
+        }
+
+        .preview-text {
+          color: var(--text-color-secondary);
+          line-height: 1.6;
+          margin: 0 0 1rem 0;
+          font-size: 0.95rem;
+        }
+
+        .content-stats {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          font-size: 0.875rem;
+          color: var(--text-color-secondary);
+
+          .word-count {
+            font-weight: 500;
+          }
+
+          .separator {
+            opacity: 0.6;
+          }
+
+          .content-type {
+            color: var(--primary-color);
+            font-weight: 500;
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Legacy support for existing history-view class */
 .history-view {
   max-width: 1200px;
   margin: 0 auto;
@@ -56,6 +171,7 @@
       transition: all 0.3s ease;
       cursor: pointer;
       overflow: hidden;
+      background: var(--surface-0);
 
       &:hover {
         transform: translateY(-2px);
@@ -93,10 +209,6 @@
           gap: 0.5rem;
 
           .p-button {
-            // width: 2.5rem;
-            // height: 2.5rem;
-            // font-size: 1rem;
-
             &.p-button-danger:hover {
               background: var(--red-50);
               color: var(--red-500);
@@ -154,7 +266,8 @@
 }
 
 /* Dark mode support */
-[data-theme="dark"] {
+[data-theme="dark"], .p-dark {
+  .history-view-content,
   .history-view {
     .history-card {
       background: var(--surface-900);

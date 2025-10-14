@@ -7,7 +7,7 @@ import { Card } from 'primereact/card';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { Toast } from 'primereact/toast';
 import EmptyContent from './EmptyContent';
-import { ProgressSpinner } from 'primereact/progressspinner';
+import FeaturePage from './components/FeaturePage';
 import { MdHistory } from 'react-icons/md';
 import './HistoryView.scss';
 
@@ -100,93 +100,168 @@ export default function HistoryView() {
     return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
   };
 
+  const handleRefreshHistory = () => {
+    loadHistory();
+  };
+
+  const handleGoToHome = () => {
+    navigate('/');
+  };
+
   useEffect(() => {
     loadHistory();
   }, []);
 
+  // Calculate stats for the header
+  const totalItems = history.length;
+  const totalWords = history.reduce((sum, item) => 
+    sum + item.originalContent.split(/\s+/).filter(Boolean).length, 0
+  );
+  const recentItems = history.filter(item => {
+    const itemDate = new Date(item.createdAt);
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return itemDate > weekAgo;
+  }).length;
+
   return (
-    <main className="history-view">
-      <ConfirmDialog />
-      <Toast ref={toast} position="top-right" />
-      
-      <div className="history-header">
-        <h1>Content History</h1>
-        <p>Your previous humanifications</p>
-      </div>
+    <FeaturePage
+      title="Content History"
+      subtitle="Your AI Humanification Journey"
+      description="Track and revisit all your previous content transformations. Each entry represents a step in your journey to create more authentic, human-like content that resonates with your audience."
+      icon="pi-history"
+      badge={totalItems > 0 ? {
+        text: `${totalItems} Items`,
+        severity: "info"
+      } : undefined}
+      stats={totalItems > 0 ? [
+        {
+          label: "Total Items",
+          value: totalItems.toString(),
+          icon: "pi-file",
+          color: "#3b82f6"
+        },
+        {
+          label: "Words Processed",
+          value: totalWords.toLocaleString(),
+          icon: "pi-book",
+          color: "#10b981"
+        },
+        {
+          label: "This Week",
+          value: recentItems.toString(),
+          icon: "pi-calendar",
+          color: "#f59e0b"
+        },
+        {
+          label: "Success Rate",
+          value: "100%",
+          icon: "pi-check-circle",
+          color: "#8b5cf6"
+        }
+      ] : undefined}
+      actions={[
+        {
+          label: "New Content",
+          icon: "pi pi-plus",
+          onClick: handleGoToHome,
+          variant: "primary"
+        },
+        {
+          label: "Refresh",
+          icon: "pi pi-refresh",
+          onClick: handleRefreshHistory,
+          variant: "secondary",
+          outlined: true
+        }
+      ]}
+      breadcrumbs={[
+        {
+          label: "Home",
+          url: "/",
+          icon: "pi-home"
+        },
+        {
+          label: "History"
+        }
+      ]}
+      headerGradient="linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%)"
+      animated={true}
+      loading={isLoading}
+    >
+      <main className="history-view-content">
+        <ConfirmDialog />
+        <Toast ref={toast} position="top-right" />
 
-      {isLoading ? (
-        <div className="loading-container">
-          <ProgressSpinner style={{ width: '45px', height: '45px' }} />
-          <p>Loading your history...</p>
-        </div>
-      ) : history.length === 0 ? (
-        <EmptyContent
-          icon={<MdHistory size={35} />}
-          title="No History Found"
-          subtitle="Start humanizing content to see your history here."
-        />
-      ) : (
-        <div className="history-grid">
-          {history.map((item) => (
-            <Card key={item.id} className="history-card">
-              <div className="card-header">
-                <div className="date-info">
-                  <span className="date">{formatDate(item.createdAt)}</span>
+        {!isLoading && history.length === 0 ? (
+          <EmptyContent
+            icon={<MdHistory size={35} />}
+            title="No History Found"
+            subtitle="Start humanizing content to see your history here."
+          />
+        ) : !isLoading && (
+          <div className="history-grid">
+            {history.map((item) => (
+              <Card key={item.id} className="history-card">
+                <div className="card-header">
+                  <div className="date-info">
+                    <span className="date">{formatDate(item.createdAt)}</span>
+                  </div>
+                  <div className="card-actions">
+                    <Button
+                      label="View"
+                      outlined
+                      icon="pi pi-eye"
+                      className="p-button-sm"
+                      onClick={() => handleViewDetails(item)}
+                      tooltip="View details"
+                      tooltipOptions={{ position: 'bottom' }}
+                    />
+                    <Button
+                      label={deletingItems.has(item.id) ? "Deleting..." : "Delete"}
+                      outlined
+                      icon={deletingItems.has(item.id) ? "pi pi-spin pi-spinner" : "pi pi-trash"}
+                      className="p-button-sm p-button-danger"
+                      disabled={deletingItems.has(item.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        confirmDialog({
+                          message: `Are you sure you want to delete this history item?`,
+                          header: 'Delete Confirmation',
+                          icon: 'pi pi-exclamation-triangle',
+                          defaultFocus: 'reject',
+                          acceptClassName: 'p-button-danger',
+                          acceptLabel: 'Delete',
+                          rejectLabel: 'Cancel',
+                          accept: () => deleteHistoryItem(item.id)
+                        });
+                      }}
+                      tooltip={deletingItems.has(item.id) ? "Deletion in progress..." : "Delete item"}
+                      tooltipOptions={{ position: 'bottom' }}
+                    />
+                  </div>
                 </div>
-                <div className="card-actions">
-                  <Button
-                    label="View"
-                    outlined
-                    icon="pi pi-eye"
-                    className="p-button-sm"
-                    onClick={() => handleViewDetails(item)}
-                    tooltip="View details"
-                    tooltipOptions={{ position: 'bottom' }}
-                  />
-                  <Button
-                    label={deletingItems.has(item.id) ? "Deleting..." : "Delete"}
-                    outlined
-                    icon={deletingItems.has(item.id) ? "pi pi-spin pi-spinner" : "pi pi-trash"}
-                    className="p-button-sm p-button-danger"
-                    disabled={deletingItems.has(item.id)}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      confirmDialog({
-                        message: `Are you sure you want to delete this history item?`,
-                        header: 'Delete Confirmation',
-                        icon: 'pi pi-exclamation-triangle',
-                        defaultFocus: 'reject',
-                        acceptClassName: 'p-button-danger',
-                        acceptLabel: 'Delete',
-                        rejectLabel: 'Cancel',
-                        accept: () => deleteHistoryItem(item.id)
-                      });
-                    }}
-                    tooltip={deletingItems.has(item.id) ? "Deletion in progress..." : "Delete item"}
-                    tooltipOptions={{ position: 'bottom' }}
-                  />
-                </div>
-              </div>
 
-              <div className="card-content">
-                {item.description && (
-                  <h3 className="description">{item.description}</h3>
-                )}
-                <p className="preview-text">
-                  {getPreviewText(item.originalContent)}
-                </p>
-                <div className="content-stats">
-                  <span className="word-count">
-                    {item.originalContent.split(/\s+/).filter(Boolean).length} words
-                  </span>
-                  <span className="separator">•</span>
-                  <span className="content-type">Humanified</span>
+                <div className="card-content">
+                  {item.description && (
+                    <h3 className="description">{item.description}</h3>
+                  )}
+                  <p className="preview-text">
+                    {getPreviewText(item.originalContent)}
+                  </p>
+                  <div className="content-stats">
+                    <span className="word-count">
+                      {item.originalContent.split(/\s+/).filter(Boolean).length} words
+                    </span>
+                    <span className="separator">•</span>
+                    <span className="content-type">Humanified</span>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-    </main>
+              </Card>
+            ))}
+          </div>
+        )}
+      </main>
+    </FeaturePage>
   );
 }

@@ -150,11 +150,107 @@ const FeaturePage: React.FC<FeaturePageProps> = ({
 
   if (loading) {
     return (
-      <div className="feature-page-loading">
-        <div className="loading-spinner">
-          <i className="pi pi-spin pi-spinner" />
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999,
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          color: 'white',
+          maxWidth: '400px',
+          padding: '3rem',
+          background: 'rgba(255, 255, 255, 0.1)',
+          borderRadius: '16px',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+        }}>
+          <div style={{
+            fontSize: '4rem',
+            marginBottom: '1.5rem',
+            animation: 'spin 2s linear infinite'
+          }}>
+            🔄
+          </div>
+          <h2 style={{
+            fontSize: '2rem',
+            fontWeight: '600',
+            margin: '0 0 1rem 0',
+            color: 'white',
+            textShadow: '0 2px 8px rgba(0, 0, 0, 0.4)'
+          }}>
+            Loading {title}
+          </h2>
+          <p style={{
+            fontSize: '1.125rem',
+            margin: '0 0 2rem 0',
+            color: 'rgba(255, 255, 255, 0.9)',
+            textShadow: '0 1px 4px rgba(0, 0, 0, 0.3)'
+          }}>
+            Please wait while we prepare your content...
+          </p>
+          <div style={{
+            width: '100%',
+            height: '6px',
+            background: 'rgba(255, 255, 255, 0.2)',
+            borderRadius: '3px',
+            overflow: 'hidden',
+            marginBottom: '1.5rem'
+          }}>
+            <div style={{
+              height: '100%',
+              background: 'linear-gradient(90deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,1) 50%, rgba(255,255,255,0.8) 100%)',
+              borderRadius: '3px',
+              animation: 'progress 2s ease-in-out infinite',
+              boxShadow: '0 0 12px rgba(255, 255, 255, 0.6)'
+            }}></div>
+          </div>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '0.3rem'
+          }}>
+            {[0, 1, 2].map(i => (
+              <div
+                key={i}
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
+                  animation: `loadingDots 1.4s ease-in-out infinite both`,
+                  animationDelay: `${-0.32 + i * 0.16}s`
+                }}
+              />
+            ))}
+          </div>
         </div>
-        <p>Loading {title}...</p>
+        <style>
+          {`
+            @keyframes spin {
+              from { transform: rotate(0deg); }
+              to { transform: rotate(360deg); }
+            }
+            @keyframes progress {
+              0% { width: 0%; opacity: 1; }
+              50% { width: 70%; opacity: 0.8; }
+              100% { width: 100%; opacity: 0.6; }
+            }
+            @keyframes loadingDots {
+              0%, 80%, 100% { transform: scale(0.8); opacity: 0.5; }
+              40% { transform: scale(1.2); opacity: 1; }
+            }
+          `}
+        </style>
       </div>
     );
   }
