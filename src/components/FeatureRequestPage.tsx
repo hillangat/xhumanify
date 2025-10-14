@@ -712,8 +712,8 @@ const FeatureRequestPage: React.FC = () => {
         }
       ]}
       breadcrumbs={[
-        { label: 'Home', url: '/' },
-        { label: 'Feature Requests', url: '/features' }
+        { label: 'Home', url: '/', icon: 'pi pi-home' },
+        { label: 'Feature Requests', url: '/features', icon: 'pi pi-lightbulb' }
       ]}
       actions={[
         {

@@ -457,8 +457,8 @@ const PricingComponent: React.FC = () => {
         }
       ]}
       breadcrumbs={[
-        { label: 'Home', url: '/' },
-        { label: 'Pricing', url: '/upgrade' }
+        { label: 'Home', url: '/', icon: 'pi-home' },
+        { label: 'Pricing', url: '/upgrade', icon: 'pi pi-credit-card' }
       ]}
       actions={hasActiveSubscription ? [
         {

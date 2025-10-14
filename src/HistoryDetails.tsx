@@ -3,8 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from 'primereact/button';
 import { Splitter, SplitterPanel } from 'primereact/splitter';
 import { Toast } from 'primereact/toast';
-import { FaCopy, FaCheck } from 'react-icons/fa';
-import { IoIosArrowBack } from 'react-icons/io';
+import FeaturePage from './components/FeaturePage';
 import './HistoryDetails.scss';
 
 interface HistoryItem {
@@ -57,37 +56,90 @@ const HistoryDetails: React.FC = () => {
 
   if (!item) {
     return (
-      <main className="history-details">
+      <FeaturePage
+        title="Content Not Found"
+        subtitle="History Item Missing"
+        description="The requested history item could not be found. It may have been deleted or the link is invalid."
+        icon="pi pi-exclamation-triangle"
+        badge={{
+          text: "Error",
+          severity: "danger"
+        }}
+        actions={[
+          {
+            label: "Back to History",
+            icon: "pi pi-arrow-left",
+            onClick: () => navigate('/history'),
+            variant: "primary"
+          }
+        ]}
+        breadcrumbs={[
+          { label: 'Home', url: '/' },
+          { label: 'History', url: '/history' },
+          { label: 'Not Found' }
+        ]}
+        className="history-details-error"
+      >
         <div className="error-container">
-          <h2>History item not found</h2>
-          <Button 
-            label="Back to History" 
-            icon={<IoIosArrowBack />}
-            onClick={() => navigate('/history')}
-          />
+          <p>The history item you're looking for doesn't exist or has been removed.</p>
         </div>
-      </main>
+      </FeaturePage>
     );
   }
 
   return (
-    <main className="history-details">
+    <FeaturePage
+      title={item.description || 'Content Details'}
+      subtitle="Humanification History"
+      description="Compare your original content with the AI-humanified version. Copy either version to use in your projects."
+      icon="pi pi-file-edit"
+      badge={{
+        text: formatDate(item.createdAt),
+        severity: "info"
+      }}
+      stats={[
+        {
+          label: "Original Words",
+          value: getWordCount(item.originalContent).toString(),
+          icon: "pi pi-file",
+          color: "info"
+        },
+        {
+          label: "Processed Words",
+          value: getWordCount(item.processedContent).toString(),
+          icon: "pi pi-check-circle",
+          color: "success"
+        },
+        {
+          label: "Processing",
+          value: "Complete",
+          icon: "pi pi-verified",
+          color: "primary"
+        }
+      ]}
+      actions={[
+        {
+          label: "Back to History",
+          icon: "pi pi-arrow-left",
+          onClick: () => navigate('/history'),
+          outlined: true
+        },
+        {
+          label: "New Content",
+          icon: "pi pi-plus",
+          onClick: () => navigate('/'),
+          variant: "primary"
+        }
+      ]}
+      breadcrumbs={[
+        { label: 'Home', url: '/' },
+        { label: 'History', url: '/history' },
+        { label: item.description || 'Content Details' }
+      ]}
+      className="history-details-page"
+    >
       <Toast position="top-right" />
       
-      <div className="details-header">
-        <Button 
-          icon={<IoIosArrowBack />}
-          label="Back to History"
-          className="p-button-text"
-          onClick={() => navigate('/history')}
-        />
-        
-        <div className="item-info">
-          <h1>{item.description || 'Untitled Content'}</h1>
-          <p className="date-info">Created on {formatDate(item.createdAt)}</p>
-        </div>
-      </div>
-
       <div className="content-container">
         <Splitter style={{ height: '70vh' }}>
           <SplitterPanel className="content-panel">
@@ -98,7 +150,7 @@ const HistoryDetails: React.FC = () => {
               </div>
               <div className="header-right">
                 <Button
-                  icon={copiedOriginal ? <FaCheck /> : <FaCopy />}
+                  icon={copiedOriginal ? "pi pi-check" : "pi pi-copy"}
                   label={copiedOriginal ? 'Copied!' : 'Copy'}
                   className={copiedOriginal ? 'p-button-success' : 'p-button-outlined'}
                   size="small"
@@ -119,7 +171,7 @@ const HistoryDetails: React.FC = () => {
               </div>
               <div className="header-right">
                 <Button
-                  icon={copiedProcessed ? <FaCheck /> : <FaCopy />}
+                  icon={copiedProcessed ? "pi pi-check" : "pi pi-copy"}
                   label={copiedProcessed ? 'Copied!' : 'Copy'}
                   className={copiedProcessed ? 'p-button-success' : 'p-button-outlined'}
                   size="small"
@@ -133,7 +185,7 @@ const HistoryDetails: React.FC = () => {
           </SplitterPanel>
         </Splitter>
       </div>
-    </main>
+    </FeaturePage>
   );
 };
 

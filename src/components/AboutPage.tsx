@@ -127,8 +127,8 @@ const AboutPage: React.FC = () => {
         }
       ]}
       breadcrumbs={[
-        { label: 'Home', url: '/' },
-        { label: 'About', url: '/about' }
+        { label: 'Home', url: '/', icon: 'pi-home' },
+        { label: 'About', url: '/about', icon: 'pi-info-circle' }
       ]}
       actions={[
         {

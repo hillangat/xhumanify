@@ -54,7 +54,7 @@ Before using these Terms of Service, you must customize the following placeholde
 - `[ARBITRATION_RULES]` - Choose arbitration rules (e.g., "American Arbitration Association Rules")
 
 ### Domain & Branding
-- `[YOUR_DOMAIN]` - Replace with your actual domain name
+- `humanizeaicontents.com` - Replace with your actual domain name
 
 ## Legal Review Recommendations
 

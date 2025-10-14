@@ -129,7 +129,7 @@ export default function HistoryView() {
       title="Content History"
       subtitle="Your AI Humanification Journey"
       description="Track and revisit all your previous content transformations. Each entry represents a step in your journey to create more authentic, human-like content that resonates with your audience."
-      icon="pi-history"
+      icon="pi pi-history"
       badge={totalItems > 0 ? {
         text: `${totalItems} Items`,
         severity: "info"
@@ -182,7 +182,8 @@ export default function HistoryView() {
           icon: "pi-home"
         },
         {
-          label: "History"
+          label: "History",
+          icon: "pi-history"
         }
       ]}
       headerGradient="linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%)"
@@ -202,7 +203,11 @@ export default function HistoryView() {
         ) : !isLoading && (
           <div className="history-grid">
             {history.map((item) => (
-              <Card key={item.id} className="history-card">
+              <Card 
+                key={item.id} 
+                className="history-card"
+                onClick={() => handleViewDetails(item)}
+              >
                 <div className="card-header">
                   <div className="date-info">
                     <span className="date">{formatDate(item.createdAt)}</span>
@@ -213,7 +218,10 @@ export default function HistoryView() {
                       outlined
                       icon="pi pi-eye"
                       className="p-button-sm"
-                      onClick={() => handleViewDetails(item)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewDetails(item);
+                      }}
                       tooltip="View details"
                       tooltipOptions={{ position: 'bottom' }}
                     />

@@ -14,7 +14,7 @@ const TermsOfService: React.FC = () => {
       title="Terms of Service"
       subtitle="Legal Terms and Conditions"
       description="Please read these terms carefully. They constitute a legally binding agreement between you and Humanize AI Content. By using our service, you agree to be bound by these terms."
-      icon="pi pi-file-text"
+      icon="pi pi-file"
       badge={{
         text: `Updated ${lastUpdated}`,
         severity: "info"
@@ -40,8 +40,8 @@ const TermsOfService: React.FC = () => {
         }
       ]}
       breadcrumbs={[
-        { label: 'Home', url: '/' },
-        { label: 'Terms of Service', url: '/terms' }
+        { label: 'Home', url: '/', icon: "pi-home" },
+        { label: 'Terms of Service', url: '/terms', icon: "pi-file" }
       ]}
       actions={[
         {
@@ -65,7 +65,7 @@ const TermsOfService: React.FC = () => {
         <div className="terms-section">
           <h2>1. ACCEPTANCE OF TERMS</h2>
           <p>
-            By accessing, using, or subscribing to the Humanize AI Content service ("Service"), including the website located at [YOUR_DOMAIN] and all associated applications, APIs, and platforms (collectively, the "Platform"), you ("User," "you," or "your") agree to be bound by these Terms of Service ("Terms"). These Terms constitute a legally binding agreement between you and Humanize AI Content ("Company," "we," "us," or "our").
+            By accessing, using, or subscribing to the Humanize AI Content service ("Service"), including the website located at <strong>humanizeaicontents.com</strong> and all associated applications, APIs, and platforms (collectively, the "Platform"), you ("User," "you," or "your") agree to be bound by these Terms of Service ("Terms"). These Terms constitute a legally binding agreement between you and Humanize AI Content ("Company," "we," "us," or "our").
           </p>
           <p>
             IF YOU DO NOT AGREE TO THESE TERMS, DO NOT USE THE SERVICE. Your use of the Service constitutes acceptance of these Terms as they may be amended from time to time.
@@ -394,8 +394,8 @@ const TermsOfService: React.FC = () => {
           </p>
           <div className="contact-info">
             <p><strong>Email:</strong> support@humanizeaicontents.com</p>
-            <p><strong>Address:</strong> [YOUR_BUSINESS_ADDRESS]</p>
-            <p><strong>Business Hours:</strong> [YOUR_SUPPORT_HOURS]</p>
+            {/* <p><strong>Address:</strong> [YOUR_BUSINESS_ADDRESS]</p> */}
+            <p><strong>Business Hours:</strong> 9am - 5pm EST</p>
           </div>
         </div>
 
