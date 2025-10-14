@@ -15,12 +15,12 @@ import { Dropdown } from 'primereact/dropdown';
 import { MultiSelect } from 'primereact/multiselect';
 import { Toast } from 'primereact/toast';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import { Toolbar } from 'primereact/toolbar';
 import { TabView, TabPanel } from 'primereact/tabview';
 import { Divider } from 'primereact/divider';
 import { Avatar } from 'primereact/avatar';
 import { Sidebar } from 'primereact/sidebar';
 import { classNames } from 'primereact/utils';
+import FeaturePage from './FeaturePage';
 import './FeatureRequestPage.scss';
 
 type CategoryType = 'textprocessing' | 'uiux' | 'billing' | 'performance' | 'integration' | 'other';
@@ -701,28 +701,72 @@ const FeatureRequestPage: React.FC = () => {
   );
 
   return (
-    <div className="feature-request-page">
-      <Toast ref={toast} />
+    <FeaturePage
+      title="Feature Requests"
+      subtitle="Shape the Future of AI Content Humanization"
+      description="Your voice drives our innovation. Explore community ideas, vote on features that matter to you, and share your own vision to help us build the tools that will revolutionize your content creation workflow."
+      icon="pi-lightbulb"
+      badge={{
+        text: "Community Driven",
+        severity: "info"
+      }}
+      stats={[
+        {
+          label: "Total Requests",
+          value: features.length.toString(),
+          icon: "pi-list",
+          color: "info"
+        },
+        {
+          label: "In Progress",
+          value: features.filter(f => ['planned', 'indevelopment', 'testing'].includes(f.status)).length.toString(),
+          icon: "pi-cog",
+          color: "warning"
+        },
+        {
+          label: "Completed",
+          value: features.filter(f => f.status === 'completed').length.toString(),
+          icon: "pi-check",
+          color: "success"
+        },
+        {
+          label: "Popular Features",
+          value: features.filter(f => (f.totalVotes || 0) > 5).length.toString(),
+          icon: "pi-star",
+          color: "primary"
+        }
+      ]}
+      breadcrumbs={[
+        { label: 'Home', url: '/' },
+        { label: 'Feature Requests', url: '/features' }
+      ]}
+      actions={[
+        {
+          label: "Share Your Vision",
+          icon: "pi-lightbulb",
+          onClick: () => setShowNewFeatureDialog(true),
+          variant: "primary"
+        }
+      ]}
+      loading={loading}
+      className="feature-request-page-wrapper"
+    >
+      <div className="feature-request-page">
+        <Toast ref={toast} />
 
-      {!currentUser && !loading ? (
-        <div className="auth-required-message">
-          <Card>
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
-              <i className="pi pi-lock" style={{ fontSize: '3rem', color: 'var(--primary-color)', marginBottom: '1rem' }}></i>
-              <h3>Authentication Required</h3>
-              <p>Please log in to view and submit feature requests.</p>
-            </div>
-          </Card>
-        </div>
-      ) : (
-        <>
-          <Toolbar
-            start={toolbarStartContent}
-            end={toolbarEndContent}
-            className="page-toolbar"
-          />
-
-          <div className="content-container">
+        {!currentUser && !loading ? (
+          <div className="auth-required-message">
+            <Card>
+              <div style={{ textAlign: 'center', padding: '2rem' }}>
+                <i className="pi pi-lock" style={{ fontSize: '3rem', color: 'var(--primary-color)', marginBottom: '1rem' }}></i>
+                <h3>Authentication Required</h3>
+                <p>Please log in to view and submit feature requests.</p>
+              </div>
+            </Card>
+          </div>
+        ) : (
+          <>
+            <div className="content-container">
             <TabView activeIndex={activeTab} onTabChange={(e) => setActiveTab(e.index)}>
               <TabPanel header="Popular" leftIcon="pi pi-star">
                 <DataView
@@ -1046,7 +1090,8 @@ const FeatureRequestPage: React.FC = () => {
           </Dialog>
         </>
       )}
-    </div>
+      </div>
+    </FeaturePage>
   );
 };
 

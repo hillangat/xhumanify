@@ -92,7 +92,7 @@ const AboutPage: React.FC = () => {
 
   return (
     <FeaturePage
-      title="About XHumanify"
+      title="About Humanize"
       subtitle="Revolutionizing AI Content with Human Intelligence"
       description="Transform artificial, robotic AI-generated text into authentic, natural content that reads like it was written by a human expert. Our cutting-edge platform bridges the gap between AI efficiency and human authenticity."
       icon="pi-info-circle"
@@ -133,13 +133,13 @@ const AboutPage: React.FC = () => {
       actions={[
         {
           label: "Start Humanizing",
-          icon: "pi-play",
+          icon: "pi pi-play",
           onClick: () => window.location.href = '/',
           variant: "primary"
         },
         {
           label: "View Pricing",
-          icon: "pi-credit-card",
+          icon: "pi pi-credit-card",
           onClick: () => window.location.href = '/upgrade',
           outlined: true
         }

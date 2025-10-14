@@ -412,7 +412,7 @@ const PricingComponent: React.FC = () => {
       title="Pricing Plans"
       subtitle="Get the most undetectable AI paraphrasing tool"
       description="Money back guarantee. If anything we produce is flagged as not human, we will refund the cost of humanization."
-      icon="pi-credit-card"
+      icon="pi pi-credit-card"
       badge={{
         text: "Money Back Guarantee",
         severity: "success"
@@ -421,38 +421,38 @@ const PricingComponent: React.FC = () => {
         {
           label: "Current Plan",
           value: currentPlan ? PRICING_PLANS[currentPlan]?.name || "Unknown" : "None",
-          icon: "pi-star",
+          icon: "pi pi-star",
           color: "success"
         },
         {
           label: "Usage",
           value: `${subscription?.usageCount || 0}`,
-          icon: "pi-chart-line",
+          icon: "pi pi-chart-line",
           color: "info"
         },
         {
           label: "Limit",
           value: subscription?.usageLimit === -1 ? "Unlimited" : (subscription?.usageLimit?.toString() || "0"),
-          icon: "pi-gauge",
+          icon: "pi pi-gauge",
           color: "warning"
         }
       ] : [
         {
           label: "Plans Available",
           value: "4",
-          icon: "pi-list",
+          icon: "pi pi-list",
           color: "info"
         },
         {
           label: "Money Back",
           value: "100%",
-          icon: "pi-shield",
+          icon: "pi pi-shield",
           color: "success"
         },
         {
           label: "Yearly Savings",
           value: "25%",
-          icon: "pi-percentage",
+          icon: "pi pi-percentage",
           color: "warning"
         }
       ]}
@@ -463,14 +463,14 @@ const PricingComponent: React.FC = () => {
       actions={hasActiveSubscription ? [
         {
           label: "Manage Subscription",
-          icon: "pi-cog",
+          icon: "pi pi-cog",
           onClick: handleManageSubscription,
           outlined: true
         }
       ] : [
         {
           label: "Start Free Trial",
-          icon: "pi-play",
+          icon: "pi pi-play",
           onClick: () => window.location.href = '/',
           variant: "primary"
         }

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from 'primereact/button';
 import { Badge } from 'primereact/badge';
 import './FeaturePage.scss';
+import { ProgressSpinner } from 'primereact/progressspinner';
 
 interface FeaturePageProps {
   /** The main title/name of the feature */
@@ -177,9 +178,14 @@ const FeaturePage: React.FC<FeaturePageProps> = ({
           <div style={{
             fontSize: '4rem',
             marginBottom: '1.5rem',
-            animation: 'spin 2s linear infinite'
+            display: 'flex',
+            justifyContent: 'center'
           }}>
-            🔄
+            <ProgressSpinner 
+              style={{ width: '4rem', height: '4rem' }} 
+              strokeWidth="3"
+              animationDuration="1s"
+            />
           </div>
           <h2 style={{
             fontSize: '2rem',
@@ -236,10 +242,6 @@ const FeaturePage: React.FC<FeaturePageProps> = ({
         </div>
         <style>
           {`
-            @keyframes spin {
-              from { transform: rotate(0deg); }
-              to { transform: rotate(360deg); }
-            }
             @keyframes progress {
               0% { width: 0%; opacity: 1; }
               50% { width: 70%; opacity: 0.8; }
