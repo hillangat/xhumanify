@@ -673,32 +673,7 @@ const FeatureRequestPage: React.FC = () => {
     }
   };
 
-  const toolbarStartContent = (
-    <div className="toolbar-start">
-      <div className="header-content">
-        <div className="title-section">
-          <h2>Shape the Future of AI Content Humanization</h2>
-          <p className="subtitle">Your voice drives our innovation. Explore community ideas, vote on features that matter to you, and share your own vision to help us build the tools that will revolutionize your content creation workflow.</p>
-        </div>
-        <div className="stats-section">
-          <Badge value={features.length} className="feature-count" />
-          <span className="stats-label">Community Ideas</span>
-        </div>
-      </div>
-    </div>
-  );
-
-  const toolbarEndContent = (
-    <div className="toolbar-end">
-      <Button
-        label="Share Your Vision"
-        icon="pi pi-lightbulb"
-        onClick={() => setShowNewFeatureDialog(true)}
-        className="submit-feature-btn"
-        size="large"
-      />
-    </div>
-  );
+  // Toolbar content removed — header/toolbar now provided by FeaturePage wrapper
 
   return (
     <FeaturePage
