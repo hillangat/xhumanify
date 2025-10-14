@@ -118,6 +118,7 @@ export default function Header() {
     {
       label: 'Contact',
       icon: 'pi pi-envelope',
+      url: '/contact',
       className: (location.pathname === '/contact' || location.pathname === '/contact/') ? 'active-menu-item' : ''
     }
   ];

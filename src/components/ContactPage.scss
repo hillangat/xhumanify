@@ -1,0 +1,370 @@
+// ContactPage.scss - Professional Contact Support Page Styling
+
+.contact-page-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0;
+
+  .contact-main-card {
+    margin-bottom: 2rem;
+
+    .support-card {
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      border: none;
+      overflow: hidden;
+
+      .support-content {
+        padding: 3rem;
+        text-align: center;
+
+        @media (max-width: 768px) {
+          padding: 2rem 1.5rem;
+        }
+
+        .support-icon {
+          margin: 0 auto 2rem;
+          width: 80px;
+          height: 80px;
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+
+          i {
+            font-size: 2.5rem;
+            color: white;
+          }
+        }
+
+        h2 {
+          font-size: 2.5rem;
+          font-weight: 700;
+          color: #1f2937;
+          margin-bottom: 1.5rem;
+          line-height: 1.2;
+
+          @media (max-width: 768px) {
+            font-size: 2rem;
+          }
+        }
+
+        .support-message {
+          font-size: 1.125rem;
+          line-height: 1.7;
+          color: #4b5563;
+          margin-bottom: 3rem;
+          max-width: 600px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+
+        .email-section {
+          margin-bottom: 3rem;
+          text-align: left;
+          background: #f8fafc;
+          padding: 2.5rem;
+          border-radius: 12px;
+          border: 1px solid #e5e7eb;
+
+          @media (max-width: 768px) {
+            padding: 2rem 1.5rem;
+          }
+
+          h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            &::before {
+              content: '📧';
+              font-size: 1.25rem;
+            }
+          }
+
+          p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #6b7280;
+            margin-bottom: 2rem;
+          }
+
+          .email-container {
+            .email-display {
+              display: flex;
+              align-items: center;
+              gap: 1rem;
+              background: white;
+              padding: 1.5rem;
+              border-radius: 8px;
+              border: 2px solid #10b981;
+              margin-bottom: 1.5rem;
+              transition: all 0.3s ease;
+
+              &:hover {
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+              }
+
+              .pi-envelope {
+                color: #10b981;
+                font-size: 1.25rem;
+              }
+
+              .email-text {
+                font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+                font-size: 1.125rem;
+                font-weight: 600;
+                color: #1f2937;
+                flex: 1;
+              }
+
+              .copy-btn {
+                color: #6b7280;
+                transition: color 0.2s ease;
+
+                &:hover {
+                  color: #10b981;
+                }
+              }
+            }
+
+            .email-button {
+              width: 100%;
+              background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+              border: none;
+              padding: 1rem 2rem;
+              font-size: 1rem;
+              font-weight: 600;
+              border-radius: 8px;
+              transition: all 0.3s ease;
+
+              &:hover {
+                background: linear-gradient(135deg, #059669 0%, #047857 100%);
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+              }
+
+              &:active {
+                transform: translateY(0);
+              }
+            }
+          }
+        }
+
+        .commitment-section {
+          text-align: left;
+          margin-bottom: 3rem;
+
+          h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 2rem;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+
+            &::before {
+              content: '🤝';
+              font-size: 1.25rem;
+            }
+          }
+
+          .commitment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+
+            .commitment-item {
+              display: flex;
+              align-items: flex-start;
+              gap: 1rem;
+              padding: 1.5rem;
+              background: white;
+              border-radius: 12px;
+              border: 1px solid #e5e7eb;
+              transition: all 0.3s ease;
+
+              &:hover {
+                border-color: #10b981;
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+                transform: translateY(-2px);
+              }
+
+              i {
+                font-size: 1.5rem;
+                color: #10b981;
+                margin-top: 0.25rem;
+                min-width: 24px;
+              }
+
+              div {
+                flex: 1;
+
+                h4 {
+                  font-size: 1.125rem;
+                  font-weight: 600;
+                  color: #1f2937;
+                  margin-bottom: 0.5rem;
+                }
+
+                p {
+                  font-size: 0.875rem;
+                  line-height: 1.5;
+                  color: #6b7280;
+                  margin: 0;
+                }
+              }
+            }
+          }
+        }
+
+        .final-message {
+          .message-highlight {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-left: 4px solid #3b82f6;
+            padding: 2rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            text-align: left;
+
+            i {
+              color: #3b82f6;
+              font-size: 1.5rem;
+              margin-top: 0.25rem;
+              min-width: 24px;
+            }
+
+            p {
+              margin: 0;
+              font-size: 1rem;
+              line-height: 1.6;
+              color: #1e40af;
+
+              strong {
+                font-weight: 600;
+                color: #1e3a8a;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Dark theme support
+[data-theme="dark"] {
+  .contact-page-content {
+    .support-card {
+      background: #1f2937;
+      border: 1px solid #374151;
+
+      .support-content {
+        h2 {
+          color: #f9fafb;
+        }
+
+        .support-message {
+          color: #d1d5db;
+        }
+
+        .email-section {
+          background: #111827;
+          border-color: #374151;
+
+          h3 {
+            color: #f9fafb;
+          }
+
+          p {
+            color: #9ca3af;
+          }
+
+          .email-display {
+            background: #1f2937;
+            border-color: #10b981;
+
+            .email-text {
+              color: #f9fafb;
+            }
+          }
+        }
+
+        .commitment-section {
+          h3 {
+            color: #f9fafb;
+          }
+
+          .commitment-item {
+            background: #111827;
+            border-color: #374151;
+
+            h4 {
+              color: #f9fafb;
+            }
+
+            p {
+              color: #9ca3af;
+            }
+          }
+        }
+
+        .final-message {
+          .message-highlight {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%);
+            border-left-color: #3b82f6;
+
+            p {
+              color: #dbeafe;
+
+              strong {
+                color: #ffffff;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 640px) {
+  .contact-page-content {
+    .support-card {
+      .support-content {
+        .commitment-section {
+          .commitment-grid {
+            grid-template-columns: 1fr;
+          }
+        }
+
+        .email-section {
+          .email-container {
+            .email-display {
+              flex-direction: column;
+              align-items: stretch;
+              gap: 1rem;
+              text-align: center;
+
+              .email-text {
+                word-break: break-all;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
