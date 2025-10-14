@@ -33,19 +33,19 @@ const ContactPage: React.FC = () => {
           label: "Response Time",
           value: "24-48h",
           icon: "pi-clock",
-          color: "#10b981"
+          color: "info"
         },
         {
           label: "Support Rating",
           value: "4.9/5",
           icon: "pi-star",
-          color: "#f59e0b"
+          color: "primary"
         },
         {
           label: "Issues Resolved",
           value: "99.2%",
           icon: "pi-check-circle",
-          color: "#8b5cf6"
+          color: "success"
         }
       ]}
       actions={[
