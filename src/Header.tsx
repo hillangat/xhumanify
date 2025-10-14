@@ -1,11 +1,42 @@
 import { MegaMenu } from 'primereact/megamenu';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { signOut } from 'aws-amplify/auth';
+import { signOut, getCurrentUser } from 'aws-amplify/auth';
+import { useState, useEffect } from 'react';
 import './Header.scss';
 
 export default function Header() {
   const location = useLocation();
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const user = await getCurrentUser();
+        setCurrentUser(user);
+      } catch (error) {
+        console.log('No authenticated user');
+        setCurrentUser(null);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
+  const getUserDisplayName = () => {
+    if (!currentUser) return 'My Account';
+    
+    // Try to get a user-friendly display name
+    const email = currentUser.signInDetails?.loginId || currentUser.username;
+    const username = currentUser.username;
+    
+    // Use email if available, otherwise username, otherwise fallback
+    if (email && email.includes('@')) {
+      return email.split('@')[0]; // Return part before @ for cleaner display
+    }
+    
+    return username || 'My Account';
+  };
 
   const handleLogout = async () => {
     try {
@@ -45,33 +76,33 @@ export default function Header() {
       url: '/upgrade',
       className: (location.pathname === '/upgrade' || location.pathname === '/upgrade/') ? 'active-menu-item' : ''
     },
-    {
-      label: 'Features',
-      icon: 'pi pi-star',
-      className: (location.pathname === '/features' || location.pathname === '/features/') ? 'active-menu-item' : '',
-      items: [
-        [
-          {
-            label: 'AI Tools',
-            items: [
-              { label: 'Content Humanizer', icon: 'pi pi-file-edit' },
-              { label: 'Text Analyzer', icon: 'pi pi-chart-line' },
-              { label: 'Grammar Check', icon: 'pi pi-check-circle' }
-            ]
-          }
-        ],
-        [
-          {
-            label: 'Integrations',
-            items: [
-              { label: 'API Access', icon: 'pi pi-cog' },
-              { label: 'Webhooks', icon: 'pi pi-link' },
-              { label: 'Third Party', icon: 'pi pi-external-link' }
-            ]
-          }
-        ]
-      ]
-    },
+    // {
+    //   label: 'Features',
+    //   icon: 'pi pi-star',
+    //   className: (location.pathname === '/features' || location.pathname === '/features/') ? 'active-menu-item' : '',
+    //   items: [
+    //     [
+    //       {
+    //         label: 'AI Tools',
+    //         items: [
+    //           { label: 'Content Humanizer', icon: 'pi pi-file-edit' },
+    //           { label: 'Text Analyzer', icon: 'pi pi-chart-line' },
+    //           { label: 'Grammar Check', icon: 'pi pi-check-circle' }
+    //         ]
+    //       }
+    //     ],
+    //     [
+    //       {
+    //         label: 'Integrations',
+    //         items: [
+    //           { label: 'API Access', icon: 'pi pi-cog' },
+    //           { label: 'Webhooks', icon: 'pi pi-link' },
+    //           { label: 'Third Party', icon: 'pi pi-external-link' }
+    //         ]
+    //       }
+    //     ]
+    //   ]
+    // },
     {
       label: 'About',
       icon: 'pi pi-info-circle',
@@ -92,7 +123,7 @@ export default function Header() {
   ];
 
   const userMenuItem = {
-    label: 'My Humanize',
+    label: getUserDisplayName(),
     icon: 'pi pi-user',
     className: 'user-menu-item',
     items: [

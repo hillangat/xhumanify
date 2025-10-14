@@ -142,9 +142,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         },
       },
       customer_creation: customerId ? undefined : 'always',
-      customer_update: customerId ? {
-        metadata: 'update',
-      } : undefined,
+      // Remove invalid customer_update parameter
     });
 
     console.log('Checkout session created successfully:', session.id);
