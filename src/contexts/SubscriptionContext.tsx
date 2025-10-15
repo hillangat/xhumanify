@@ -70,14 +70,17 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         return;
       }
 
-      // Load subscription with proper user filtering
+      // Load subscription with proper user filtering and active status
       const { data } = await client.models.UserSubscription.list({
         filter: {
           userId: {
             eq: currentUser.userId
+          },
+          status: {
+            eq: 'active'  // Only get active subscriptions
           }
         },
-        limit: 1, // Only need one subscription per user
+        limit: 1, // Only need one active subscription per user
         selectionSet: [
           'id',
           'userId',

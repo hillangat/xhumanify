@@ -226,6 +226,86 @@ export const handler: APIGatewayProxyHandler = async (event) => {
   }
 };
 
+async function deactivateExistingSubscriptions(userId: string) {
+  if (!userId) {
+    console.log('⚠️ No userId provided, skipping existing subscription deactivation');
+    return;
+  }
+
+  try {
+    console.log('🔍 Checking for existing active subscriptions for user:', userId);
+    
+    // Find all active subscriptions for this user
+    const existingSubscriptionsQuery = /* GraphQL */ `
+      query ListUserSubscriptions($filter: ModelUserSubscriptionFilterInput) {
+        listUserSubscriptions(filter: $filter) {
+          items {
+            id
+            userId
+            stripeSubscriptionId
+            status
+            planName
+          }
+        }
+      }
+    `;
+    
+    const result = await client.graphql({
+      query: existingSubscriptionsQuery,
+      variables: {
+        filter: {
+          userId: { eq: userId },
+          status: { eq: 'active' }
+        }
+      },
+      authMode: 'iam'
+    }) as any;
+    
+    const existingSubscriptions = result?.data?.listUserSubscriptions?.items || [];
+    
+    if (existingSubscriptions.length > 0) {
+      console.log(`🔄 Found ${existingSubscriptions.length} existing active subscriptions to deactivate`);
+      
+      // Deactivate each existing subscription
+      const updateMutation = /* GraphQL */ `
+        mutation UpdateUserSubscription($input: UpdateUserSubscriptionInput!) {
+          updateUserSubscription(input: $input) {
+            id
+            status
+            updatedAt
+          }
+        }
+      `;
+      
+      for (const sub of existingSubscriptions) {
+        try {
+          console.log(`📝 Deactivating subscription ${sub.id} (${sub.planName})`);
+          
+          await client.graphql({
+            query: updateMutation,
+            variables: {
+              input: {
+                id: sub.id,
+                status: 'inactive',
+                updatedAt: new Date().toISOString()
+              }
+            },
+            authMode: 'iam'
+          });
+          
+          console.log(`✅ Successfully deactivated subscription ${sub.id}`);
+        } catch (updateError) {
+          console.error(`❌ Failed to deactivate subscription ${sub.id}:`, updateError);
+        }
+      }
+    } else {
+      console.log('✅ No existing active subscriptions found');
+    }
+  } catch (error) {
+    console.error('❌ Error checking/deactivating existing subscriptions:', error);
+  }
+}
+
 async function handleSubscriptionCreated(event: any) {
   console.log('🎉 SUBSCRIPTION CREATED:', event.data.object.id);
   
@@ -266,6 +346,11 @@ async function handleSubscriptionCreated(event: any) {
 
   try {
     console.log('💾 Creating subscription in database using Models API...');
+    
+    // IMPORTANT: Deactivate existing subscriptions before creating new one
+    if (userId) {
+      await deactivateExistingSubscriptions(userId);
+    }
     
     // Extract subscription details
     const planId = subscription.items.data[0]?.price?.id;
