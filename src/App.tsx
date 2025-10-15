@@ -17,6 +17,7 @@ import UsageDisplay from './components/UsageDisplay';
 import UsageBreakdownPopup from './components/UsageBreakdownPopup';
 import FeaturePage from './components/FeaturePage';
 import { getPlanLimits } from './config/plans';
+import { FaGooglePlay } from 'react-icons/fa';
 
 export default function App() {
   const client = generateClient<Schema>();
@@ -466,7 +467,7 @@ export default function App() {
                     label='Humanize'
                     loading={isRunning}
                     loadingIcon="pi pi-spin pi-spinner"
-                    icon="pi pi-play"
+                    icon={<FaGooglePlay />}
                     onClick={handleButtonClick}
                     disabled={loading || !prompt || isRunning || !canUseService}
                     severity={!canUseService ? 'danger' : undefined}
