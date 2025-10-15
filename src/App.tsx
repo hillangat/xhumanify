@@ -24,6 +24,7 @@ export default function App() {
 
   const [prompt, setPrompt] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [isInitialLoad, setIsInitialLoad] = useState<boolean>(true);
   const [answer, setAnswer] = useState<string | null>(null);
   const [usageInfo, setUsageInfo] = useState<any>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -338,6 +339,13 @@ export default function App() {
     }
   }, [answer, isRunning]);
 
+  // Track initial loading completion
+  useEffect(() => {
+    if (!loading && isInitialLoad) {
+      setIsInitialLoad(false);
+    }
+  }, [loading, isInitialLoad]);
+
   return (
     <FeaturePage
       title="Humanize AI Content"
@@ -350,10 +358,10 @@ export default function App() {
       } : undefined}
       stats={[
         {
-          label: "Words Used",
-          value: usageCount.toString(),
-          icon: "pi pi-chart-bar",
-          color: "info"
+          label: "Current Plan",
+          value: currentTier || "Loading",
+          icon: "pi pi-star",
+          color: "success"
         },
         {
           label: "Monthly Limit",
@@ -362,10 +370,10 @@ export default function App() {
           color: "primary"
         },
         {
-          label: "Current Plan",
-          value: currentTier || "Loading",
-          icon: "pi pi-star",
-          color: "success"
+          label: "Words Used",
+          value: usageCount.toString(),
+          icon: "pi pi-chart-bar",
+          color: "info"
         },
         {
           label: "Available",
@@ -389,7 +397,7 @@ export default function App() {
         }] : [])
       ]}
       className="app-main-page"
-      loading={loading}
+      loading={isInitialLoad && loading}
     >
       <Toast ref={toast} position="top-right" />
       <ConfirmPopup />
