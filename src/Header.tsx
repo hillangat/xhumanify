@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from 'primereact/button';
 import { Menu } from 'primereact/menu';
 import { Sidebar } from 'primereact/sidebar';
@@ -11,7 +11,6 @@ export default function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [userMenuVisible, setUserMenuVisible] = useState(false);
   const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
   const userMenuRef = useRef<Menu>(null);
 
@@ -133,7 +132,6 @@ export default function Header() {
       label: 'Profile',
       icon: 'pi pi-user',
       command: () => {
-        setUserMenuVisible(false);
         console.log('Navigate to profile');
       }
     },
@@ -141,7 +139,6 @@ export default function Header() {
       label: 'Settings',
       icon: 'pi pi-cog',
       command: () => {
-        setUserMenuVisible(false);
         console.log('Navigate to settings');
       }
     },
@@ -149,7 +146,6 @@ export default function Header() {
       label: 'Billing',
       icon: 'pi pi-credit-card',
       command: () => {
-        setUserMenuVisible(false);
         navigate('/upgrade');
       }
     },
@@ -160,7 +156,6 @@ export default function Header() {
       label: 'Sign Out',
       icon: 'pi pi-sign-out',
       command: () => {
-        setUserMenuVisible(false);
         handleLogout();
       }
     }
@@ -174,21 +169,6 @@ export default function Header() {
   useEffect(() => {
     setMobileMenuVisible(false);
   }, [location.pathname]);
-
-  // Close menus when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!event.target) return;
-      
-      const target = event.target as Element;
-      if (!target.closest('.user-menu-container') && !target.closest('.p-menu')) {
-        setUserMenuVisible(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   return (
     <>
