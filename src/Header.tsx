@@ -181,7 +181,7 @@ export default function Header() {
                 <i className="pi pi-sparkles"></i>
               </div>
               <div className="logo-text">
-                <span className="logo-x">x</span>Humanify
+                <span className="logo-x">Humanize</span>
               </div>
             </div>
 
