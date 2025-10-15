@@ -103,7 +103,6 @@
   .nav-button {
     position: relative;
     padding: 0.75rem 1rem;
-    border-radius: 12px;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     font-weight: 500;
     color: var(--text-color-secondary);
@@ -119,24 +118,26 @@
     }
 
     &.active {
-      background: linear-gradient(135deg, 
-        rgba(var(--primary-color-rgb), 0.1), 
-        rgba(var(--primary-color-rgb), 0.05));
       color: var(--primary-color);
       font-weight: 600;
-      box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.2);
+      background: linear-gradient(
+        to top,
+        color-mix(in srgb, var(--primary-color) 15%, transparent) 0%,
+        transparent 15px
+      );
+      border-bottom: 1px solid var(--primary-color);
 
-      &::after {
-        content: '';
-        position: absolute;
-        bottom: -1px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 60%;
-        height: 2px;
-        background: var(--primary-color);
-        border-radius: 1px;
-      }
+      // &::after {
+      //   content: '';
+      //   position: absolute;
+      //   bottom: -1px;
+      //   left: 50%;
+      //   transform: translateX(-50%);
+      //   width: 60%;
+      //   height: 2px;
+      //   background: var(--primary-color);
+      //   border-radius: 1px;
+      // }
     }
 
     .pi {

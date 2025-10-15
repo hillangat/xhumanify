@@ -101,7 +101,7 @@ export default function Header() {
     },
     {
       label: 'Terms',
-      icon: 'pi pi-file-text',
+      icon: 'pi pi-file',
       path: '/terms',
       command: () => {
         navigate('/terms');
