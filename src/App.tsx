@@ -343,8 +343,7 @@ export default function App() {
       title="Humanize AI Content"
       subtitle="Transform AI Text into Authentic Human Writing"
       description="Give AI content a human touch with the most advanced tool. Turn stiff, robotic AI text into writing that feels genuinely human."
-      icon="pi pi-brain"
-      maxWidth="90%"
+      icon="pi pi-sparkles"
       badge={currentTier ? {
         text: `${currentTier.charAt(0).toUpperCase() + currentTier.slice(1)} Plan`,
         severity: currentTier === 'free' ? 'info' : currentTier === 'lite' ? 'success' : currentTier === 'standard' ? 'warning' : 'danger'

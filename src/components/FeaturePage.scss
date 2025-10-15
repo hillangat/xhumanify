@@ -34,7 +34,7 @@
   --feature-spacing-lg: 2rem;
   --feature-spacing-xl: 3rem;
   
-  // Container width - configurable with default
+  // Container width - fixed width
   --feature-content-max-width: 1200px;
   
   // Transitions
@@ -95,6 +95,7 @@
   background: var(--feature-bg-secondary);
   position: relative;
   overflow-x: hidden;
+  padding-top: 4rem; // Account for fixed header height
 
   // Animation states
   &.animated {
@@ -138,7 +139,7 @@
     .header-content {
       position: relative;
       z-index: 2;
-      max-width: var(--feature-content-max-width);
+      max-width: 1200px;
       margin: 0 auto;
       width: 100%;
     }
@@ -412,7 +413,7 @@
     border: 1px solid var(--feature-border);
 
     .content-container {
-      max-width: var(--feature-content-max-width);
+      max-width: 1200px;
       margin: 0 auto;
       padding: var(--feature-spacing-xl) var(--feature-spacing-lg);
       min-height: 200px;

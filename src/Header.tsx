@@ -1,13 +1,19 @@
-import { MegaMenu } from 'primereact/megamenu';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from 'primereact/button';
+import { Menu } from 'primereact/menu';
+import { Sidebar } from 'primereact/sidebar';
+import { Divider } from 'primereact/divider';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { signOut, getCurrentUser } from 'aws-amplify/auth';
-import { useState, useEffect } from 'react';
 import './Header.scss';
 
 export default function Header() {
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [userMenuVisible, setUserMenuVisible] = useState(false);
+  const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
+  const userMenuRef = useRef<Menu>(null);
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -41,147 +47,310 @@ export default function Header() {
   const handleLogout = async () => {
     try {
       await signOut();
-      // Redirect to home page or login page after logout
       navigate('/');
-      // Optional: Show success message or refresh the page
-      //window.location.reload();
     } catch (error) {
       console.error('Error signing out:', error);
-      // Optional: Show error message to user
     }
   };
 
-  const megaMenuItems = [
+  const navigationItems = [
     {
       label: 'Home',
       icon: 'pi pi-home',
-      url: '/',
-      className: location.pathname === '/' ? 'active-menu-item' : ''
+      path: '/',
+      command: () => {
+        navigate('/');
+        setMobileMenuVisible(false);
+      }
     },
     {
       label: 'History',
       icon: 'pi pi-history',
-      url: '/history',
-      className: (location.pathname === '/history' || location.pathname === '/history/') ? 'active-menu-item' : ''
+      path: '/history',
+      command: () => {
+        navigate('/history');
+        setMobileMenuVisible(false);
+      }
     },
     {
       label: 'Feature Requests',
       icon: 'pi pi-lightbulb',
-      url: '/features',
-      className: (location.pathname === '/features' || location.pathname === '/features/') ? 'active-menu-item' : ''
+      path: '/features',
+      command: () => {
+        navigate('/features');
+        setMobileMenuVisible(false);
+      }
     },
     {
       label: 'Pricing',
       icon: 'pi pi-dollar',
-      url: '/upgrade',
-      className: (location.pathname === '/upgrade' || location.pathname === '/upgrade/') ? 'active-menu-item' : ''
+      path: '/upgrade',
+      command: () => {
+        navigate('/upgrade');
+        setMobileMenuVisible(false);
+      }
     },
-    // {
-    //   label: 'Features',
-    //   icon: 'pi pi-star',
-    //   className: (location.pathname === '/features' || location.pathname === '/features/') ? 'active-menu-item' : '',
-    //   items: [
-    //     [
-    //       {
-    //         label: 'AI Tools',
-    //         items: [
-    //           { label: 'Content Humanizer', icon: 'pi pi-file-edit' },
-    //           { label: 'Text Analyzer', icon: 'pi pi-chart-line' },
-    //           { label: 'Grammar Check', icon: 'pi pi-check-circle' }
-    //         ]
-    //       }
-    //     ],
-    //     [
-    //       {
-    //         label: 'Integrations',
-    //         items: [
-    //           { label: 'API Access', icon: 'pi pi-cog' },
-    //           { label: 'Webhooks', icon: 'pi pi-link' },
-    //           { label: 'Third Party', icon: 'pi pi-external-link' }
-    //         ]
-    //       }
-    //     ]
-    //   ]
-    // },
     {
       label: 'About',
       icon: 'pi pi-info-circle',
-      url: '/about',
-      className: (location.pathname === '/about' || location.pathname === '/about/') ? 'active-menu-item' : ''
+      path: '/about',
+      command: () => {
+        navigate('/about');
+        setMobileMenuVisible(false);
+      }
     },
     {
       label: 'Terms',
       icon: 'pi pi-file-text',
-      url: '/terms',
-      className: (location.pathname === '/terms' || location.pathname === '/terms/') ? 'active-menu-item' : ''
+      path: '/terms',
+      command: () => {
+        navigate('/terms');
+        setMobileMenuVisible(false);
+      }
     },
     {
       label: 'Contact',
       icon: 'pi pi-envelope',
-      url: '/contact',
-      className: (location.pathname === '/contact' || location.pathname === '/contact/') ? 'active-menu-item' : ''
+      path: '/contact',
+      command: () => {
+        navigate('/contact');
+        setMobileMenuVisible(false);
+      }
     }
   ];
 
-  const userMenuItem = {
-    label: getUserDisplayName(),
-    icon: 'pi pi-user',
-    className: 'user-menu-item',
-    items: [
-      [
-        {
-          label: 'Account',
-          items: [
-            { 
-              label: 'Profile', 
-              icon: 'pi pi-user',
-              command: () => console.log('Navigate to profile')
-            },
-            { 
-              label: 'Settings', 
-              icon: 'pi pi-cog',
-              command: () => console.log('Navigate to settings')
-            },
-            { 
-              label: 'Billing', 
-              icon: 'pi pi-credit-card',
-              command: () => navigate('/upgrade')
-            },
-            { 
-              label: 'Upgrade Plan', 
-              icon: 'pi pi-star-fill',
-              command: () => navigate('/upgrade')
-            },
-            { 
-              label: 'Log Out', 
-              icon: 'pi pi-sign-out',
-              command: () => handleLogout()
-            }
-          ]
-        }
-      ],
-      [
-        {
-          label: 'Actions',
-          items: [
-            { 
-              label: 'Log Out', 
-              icon: 'pi pi-sign-out',
-              command: () => handleLogout()
-            }
-          ]
-        }
-      ]
-    ]
+  const userMenuItems = [
+    {
+      label: getUserDisplayName(),
+      icon: 'pi pi-user',
+      disabled: true,
+      className: 'user-info-item'
+    },
+    {
+      separator: true
+    },
+    {
+      label: 'Profile',
+      icon: 'pi pi-user',
+      command: () => {
+        setUserMenuVisible(false);
+        console.log('Navigate to profile');
+      }
+    },
+    {
+      label: 'Settings',
+      icon: 'pi pi-cog',
+      command: () => {
+        setUserMenuVisible(false);
+        console.log('Navigate to settings');
+      }
+    },
+    {
+      label: 'Billing',
+      icon: 'pi pi-credit-card',
+      command: () => {
+        setUserMenuVisible(false);
+        navigate('/upgrade');
+      }
+    },
+    {
+      separator: true
+    },
+    {
+      label: 'Sign Out',
+      icon: 'pi pi-sign-out',
+      command: () => {
+        setUserMenuVisible(false);
+        handleLogout();
+      }
+    }
+  ];
+
+  const isActivePage = (path: string) => {
+    return location.pathname === path || location.pathname === path + '/';
   };
 
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuVisible(false);
+  }, [location.pathname]);
+
+  // Close menus when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!event.target) return;
+      
+      const target = event.target as Element;
+      if (!target.closest('.user-menu-container') && !target.closest('.p-menu')) {
+        setUserMenuVisible(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <div className="card header-card">
-      <MegaMenu 
-        model={megaMenuItems} 
-        start={<div className="p-menubar-start"><strong>Humanize AI Contents</strong></div>}
-        end={<MegaMenu model={[userMenuItem]} className="user-megamenu" />}
-      />
-    </div>
+    <>
+      <header className="elegant-header">
+        <div className="header-container">
+          <div className="nav-header-content">
+            {/* Logo */}
+            <div className="logo-section" onClick={() => navigate('/')}>
+              <div className="logo-icon">
+                <i className="pi pi-sparkles"></i>
+              </div>
+              <div className="logo-text">
+                <span className="logo-x">x</span>Humanify
+              </div>
+            </div>
+
+            {/* Desktop Navigation */}
+            <nav className="desktop-nav">
+              {navigationItems.map((item) => (
+                <Button
+                  key={item.path}
+                  label={item.label}
+                  icon={item.icon}
+                  text
+                  className={`nav-button ${isActivePage(item.path) ? 'active' : ''}`}
+                  onClick={item.command}
+                />
+              ))}
+            </nav>
+
+            {/* Right Side Controls */}
+            <div className="header-controls">
+              {/* User Menu */}
+              <div className="user-menu-container">
+                <Button
+                  icon="pi pi-user"
+                  rounded
+                  text
+                  className="user-button"
+                  onClick={(e) => userMenuRef.current?.toggle(e)}
+                  aria-label="User menu"
+                />
+                <Menu
+                  model={userMenuItems}
+                  popup
+                  ref={userMenuRef}
+                  id="user-menu"
+                  popupAlignment="right"
+                  className="elegant-user-menu"
+                />
+              </div>
+
+              {/* Mobile Menu Button */}
+              <Button
+                icon="pi pi-bars"
+                rounded
+                text
+                className="mobile-menu-button"
+                onClick={() => setMobileMenuVisible(true)}
+                aria-label="Open menu"
+              />
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Mobile Sidebar */}
+      <Sidebar
+        visible={mobileMenuVisible}
+        position="right"
+        onHide={() => setMobileMenuVisible(false)}
+        className="mobile-sidebar"
+        modal
+      >
+        <div className="mobile-menu-content">
+          <div className="mobile-header">
+            <div className="mobile-logo">
+              <div className="logo-icon">
+                <i className="pi pi-sparkles"></i>
+              </div>
+              <div className="logo-text">
+                <span className="logo-x">x</span>Humanify
+              </div>
+            </div>
+            <Button
+              icon="pi pi-times"
+              rounded
+              text
+              className="close-button"
+              onClick={() => setMobileMenuVisible(false)}
+              aria-label="Close menu"
+            />
+          </div>
+
+          <Divider />
+
+          <div className="mobile-nav">
+            {navigationItems.map((item) => (
+              <div
+                key={item.path}
+                className={`mobile-nav-item ${isActivePage(item.path) ? 'active' : ''}`}
+                onClick={item.command}
+              >
+                <i className={item.icon}></i>
+                <span>{item.label}</span>
+                {isActivePage(item.path) && <i className="pi pi-check current-indicator"></i>}
+              </div>
+            ))}
+          </div>
+
+          <Divider />
+
+          <div className="mobile-user-section">
+            <div className="mobile-user-info">
+              <i className="pi pi-user"></i>
+              <span>{getUserDisplayName()}</span>
+            </div>
+            <div className="mobile-user-actions">
+              <Button
+                label="Profile"
+                icon="pi pi-user"
+                text
+                className="mobile-action-button"
+                onClick={() => {
+                  setMobileMenuVisible(false);
+                  console.log('Navigate to profile');
+                }}
+              />
+              <Button
+                label="Settings"
+                icon="pi pi-cog"
+                text
+                className="mobile-action-button"
+                onClick={() => {
+                  setMobileMenuVisible(false);
+                  console.log('Navigate to settings');
+                }}
+              />
+              <Button
+                label="Billing"
+                icon="pi pi-credit-card"
+                text
+                className="mobile-action-button"
+                onClick={() => {
+                  setMobileMenuVisible(false);
+                  navigate('/upgrade');
+                }}
+              />
+              <Button
+                label="Sign Out"
+                icon="pi pi-sign-out"
+                text
+                className="mobile-action-button sign-out"
+                onClick={() => {
+                  setMobileMenuVisible(false);
+                  handleLogout();
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      </Sidebar>
+    </>
   );
 }

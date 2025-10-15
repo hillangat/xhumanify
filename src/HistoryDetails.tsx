@@ -74,9 +74,9 @@ const HistoryDetails: React.FC = () => {
           }
         ]}
         breadcrumbs={[
-          { label: 'Home', url: '/' },
-          { label: 'History', url: '/history' },
-          { label: 'Not Found' }
+          { label: 'Home', url: '/', icon: 'pi-home' },
+          { label: 'History', url: '/history', icon: "pi-history" },
+          { label: 'Not Found', icon: 'pi-exclamation-triangle' }
         ]}
         className="history-details-error"
       >
@@ -132,9 +132,9 @@ const HistoryDetails: React.FC = () => {
         }
       ]}
       breadcrumbs={[
-        { label: 'Home', url: '/' },
-        { label: 'History', url: '/history' },
-        { label: item.description || 'Content Details' }
+        { label: 'Home', url: '/', icon: 'pi-home' },
+        { label: 'History', url: '/history', icon: 'pi-history' },
+        { label: item.description || 'Content Details', icon: 'pi-file-edit' }
       ]}
       className="history-details-page"
     >
