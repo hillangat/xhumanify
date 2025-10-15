@@ -2,9 +2,7 @@ import type { Schema } from '../amplify/data/resource';
 import { useState, useEffect, useRef } from 'react';
 import { generateClient } from 'aws-amplify/data';
 import './App.scss';
-import { FaSpinner, FaCheck, FaRegCopy, FaTimes, FaGooglePlay } from 'react-icons/fa';
 import { ProgressSpinner } from 'primereact/progressspinner';
-import { MdHourglassEmpty } from 'react-icons/md';
 import EmptyContent from './EmptyContent';
 import { Button } from 'primereact/button';
 import { ButtonGroup } from 'primereact/buttongroup';
@@ -14,17 +12,16 @@ import { Toast } from 'primereact/toast';
 import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup';
 import UserFeedback, { UserFeedbackRef } from './UserFeedback';
 import { TONE_OPTIONS } from './constants/feedbackConstants';
-import { VscFeedback } from "react-icons/vsc";
 import { useSubscription } from './contexts/SubscriptionContext';
 import UsageDisplay from './components/UsageDisplay';
-import ExpandableDescription from './components/ExpandableDescription';
 import UsageBreakdownPopup from './components/UsageBreakdownPopup';
+import FeaturePage from './components/FeaturePage';
 import { getPlanLimits } from './config/plans';
 
 export default function App() {
   const client = generateClient<Schema>();
   const { trackUsage, trackUsageWithTokens, checkUsageLimit, canUseService, currentTier, loading, usageCount, usageLimit } = useSubscription();
-  
+
   const [prompt, setPrompt] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [answer, setAnswer] = useState<string | null>(null);
@@ -99,10 +96,10 @@ export default function App() {
           const response = JSON.parse(data);
           const content = response.content;
           const usage = response.usage;
-          
+
           setAnswer(content);
           setUsageInfo(usage);
-          
+
           // Track usage with actual token data
           if (content && usage) {
             await trackUsageWithTokens(prompt, content, usage);
@@ -126,17 +123,17 @@ export default function App() {
 
   const handleButtonClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    
+
     // Check usage limit before sending and show confirmation if exceeded
     if (!checkUsageLimit(prompt)) {
       const inputWords = countWords(prompt);
-      
+
       const currentPlanLimits = getPlanLimits(currentTier);
       const wouldExceedMonthly = (usageCount + inputWords) > usageLimit;
       const exceedsPerRequest = inputWords > currentPlanLimits.wordsPerRequest;
-      
+
       let confirmMessage = '';
-      
+
       if (exceedsPerRequest) {
         const limitText = currentPlanLimits.wordsPerRequest === 999999 ? 'unlimited' : `${currentPlanLimits.wordsPerRequest}-word`;
         confirmMessage = `Your input (${inputWords} words) exceeds the ${limitText} limit per request for ${currentTier} plan. Please split your content into smaller chunks or upgrade to Standard/Pro for unlimited words per request.`;
@@ -146,7 +143,7 @@ export default function App() {
       } else {
         confirmMessage = `This request would exceed your ${currentTier} plan limits. Please upgrade your plan or wait until next month.`;
       }
-      
+
       confirmPopup({
         target: event.currentTarget,
         message: confirmMessage,
@@ -167,7 +164,7 @@ export default function App() {
       });
       return;
     }
-    
+
     await sendPrompt();
   };
 
@@ -264,10 +261,10 @@ export default function App() {
     }
 
     setIsSubmittingFeedback(true);
-    
+
     try {
       const feedbackData = feedbackRef.current.getFeedbackData();
-      
+
       // Add timestamp, processing time, and content data
       const completeFeedback = {
         ...feedbackData,
@@ -278,22 +275,22 @@ export default function App() {
       };
 
       console.log('Feedback Data to Submit:', completeFeedback);
-      
+
       // Save to your backend
       await client.models.UserFeedback.create(completeFeedback);
-      
+
       toast.current?.show({
         severity: 'success',
         summary: 'Feedback Submitted!',
         detail: 'Thank you for your valuable feedback.',
         life: 4000
       });
-      
+
       setShowFeedbackDialog(false);
-      
+
     } catch (error) {
       console.error('Error submitting feedback:', error);
-      
+
       toast.current?.show({
         severity: 'error',
         summary: 'Submission Failed',
@@ -342,18 +339,99 @@ export default function App() {
   }, [answer, isRunning]);
 
   return (
-    <>
-      <main>
-        <section className='title-section'>
-          <div className='title-text'>
-            <h1>Humanize AI Generated Content</h1>
-            <ExpandableDescription
-              title="Give AI content a human touch with the most advanced tool."
-              description="Turn stiff, robotic AI text into writing that feels genuinely human. Our tool smooths out the rough edges of AI-generated content, reshaping it into clear, natural, and authentic language that won't raise red flags. With us, your words will sound like they came straight from a real person—so you can publish or submit your work with confidence."
-              defaultExpanded={false}
-            />
+    <FeaturePage
+      title="Humanize AI Content"
+      subtitle="Transform AI Text into Authentic Human Writing"
+      description="Give AI content a human touch with the most advanced tool. Turn stiff, robotic AI text into writing that feels genuinely human."
+      icon="pi pi-brain"
+      maxWidth="90%"
+      badge={currentTier ? {
+        text: `${currentTier.charAt(0).toUpperCase() + currentTier.slice(1)} Plan`,
+        severity: currentTier === 'free' ? 'info' : currentTier === 'lite' ? 'success' : currentTier === 'standard' ? 'warning' : 'danger'
+      } : undefined}
+      stats={[
+        {
+          label: "Words Used",
+          value: usageCount.toString(),
+          icon: "pi pi-chart-bar",
+          color: "info"
+        },
+        {
+          label: "Monthly Limit",
+          value: usageLimit === 999999 ? "Unlimited" : usageLimit.toString(),
+          icon: "pi pi-calendar",
+          color: "primary"
+        },
+        {
+          label: "Current Plan",
+          value: currentTier || "Loading",
+          icon: "pi pi-star",
+          color: "success"
+        },
+        {
+          label: "Available",
+          value: usageLimit === 999999 ? "Unlimited" : Math.max(0, usageLimit - usageCount).toString(),
+          icon: "pi pi-check-circle",
+          color: usageLimit - usageCount > 1000 ? "success" : "warning"
+        }
+      ]}
+      actions={[
+        {
+          label: "View History",
+          icon: "pi pi-history",
+          onClick: () => window.location.href = '/history',
+          outlined: true
+        },
+        ...(currentTier !== 'pro' ? [{
+          label: "Upgrade Plan",
+          icon: "pi pi-star",
+          onClick: () => window.location.href = '/upgrade',
+          variant: "primary" as const
+        }] : [])
+      ]}
+      className="app-main-page"
+      loading={loading}
+    >
+      <Toast ref={toast} position="top-right" />
+      <ConfirmPopup />
+
+      <main className="app-content">
+        {/* Main Action Bar */}
+        <div className="main-action-bar">
+          <div className="main-action-bar-content">
+            <div className="action-group-left">
+              <div className="tone-selector-wrapper">
+                <i className="pi pi-palette tone-icon"></i>
+                <span className="tone-label">Tone:</span>
+                <Menu
+                  ref={toneMenuRef}
+                  model={toneMenuItems}
+                  popup
+                  className="tone-menu"
+                  id="tone_menu"
+                  appendTo={document.body}
+                  autoZIndex={true}
+                  baseZIndex={3000}
+                />
+                <Button
+                  label={getSelectedToneDisplayName()}
+                  icon="pi pi-angle-down"
+                  iconPos="right"
+                  onClick={(e) => toneMenuRef.current?.toggle(e)}
+                  className="tone-selection-button"
+                  size="small"
+                  aria-controls="tone_menu"
+                  aria-haspopup
+                />
+              </div>
+            </div>
+            
+            <div className="action-group-right">
+              <UsageDisplay compact currentPrompt={prompt} />
+            </div>
           </div>
-        </section>
+        </div>
+
         <section className='content-section'>
           <div className='raw-content'>
             <div className='action-bar'>
@@ -361,48 +439,27 @@ export default function App() {
                 <p><strong>{countWords(prompt)}</strong> Words</p>
               </div>
               <div className='action-bar-right'>
-                <UsageDisplay compact currentPrompt={prompt} />
                 <ButtonGroup>
-                  <Menu 
-                    ref={toneMenuRef} 
-                    model={toneMenuItems} 
-                    popup 
-                    className="tone-menu"
-                    id="tone_menu"
-                    appendTo={document.body}
-                    autoZIndex={true}
-                    baseZIndex={3000}
-                  />
-                  <Button 
-                    label={getSelectedToneDisplayName()}
-                    icon="pi pi-angle-down"
-                    iconPos="right"
-                    onClick={(e) => toneMenuRef.current?.toggle(e)}
-                    outlined
-                    size="small"
-                    aria-controls="tone_menu"
-                    aria-haspopup
-                  />
                   <Button
                     label={copiedRaw ? 'Copied' : ''}
                     outlined={!copiedRaw}
                     severity={copiedRaw ? 'success' : undefined}
-                    icon={copiedRaw ? <FaCheck /> : <FaRegCopy />}
+                    icon={copiedRaw ? "pi pi-check" : "pi pi-copy"}
                     onClick={handleCopyRawClick}
                     disabled={!prompt}
                   />
                   <Button
                     label=''
                     outlined
-                    icon={<FaTimes />}
+                    icon="pi pi-times"
                     onClick={handleResetClick}
                     disabled={!prompt}
                   />
                   <Button
                     label='Humanize'
                     loading={isRunning}
-                    loadingIcon={<FaSpinner className='spin' />}
-                    icon={<FaGooglePlay />}
+                    loadingIcon="pi pi-spin pi-spinner"
+                    icon="pi pi-play"
                     onClick={handleButtonClick}
                     disabled={loading || !prompt || isRunning || !canUseService}
                     severity={!canUseService ? 'danger' : undefined}
@@ -439,13 +496,13 @@ export default function App() {
                     label={copiedProcessed ? 'Copied' : ''}
                     outlined={!copiedProcessed}
                     severity={copiedProcessed ? 'success' : undefined}
-                    icon={copiedProcessed ? <FaCheck /> : <FaRegCopy />}
+                    icon={copiedProcessed ? "pi pi-check" : "pi pi-copy"}
                     onClick={handleCopyProcessedClick}
                     disabled={!answer}
                   />
                   <Button
                     label=""
-                    icon={<VscFeedback />}
+                    icon="pi pi-comment"
                     onClick={() => setShowFeedbackDialog(true)}
                     disabled={!answer || !prompt}
                     outlined
@@ -496,7 +553,7 @@ export default function App() {
                 </>
               ) : (
                 <EmptyContent
-                  icon={isRunning ? <ProgressSpinner style={{ width: '45px', height: '45px' }} /> : <MdHourglassEmpty size={35} />}
+                  icon={isRunning ? <ProgressSpinner style={{ width: '45px', height: '45px' }} /> : <i className="pi pi-hourglass" style={{ fontSize: '2.5rem', color: 'var(--text-color-secondary)' }}></i>}
                   title={isRunning ? 'Processing...' : 'No Processed Content'}
                   subtitle={isRunning ? 'Please wait while we humanize your content.' : 'Processed Content will appear here after a successful processing.'}
                 />
@@ -598,7 +655,7 @@ export default function App() {
           disabled={isSubmittingFeedback}
         />
       </Dialog>
-      
+
       {/* Usage Breakdown Popup */}
       {usageInfo && (
         <UsageBreakdownPopup
@@ -609,10 +666,6 @@ export default function App() {
           outputWords={countWords(answer)}
         />
       )}
-      
-      {/* Toast Notifications */}
-      <Toast ref={toast} position="top-right" />
-      <ConfirmPopup />
-    </>
+    </FeaturePage>
   );
 }

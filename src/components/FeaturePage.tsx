@@ -49,6 +49,8 @@ interface FeaturePageProps {
   animated?: boolean;
   /** Custom CSS class */
   className?: string;
+  /** Maximum width for content container (default: 1200px) */
+  maxWidth?: string | number;
 }
 
 const FeaturePage: React.FC<FeaturePageProps> = ({
@@ -64,7 +66,8 @@ const FeaturePage: React.FC<FeaturePageProps> = ({
   loading = false,
   headerGradient,
   animated = true,
-  className = ''
+  className = '',
+  maxWidth = 1200
 }) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -82,6 +85,12 @@ const FeaturePage: React.FC<FeaturePageProps> = ({
   const gradientStyle = {
     background: headerGradient || defaultGradient
   };
+
+  // Convert maxWidth to CSS value
+  const maxWidthValue = typeof maxWidth === 'number' ? `${maxWidth}px` : maxWidth;
+  const containerStyle = {
+    '--feature-content-max-width': maxWidthValue
+  } as React.CSSProperties;
 
   const renderBreadcrumbs = () => {
     if (!breadcrumbs || breadcrumbs.length === 0) return null;
@@ -258,7 +267,10 @@ const FeaturePage: React.FC<FeaturePageProps> = ({
   }
 
   return (
-    <div className={`feature-page ${animated ? 'animated' : ''} ${isVisible ? 'visible' : ''} ${className}`}>
+    <div 
+      className={`feature-page ${animated ? 'animated' : ''} ${isVisible ? 'visible' : ''} ${className}`}
+      style={containerStyle}
+    >
       {/* Header Section */}
       <div className="feature-page-header" style={gradientStyle}>
         <div className="header-background-pattern" />
