@@ -440,17 +440,13 @@
                     ]
                   },
                   {
-                    "allow": "private",
-                    "operations": [
-                      "read"
-                    ]
-                  },
-                  {
                     "allow": "public",
                     "provider": "iam",
                     "operations": [
                       "create",
-                      "update"
+                      "update",
+                      "read",
+                      "delete"
                     ]
                   }
                 ]
@@ -741,7 +737,8 @@
                     "allow": "private",
                     "operations": [
                       "read",
-                      "create"
+                      "create",
+                      "update"
                     ]
                   },
                   {
@@ -750,7 +747,8 @@
                     "allow": "owner",
                     "operations": [
                       "read",
-                      "update"
+                      "update",
+                      "delete"
                     ],
                     "identityClaim": "cognito:username"
                   },
@@ -833,7 +831,8 @@
                   {
                     "allow": "private",
                     "operations": [
-                      "read"
+                      "read",
+                      "create"
                     ]
                   },
                   {

@@ -264,7 +264,7 @@ async function deactivateExistingSubscriptions(userId: string) {
     const existingSubscriptions = result?.data?.listUserSubscriptions?.items || [];
     
     if (existingSubscriptions.length > 0) {
-      console.log(`🔄 Found ${existingSubscriptions.length} existing active subscriptions to deactivate`);
+      console.log(`🔄 Found ${existingSubscriptions.length} existing active subscriptions to mark as canceled`);
       
       // Deactivate each existing subscription
       const updateMutation = /* GraphQL */ `
@@ -279,30 +279,30 @@ async function deactivateExistingSubscriptions(userId: string) {
       
       for (const sub of existingSubscriptions) {
         try {
-          console.log(`📝 Deactivating subscription ${sub.id} (${sub.planName})`);
+          console.log(`📝 Marking subscription ${sub.id} as canceled (${sub.planName})`);
           
           await client.graphql({
             query: updateMutation,
             variables: {
               input: {
                 id: sub.id,
-                status: 'inactive',
+                status: 'canceled',
                 updatedAt: new Date().toISOString()
               }
             },
             authMode: 'iam'
           });
           
-          console.log(`✅ Successfully deactivated subscription ${sub.id}`);
+          console.log(`✅ Successfully marked subscription ${sub.id} as canceled`);
         } catch (updateError) {
-          console.error(`❌ Failed to deactivate subscription ${sub.id}:`, updateError);
+          console.error(`❌ Failed to mark subscription ${sub.id} as canceled:`, updateError);
         }
       }
     } else {
       console.log('✅ No existing active subscriptions found');
     }
   } catch (error) {
-    console.error('❌ Error checking/deactivating existing subscriptions:', error);
+    console.error('❌ Error checking/marking existing subscriptions as canceled:', error);
   }
 }
 
