@@ -60,6 +60,9 @@ const schema = a.schema({
       createdAt: a.datetime(),
       updatedAt: a.datetime(),
     })
+    .secondaryIndexes((index) => [
+      index("userId").queryField("listUserSubscriptionsByUserId"), // Add GSI for userId queries
+    ])
     .authorization((allow) => [
       allow.ownerDefinedIn("userId"), // Use userId field for ownership
       allow.guest().to(["create", "update", "read", "delete"]) // Allow webhook (IAM) full access

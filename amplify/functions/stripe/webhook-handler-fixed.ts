@@ -7,14 +7,6 @@ import { PLAN_LIMITS } from '../../shared/planConfig';
 // @ts-ignore
 import { env } from '$amplify/env/handleWebhook';
 
-console.log('🚀 FIXED WEBHOOK: Module loading started');
-
-// Environment variables accessed through generated env object
-console.log('🔍 FIXED WEBHOOK: Environment check:', {
-  STRIPE_SECRET_KEY: env.STRIPE_SECRET_KEY ? 'SET' : 'NOT_SET',
-  STRIPE_WEBHOOK_SECRET: env.STRIPE_WEBHOOK_SECRET ? 'SET' : 'NOT_SET'
-});
-
 // Configure Amplify with direct approach that works reliably
 Amplify.configure({
   API: {
@@ -89,19 +81,15 @@ let stripeClient: any = null;
 
 async function initializeStripe() {
   if (!stripeClient && env.STRIPE_SECRET_KEY) {
-    console.log('⚡ FIXED WEBHOOK: Initializing Stripe client...');
     const Stripe = await import('stripe');
     stripeClient = new Stripe.default(env.STRIPE_SECRET_KEY, {
       apiVersion: '2025-09-30.clover',
     });
-    console.log('✅ FIXED WEBHOOK: Stripe client initialized');
   }
   return stripeClient;
 }
 
 export const handler: APIGatewayProxyHandler = async (event) => {
-  console.log('🎯 FIXED WEBHOOK: Handler called');
-  console.log('📝 FIXED WEBHOOK: Event method:', event.httpMethod);
   
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -235,10 +223,10 @@ async function deactivateExistingSubscriptions(userId: string) {
   try {
     console.log('🔍 Checking for existing active subscriptions for user:', userId);
     
-    // Find all active subscriptions for this user
+    // Use the new GSI query for efficient userId lookups with status filtering
     const existingSubscriptionsQuery = /* GraphQL */ `
-      query ListUserSubscriptions($filter: ModelUserSubscriptionFilterInput) {
-        listUserSubscriptions(filter: $filter) {
+      query ListUserSubscriptionsByUserId($userId: ID!, $filter: ModelUserSubscriptionFilterInput) {
+        listUserSubscriptionsByUserId(userId: $userId, filter: $filter) {
           items {
             id
             userId
@@ -253,15 +241,15 @@ async function deactivateExistingSubscriptions(userId: string) {
     const result = await client.graphql({
       query: existingSubscriptionsQuery,
       variables: {
+        userId: userId,
         filter: {
-          userId: { eq: userId },
           status: { eq: 'active' }
         }
       },
       authMode: 'iam'
     }) as any;
     
-    const existingSubscriptions = result?.data?.listUserSubscriptions?.items || [];
+    const existingSubscriptions = result?.data?.listUserSubscriptionsByUserId?.items || [];
     
     if (existingSubscriptions.length > 0) {
       console.log(`🔄 Found ${existingSubscriptions.length} existing active subscriptions to mark as canceled`);
@@ -597,5 +585,3 @@ async function handlePaymentFailed(event: any) {
   
   // Could handle payment failure logic here (suspend access, send notifications, etc.)
 }
-
-console.log('✅ FIXED WEBHOOK: Module loaded completely');

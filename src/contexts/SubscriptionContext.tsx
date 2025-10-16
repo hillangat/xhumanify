@@ -71,33 +71,41 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       }
 
       // Load subscription with proper user filtering and active status
-      const { data } = await client.models.UserSubscription.list({
-        filter: {
-          userId: {
-            eq: currentUser.userId
+      // Get all user subscriptions and filter for active ones in memory
+      let data: any[] = [];
+      try {
+        // Get all subscriptions for this user first
+        const result = await client.models.UserSubscription.list({
+          filter: {
+            userId: {
+              eq: currentUser.userId
+            }
           },
-          status: {
-            eq: 'active'  // Only get active subscriptions
-          }
-        },
-        limit: 1, // Only need one active subscription per user
-        selectionSet: [
-          'id',
-          'userId',
-          'stripeCustomerId',
-          'stripeSubscriptionId',
-          'stripePriceId',
-          'status',
-          'planName',
-          'currentPeriodStart',
-          'currentPeriodEnd',
-          'cancelAtPeriodEnd',
-          'usageCount',
-          'usageLimit',
-          'createdAt',
-          'updatedAt'
-        ]
-      });
+          selectionSet: [
+            'id',
+            'userId',
+            'stripeCustomerId',
+            'stripeSubscriptionId',
+            'stripePriceId',
+            'status',
+            'planName',
+            'currentPeriodStart',
+            'currentPeriodEnd',
+            'cancelAtPeriodEnd',
+            'usageCount',
+            'usageLimit',
+            'createdAt',
+            'updatedAt'
+          ]
+        });
+        
+        // Filter for active subscriptions in memory
+        data = result.data?.filter(sub => sub.status === 'active') || [];
+        
+      } catch (error) {
+        console.error('Failed to load subscription:', error);
+        data = [];
+      }
       
       if (data && data.length > 0) {
         // Use the first (and should be only) subscription for this user
