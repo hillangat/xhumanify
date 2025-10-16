@@ -18,6 +18,14 @@ export const generateHaikuFunction = defineFunction({
   timeoutSeconds: 180, // Increase timeout to 180 seconds for Bedrock API calls
 });
 
+export const detectAIContentFunction = defineFunction({
+  entry: "./detectAIContent.ts",
+  environment: {
+    MODEL_ID,
+  },
+  timeoutSeconds: 180, // Increase timeout to 180 seconds for Bedrock API calls
+});
+
 const schema = a.schema({
   Todo: a
     .model({content: a.string()})
@@ -150,7 +158,13 @@ const schema = a.schema({
     .arguments({ prompt: a.string().required(), tone: a.string() })
     .returns(a.string())
     .authorization((allow) => [allow.publicApiKey()])
-    .handler(a.handler.function(generateHaikuFunction))
+    .handler(a.handler.function(generateHaikuFunction)),
+  detectAIContent: a
+    .query()
+    .arguments({ text: a.string().required() })
+    .returns(a.string())
+    .authorization((allow) => [allow.authenticated()])
+    .handler(a.handler.function(detectAIContentFunction))
 }).authorization((allow) => [allow.resource(handleWebhook)]);
 
 export type Schema = ClientSchema<typeof schema>;

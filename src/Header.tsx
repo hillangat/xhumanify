@@ -81,6 +81,15 @@ export default function Header() {
       }
     },
     {
+      label: 'AI Detection',
+      icon: 'pi pi-search',
+      path: '/ai-detection',
+      command: () => {
+        navigate('/ai-detection');
+        setMobileMenuVisible(false);
+      }
+    },
+    {
       label: 'Pricing',
       icon: 'pi pi-dollar',
       path: '/upgrade',

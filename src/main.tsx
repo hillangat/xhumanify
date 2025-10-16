@@ -8,6 +8,7 @@ import HistoryDetails from "./HistoryDetails.tsx";
 import PricingComponent from "./PricingComponent.tsx";
 import PaymentSuccess from "./PaymentSuccess.tsx";
 import FeatureRequestPage from "./components/FeatureRequestPage.tsx";
+import AIDetectionPage from "./components/AIDetectionPage.tsx";
 import AboutPage from "./components/AboutPage.tsx";
 import TermsOfService from "./components/TermsOfService.tsx";
 import ContactPage from "./components/ContactPage.tsx";
@@ -65,6 +66,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               <Route path="/upgrade" element={<PricingComponent />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />
               <Route path="/features" element={<FeatureRequestPage />} />
+              <Route path="/ai-detection" element={<AIDetectionPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/contact" element={<ContactPage />} />
