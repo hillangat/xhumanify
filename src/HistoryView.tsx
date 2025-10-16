@@ -22,13 +22,19 @@ interface HistoryItem {
 export default function HistoryView() {
   const client = generateClient<Schema>();
   const [history, setHistory] = useState<HistoryItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [deletingItems, setDeletingItems] = useState<Set<string>>(new Set());
   const toast = useRef<Toast>(null);
   const navigate = useNavigate();
 
-  const loadHistory = async () => {
-    setIsLoading(true);
+  const loadHistory = async (isInitial = false) => {
+    if (isInitial) {
+      setIsInitialLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
+    
     try {
       const { data } = await client.models.UserContentHistory.list({
         limit: 50
@@ -45,7 +51,11 @@ export default function HistoryView() {
     } catch (error) {
       console.error('Failed to load history:', error);
     } finally {
-      setIsLoading(false);
+      if (isInitial) {
+        setIsInitialLoading(false);
+      } else {
+        setIsRefreshing(false);
+      }
     }
   };
 
@@ -56,7 +66,7 @@ export default function HistoryView() {
     
     try {
       await client.models.UserContentHistory.delete({ id });
-      await loadHistory();
+      await loadHistory(false); // Don't show full page loading
       
       toast.current?.show({
         severity: 'success',
@@ -101,7 +111,7 @@ export default function HistoryView() {
   };
 
   const handleRefreshHistory = () => {
-    loadHistory();
+    loadHistory(false); // Use refresh loading, not initial loading
   };
 
   const handleGoToHome = () => {
@@ -109,7 +119,7 @@ export default function HistoryView() {
   };
 
   useEffect(() => {
-    loadHistory();
+    loadHistory(true); // This is initial loading
   }, []);
 
   // Calculate stats for the header
@@ -188,21 +198,28 @@ export default function HistoryView() {
       ]}
       headerGradient="linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%)"
       animated={true}
-      loading={isLoading}
+      loading={isInitialLoading}
     >
       <main className="history-view-content">
         <ConfirmDialog />
-        <Toast ref={toast} position="top-right" />
+        <Toast ref={toast} position="top-right" className="app-toast" />
 
-        {!isLoading && history.length === 0 ? (
+        {!isInitialLoading && history.length === 0 ? (
           <EmptyContent
             icon={<MdHistory size={35} />}
             title="No History Found"
             subtitle="Start humanizing content to see your history here."
           />
-        ) : !isLoading && (
-          <div className="history-grid">
-            {history.map((item) => (
+        ) : !isInitialLoading && (
+          <>
+            {isRefreshing && (
+              <div className="refresh-indicator">
+                <i className="pi pi-spin pi-spinner" style={{ marginRight: '0.5rem' }} />
+                Refreshing history...
+              </div>
+            )}
+            <div className="history-grid">
+              {history.map((item) => (
               <Card 
                 key={item.id} 
                 className="history-card"
@@ -267,7 +284,8 @@ export default function HistoryView() {
                 </div>
               </Card>
             ))}
-          </div>
+            </div>
+          </>
         )}
       </main>
     </FeaturePage>

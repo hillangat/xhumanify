@@ -110,7 +110,7 @@ const UserFeedbackDemo: React.FC = () => {
       </Dialog>
 
       {/* Toast for notifications */}
-      <Toast ref={toast} position="top-right" />
+      <Toast ref={toast} position="top-right" className="app-toast" />
     </div>
   );
 };

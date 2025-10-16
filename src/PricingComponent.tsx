@@ -589,7 +589,7 @@ const PricingComponent: React.FC = () => {
       </div>
       
       {/* Toast Notifications */}
-      <Toast ref={toast} position="top-right" />
+      <Toast ref={toast} position="top-right" className="app-toast" />
       </div>
     </FeaturePage>
   );

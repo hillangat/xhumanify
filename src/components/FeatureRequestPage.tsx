@@ -727,7 +727,7 @@ const FeatureRequestPage: React.FC = () => {
       className="feature-request-page-wrapper"
     >
       <div className="feature-request-page">
-        <Toast ref={toast} />
+        <Toast ref={toast} position="top-right" className="app-toast" />
 
         {!currentUser && !loading ? (
           <div className="auth-required-message">

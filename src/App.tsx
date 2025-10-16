@@ -348,60 +348,62 @@ export default function App() {
   }, [loading, isInitialLoad]);
 
   return (
-    <FeaturePage
-      title="Humanize AI Content"
-      subtitle="Transform AI Text into Authentic Human Writing"
-      description="Give AI content a human touch with the most advanced tool. Turn stiff, robotic AI text into writing that feels genuinely human."
-      icon="pi pi-sparkles"
-      badge={currentTier ? {
-        text: `${currentTier.charAt(0).toUpperCase() + currentTier.slice(1)} Plan`,
-        severity: currentTier === 'free' ? 'info' : currentTier === 'lite' ? 'success' : currentTier === 'standard' ? 'warning' : 'danger'
-      } : undefined}
-      stats={[
-        {
-          label: "Current Plan",
-          value: currentTier || "Loading",
-          icon: "pi pi-star",
-          color: "success"
-        },
-        {
-          label: "Monthly Limit",
-          value: usageLimit === 999999 ? "Unlimited" : usageLimit.toString(),
-          icon: "pi pi-calendar",
-          color: "primary"
-        },
-        {
-          label: "Words Used",
-          value: usageCount.toString(),
-          icon: "pi pi-chart-bar",
-          color: "info"
-        },
-        {
-          label: "Available",
-          value: usageLimit === 999999 ? "Unlimited" : Math.max(0, usageLimit - usageCount).toString(),
-          icon: "pi pi-check-circle",
-          color: usageLimit - usageCount > 1000 ? "success" : "warning"
-        }
-      ]}
-      actions={[
-        {
-          label: "View History",
-          icon: "pi pi-history",
-          onClick: () => window.location.href = '/history',
-          outlined: true
-        },
-        ...(currentTier !== 'pro' ? [{
-          label: "Upgrade Plan",
-          icon: "pi pi-star",
-          onClick: () => window.location.href = '/upgrade',
-          variant: "primary" as const
-        }] : [])
-      ]}
-      className="app-main-page"
-      loading={isInitialLoad && loading}
-    >
-      <Toast ref={toast} position="top-right" />
+    <>
+      <Toast ref={toast} position="top-right" className="app-toast" />
       <ConfirmPopup />
+      
+      <FeaturePage
+        title="Humanize AI Content"
+        subtitle="Transform AI Text into Authentic Human Writing"
+        description="Give AI content a human touch with the most advanced tool. Turn stiff, robotic AI text into writing that feels genuinely human."
+        icon="pi pi-sparkles"
+        badge={currentTier ? {
+          text: `${currentTier.charAt(0).toUpperCase() + currentTier.slice(1)} Plan`,
+          severity: currentTier === 'free' ? 'info' : currentTier === 'lite' ? 'success' : currentTier === 'standard' ? 'warning' : 'danger'
+        } : undefined}
+        stats={[
+          {
+            label: "Current Plan",
+            value: currentTier || "Loading",
+            icon: "pi pi-star",
+            color: "success"
+          },
+          {
+            label: "Monthly Limit",
+            value: usageLimit === 999999 ? "Unlimited" : usageLimit.toString(),
+            icon: "pi pi-calendar",
+            color: "primary"
+          },
+          {
+            label: "Words Used",
+            value: usageCount.toString(),
+            icon: "pi pi-chart-bar",
+            color: "info"
+          },
+          {
+            label: "Available",
+            value: usageLimit === 999999 ? "Unlimited" : Math.max(0, usageLimit - usageCount).toString(),
+            icon: "pi pi-check-circle",
+            color: usageLimit - usageCount > 1000 ? "success" : "warning"
+          }
+        ]}
+        actions={[
+          {
+            label: "View History",
+            icon: "pi pi-history",
+            onClick: () => window.location.href = '/history',
+            outlined: true
+          },
+          ...(currentTier !== 'pro' ? [{
+            label: "Upgrade Plan",
+            icon: "pi pi-star",
+            onClick: () => window.location.href = '/upgrade',
+            variant: "primary" as const
+          }] : [])
+        ]}
+        className="app-main-page"
+        loading={isInitialLoad && loading}
+      >
 
       <main className="app-content">
         {/* Main Action Bar */}
@@ -674,6 +676,7 @@ export default function App() {
           outputWords={countWords(answer)}
         />
       )}
-    </FeaturePage>
+      </FeaturePage>
+    </>
   );
 }

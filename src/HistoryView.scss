@@ -3,6 +3,29 @@
   max-width: 1200px;
   margin: 0 auto;
   
+  .refresh-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    background: var(--surface-100);
+    border: 1px solid var(--surface-border);
+    border-radius: 8px;
+    color: var(--text-color-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    
+    .p-dark & {
+      background: var(--surface-800);
+      border-color: var(--surface-700);
+    }
+    
+    .pi-spinner {
+      color: var(--primary-color);
+    }
+  }
+  
   .history-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
