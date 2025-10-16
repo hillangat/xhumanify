@@ -59,7 +59,8 @@ const FeatureRequestPage: React.FC = () => {
   const toast = useRef<Toast>(null);
 
   const [features, setFeatures] = useState<FeatureRequest[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [votingLoading, setVotingLoading] = useState<Set<string>>(new Set());
   const [showNewFeatureDialog, setShowNewFeatureDialog] = useState(false);
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -127,11 +128,11 @@ const FeatureRequestPage: React.FC = () => {
       setCurrentUser(user);
       // Load user-specific data after authentication succeeds
       await loadUserVotes(user.username);
-      await loadFeatures();
+      await loadFeatures(true); // Initial loading
     } catch (error) {
       console.log('Authentication failed or user not signed in:', error);
       setCurrentUser(null);
-      setLoading(false);
+      setInitialLoading(false);
 
       // For debugging: show what kind of error this is
       if (error instanceof Error) {
@@ -152,9 +153,13 @@ const FeatureRequestPage: React.FC = () => {
     }
   };
 
-  const loadFeatures = async () => {
+  const loadFeatures = async (isInitial = false) => {
     try {
-      setLoading(true);
+      if (isInitial) {
+        setInitialLoading(true);
+      } else {
+        setRefreshing(true);
+      }
 
       const { data } = await client.models.FeatureRequest.list({
         limit: 100
@@ -182,13 +187,17 @@ const FeatureRequestPage: React.FC = () => {
         life: 5000
       });
     } finally {
-      setLoading(false);
+      if (isInitial) {
+        setInitialLoading(false);
+      } else {
+        setRefreshing(false);
+      }
     }
   };
 
   const loadFeaturesAsGuest = async () => {
     try {
-      setLoading(true);
+      setInitialLoading(true);
       console.log('Attempting to load features as guest...');
 
       // Try with different auth modes for guest access
@@ -228,7 +237,7 @@ const FeatureRequestPage: React.FC = () => {
         life: 5000
       });
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -291,7 +300,7 @@ const FeatureRequestPage: React.FC = () => {
       });
 
       // Refresh the features list
-      await loadFeatures();
+      await loadFeatures(false); // Don't show full page loading
 
     } catch (error) {
       console.error('Error deleting feature:', error);
@@ -433,7 +442,7 @@ const FeatureRequestPage: React.FC = () => {
       });
 
       // Refresh feature data to show updated counts
-      await loadFeatures();
+      await loadFeatures(false); // Don't show full page loading
 
       // Update selectedFeature if sidebar is open
       if (selectedFeature && selectedFeature.id === featureId) {
@@ -722,14 +731,14 @@ const FeatureRequestPage: React.FC = () => {
           onClick: () => setShowNewFeatureDialog(true),
           variant: "primary"
         }
-      ]}
-      loading={loading}
+      ]}  
+      loading={initialLoading}
       className="feature-request-page-wrapper"
     >
       <div className="feature-request-page">
         <Toast ref={toast} position="top-right" className="app-toast" />
 
-        {!currentUser && !loading ? (
+        {!currentUser && !initialLoading ? (
           <div className="auth-required-message">
             <Card>
               <div style={{ textAlign: 'center', padding: '2rem' }}>
@@ -742,13 +751,19 @@ const FeatureRequestPage: React.FC = () => {
         ) : (
           <>
             <div className="content-container">
+            {refreshing && (
+              <div className="refresh-indicator">
+                <i className="pi pi-spin pi-spinner" style={{ marginRight: '0.5rem' }} />
+                Refreshing features...
+              </div>
+            )}
             <TabView activeIndex={activeTab} onTabChange={(e) => setActiveTab(e.index)}>
               <TabPanel header="Popular" leftIcon="pi pi-star">
                 <DataView
                   value={getTabFilteredFeatures(0)}
                   itemTemplate={renderFeatureCard}
                   layout="grid"
-                  loading={loading}
+                  loading={initialLoading}
                   emptyMessage="No feature requests found"
                   className="features-grid"
                 />
@@ -759,7 +774,7 @@ const FeatureRequestPage: React.FC = () => {
                   value={getTabFilteredFeatures(1)}
                   itemTemplate={renderFeatureCard}
                   layout="grid"
-                  loading={loading}
+                  loading={initialLoading}
                   emptyMessage="No feature requests found"
                   className="features-grid"
                 />
@@ -770,7 +785,7 @@ const FeatureRequestPage: React.FC = () => {
                   value={getTabFilteredFeatures(2)}
                   itemTemplate={renderFeatureCard}
                   layout="grid"
-                  loading={loading}
+                  loading={initialLoading}
                   emptyMessage="No features in progress"
                   className="features-grid"
                 />
@@ -781,7 +796,7 @@ const FeatureRequestPage: React.FC = () => {
                   value={getTabFilteredFeatures(3)}
                   itemTemplate={renderFeatureCard}
                   layout="grid"
-                  loading={loading}
+                  loading={initialLoading}
                   emptyMessage="No completed features"
                   className="features-grid"
                 />
