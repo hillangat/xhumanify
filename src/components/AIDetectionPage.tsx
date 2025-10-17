@@ -5,8 +5,11 @@ import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Toast } from 'primereact/toast';
+import { ProgressBar } from 'primereact/progressbar';
+import { Chip } from 'primereact/chip';
 import FeaturePage from './FeaturePage';
 import AIDetectionResults from './AIDetectionResults';
+import useRetryableRequest from '../hooks/useRetryableRequest';
 import './AIDetectionPage.scss';
 
 interface DetectionResponse {
@@ -48,51 +51,62 @@ const AIDetectionPage: React.FC = () => {
   const toast = useRef<Toast>(null);
 
   const [inputText, setInputText] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<DetectionResponse | null>(null);
-  const [isRetrying, setIsRetrying] = useState(false);
 
-  // Advanced retry logic with exponential backoff
-  const retryWithBackoff = async (fn: () => Promise<any>, maxRetries: number = 4): Promise<any> => {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        return await fn();
-      } catch (error: any) {
-        console.error(`Attempt ${attempt} failed:`, error);
+  // Retryable request hook for AI detection
+  const {
+    execute: executeAnalysis,
+    cancel,
+    isLoading: isAnalyzing,
+    isRetrying,
+    retryCount,
+    nextRetryIn,
+    error
+  } = useRetryableRequest(
+    async () => {
+      const response = await client.queries.detectAIContent({ text: inputText });
+      if (!response.data) {
+        throw new Error('No response data received');
+      }
+      return JSON.parse(response.data) as DetectionResponse;
+    },
+    {
+      maxRetries: 3,
+      baseDelay: 5000, // 5 seconds
+      maxDelay: 60000, // 60 seconds
+      onRetry: (attempt, delay) => {
+        toast.current?.show({
+          severity: 'info',
+          summary: 'Retrying Analysis',
+          detail: `Service is busy. Retrying in ${Math.ceil(delay / 1000)} seconds... (Attempt ${attempt}/3)`,
+          life: Math.min(delay, 5000)
+        });
+      },
+      onError: (error, _attempt) => {
+        console.error('AI detection failed after all retries:', error);
         
-        // Check if it's a throttling error
-        const isThrottling = error.message?.includes('ThrottlingException') || 
-                           error.message?.includes('Too many requests') ||
-                           error.message?.includes('rate limit') ||
-                           error.name === 'ThrottlingException';
+        const isThrottling = error?.metadata?.isThrottling || 
+                           error?.error?.includes('Throttling') ||
+                           error?.error?.includes('Too many requests');
         
-        if (isThrottling && attempt < maxRetries) {
-          const delay = Math.min(Math.pow(2, attempt) * 2000 + Math.random() * 1000, 30000);
-          console.log(`Throttling detected, waiting ${delay}ms before retry ${attempt + 1}...`);
-          
-          setIsRetrying(true);
+        if (isThrottling) {
           toast.current?.show({
-            severity: 'info',
-            summary: 'Service Busy',
-            detail: `Analysis queue is busy. Retrying in ${Math.round(delay / 1000)} seconds... (Attempt ${attempt}/${maxRetries})`,
-            life: delay > 5000 ? delay : 5000
+            severity: 'error',
+            summary: 'Service Unavailable',
+            detail: 'The AI detection service is experiencing high demand. Please try again in a few minutes.',
+            life: 8000
           });
-          
-          await new Promise(resolve => setTimeout(resolve, delay));
-          setIsRetrying(false);
-          continue;
+        } else {
+          toast.current?.show({
+            severity: 'error',
+            summary: 'Analysis Failed',
+            detail: error?.analysis?.summary || 'Unable to complete AI detection analysis. Please try again.',
+            life: 5000
+          });
         }
-        
-        // For non-throttling errors or final attempt, throw the error
-        if (attempt === maxRetries) {
-          throw error;
-        }
-        
-        // Short delay for other types of errors
-        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
       }
     }
-  };
+  );
 
   const handleAnalyzeText = async () => {
     if (!inputText.trim()) {
@@ -105,99 +119,63 @@ const AIDetectionPage: React.FC = () => {
       return;
     }
 
-    setIsAnalyzing(true);
     setAnalysisResult(null);
 
     try {
       toast.current?.show({
         severity: 'info',
         summary: 'Analysis Started',
-        detail: 'Running AI detection analysis. This may take a moment...',
+        detail: 'Running AI detection analysis...',
         life: 3000
       });
 
-      const response = await retryWithBackoff(async () => {
-        return await client.queries.detectAIContent({ text: inputText });
-      });
-      
-      if (response.data) {
-        const result: DetectionResponse = JSON.parse(response.data);
-        setAnalysisResult(result);
+      const result = await executeAnalysis();
+      setAnalysisResult(result);
 
-        toast.current?.show({
-          severity: 'success',
-          summary: 'Analysis Complete',
-          detail: `AI detection analysis completed with ${result.analysis.flags.length} flags identified.`,
-          life: 3000
-        });
-      }
+      toast.current?.show({
+        severity: 'success',
+        summary: 'Analysis Complete',
+        detail: `AI detection analysis completed with ${result.analysis.flags.length} flags identified.`,
+        life: 3000
+      });
     } catch (error: any) {
-      console.error('AI detection analysis failed:', error);
-      
-      const isThrottling = error.message?.includes('ThrottlingException') || 
-                         error.message?.includes('Too many requests') ||
-                         error.message?.includes('rate limit');
-      
-      if (isThrottling) {
-        toast.current?.show({
-          severity: 'warn',
-          summary: 'Service Temporarily Unavailable',
-          detail: 'AI detection service is experiencing high demand. Please wait a few moments and try again.',
-          life: 8000
-        });
-      } else {
-        toast.current?.show({
-          severity: 'error',
-          summary: 'Analysis Failed',
-          detail: 'Failed to analyze text for AI content. Please try again in a moment.',
-          life: 5000
-        });
-      }
-    } finally {
-      setIsAnalyzing(false);
-      setIsRetrying(false);
+      // Error handling is done in the onError callback
     }
   };
 
   const clearAnalysis = () => {
-    setInputText('');
     setAnalysisResult(null);
+    setInputText('');
+    cancel(); // Cancel any ongoing retries
+  };
+
+  const retryAnalysis = () => {
+    handleAnalyzeText();
   };
 
   return (
     <FeaturePage
       title="AI Content Detection"
-      subtitle="Analyze Text for AI-Generated Content Patterns"
-      description="Our advanced AI detection system analyzes text for patterns commonly found in AI-generated content. Get detailed feedback with specific flags, confidence scores, and recommendations for making content more human-like."
-      icon="pi pi-search"
-      badge={{
-        text: "Advanced Analysis",
-        severity: "warning"
-      }}
+      subtitle="Advanced AI detection to identify artificially generated text patterns"
+      description="Our sophisticated AI detection system analyzes text for patterns commonly found in AI-generated content, providing detailed insights and recommendations for improvement."
       stats={[
         {
-          label: "Detection Accuracy",
-          value: "94%",
+          label: "Accuracy Rate",
+          value: "94.2%",
           icon: "pi pi-check-circle",
           color: "success"
         },
         {
-          label: "Analysis Types",
-          value: "12+",
-          icon: "pi pi-list",
-          color: "info"
-        },
-        {
-          label: "Flag Categories",
-          value: "15+",
-          icon: "pi pi-flag",
-          color: "warning"
-        },
-        {
-          label: "Response Time",
-          value: "<10s",
+          label: "Analysis Speed", 
+          value: "<30s",
           icon: "pi pi-clock",
           color: "primary"
+        },
+        {
+          label: "Pattern Types",
+          value: "11+",
+          icon: "pi pi-list",
+          color: "info"
         }
       ]}
       breadcrumbs={[
@@ -210,7 +188,13 @@ const AIDetectionPage: React.FC = () => {
           icon: "pi pi-refresh",
           onClick: clearAnalysis,
           variant: "secondary"
-        }
+        },
+        ...(error && error.metadata?.retryable ? [{
+          label: "Retry Analysis",
+          icon: "pi pi-replay", 
+          onClick: retryAnalysis,
+          variant: "primary" as const
+        }] : [])
       ]}
       loading={false}
       className="ai-detection-page-wrapper"
@@ -242,21 +226,59 @@ const AIDetectionPage: React.FC = () => {
               <div className="input-footer">
                 <div className="text-stats">
                   <span>Characters: {inputText.length}</span>
-                  <span>Words: {inputText.trim() ? inputText.trim().split(/\\s+/).length : 0}</span>
+                  <span>Words: {inputText.trim() ? inputText.trim().split(/\s+/).length : 0}</span>
                 </div>
                 
-                <Button
-                  label={isAnalyzing ? (isRetrying ? "Retrying..." : "Analyzing...") : "Analyze Text"}
-                  icon={isAnalyzing ? "pi pi-spin pi-spinner" : "pi pi-search"}
-                  onClick={handleAnalyzeText}
-                  disabled={isAnalyzing || !inputText.trim()}
-                  className="analyze-button"
-                  size="large"
-                  severity={isRetrying ? "warning" : undefined}
-                />
+                <div className="analysis-controls">
+                  {isRetrying && (
+                    <div className="retry-status">
+                      <Chip 
+                        label={`Retrying in ${nextRetryIn}s (${retryCount}/3)`}
+                        icon="pi pi-clock"
+                        className="retry-chip"
+                      />
+                      <Button
+                        label="Cancel"
+                        icon="pi pi-times"
+                        onClick={cancel}
+                        size="small"
+                        text
+                      />
+                    </div>
+                  )}
+                  
+                  <Button
+                    label={isAnalyzing ? (isRetrying ? "Retrying..." : "Analyzing...") : "Analyze Text"}
+                    icon={isAnalyzing ? "pi pi-spin pi-spinner" : "pi pi-search"}
+                    onClick={handleAnalyzeText}
+                    disabled={isAnalyzing || !inputText.trim()}
+                    className="analyze-button"
+                    size="large"
+                    severity={isRetrying ? "warning" : undefined}
+                  />
+                </div>
               </div>
             </div>
           </Card>
+
+          {/* Progress indicator during retries */}
+          {isRetrying && (
+            <Card className="retry-progress">
+              <div className="retry-info">
+                <h4>Analysis in Progress</h4>
+                <p>The service is experiencing high demand. Automatically retrying...</p>
+                <ProgressBar 
+                  value={((3 - retryCount) / 3) * 100} 
+                  showValue={false}
+                  className="retry-progress-bar"
+                />
+                <div className="retry-details">
+                  <span>Attempt {retryCount} of 3</span>
+                  {nextRetryIn > 0 && <span>Next retry in {nextRetryIn}s</span>}
+                </div>
+              </div>
+            </Card>
+          )}
 
           {/* Results Section */}
           {analysisResult && (

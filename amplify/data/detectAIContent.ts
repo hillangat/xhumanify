@@ -11,10 +11,10 @@ const client = new BedrockRuntimeClient({
   maxAttempts: 8 // Increased max attempts
 });
 
-// Advanced retry function with circuit breaker pattern
-async function invokeWithAdvancedRetry(
+// Fast-fail retry function for improved UX
+async function invokeWithFastRetry(
   command: InvokeModelCommand, 
-  maxAttempts: number = 8
+  maxAttempts: number = 3 // Reduced attempts for faster failure
 ): Promise<any> {
   let lastError;
   
@@ -26,33 +26,36 @@ async function invokeWithAdvancedRetry(
       lastError = error;
       console.error(`Attempt ${attempt} failed:`, error.message);
       
-      // Check if it's a throttling error
+      // For throttling errors, fail fast and let frontend handle retries
       if (error.name === 'ThrottlingException' || error.$metadata?.httpStatusCode === 429) {
-        if (attempt === maxAttempts) {
-          console.error(`All ${maxAttempts} attempts failed with throttling. Giving up.`);
-          break;
+        if (attempt === 1) {
+          // Immediate throttling - fail fast
+          console.log('Immediate throttling detected. Failing fast for frontend retry.');
+          throw {
+            ...error,
+            isThrottling: true,
+            retryAfter: 30, // Suggest 30 second wait
+            fastFail: true
+          };
+        } else if (attempt < maxAttempts) {
+          // Quick retry with minimal delay
+          const quickDelay = 2000 + (Math.random() * 1000); // 2-3 seconds
+          console.log(`Quick throttling retry. Waiting ${quickDelay}ms...`);
+          await new Promise(resolve => setTimeout(resolve, quickDelay));
+          continue;
         }
-        
-        // Calculate progressive delay with exponential backoff and jitter
-        const baseDelay = Math.min(Math.pow(2, attempt) * 2000, 300000); // 2s, 4s, 8s, 16s, 32s, 64s, 120s, 300s max
-        const jitter = Math.random() * 2000; // Add 0-2s random jitter
-        const totalDelay = Math.floor(baseDelay + jitter);
-        
-        console.log(`Throttling detected. Waiting ${totalDelay}ms before retry ${attempt + 1}...`);
-        await new Promise(resolve => setTimeout(resolve, totalDelay));
-        continue;
       }
       
-      // For non-throttling errors, use shorter delays
+      // For non-throttling errors, don't retry
       if (error.name === 'ValidationException' || error.name === 'AccessDeniedException') {
         console.error(`Non-recoverable error: ${error.name}. Not retrying.`);
         break;
       }
       
-      // For other errors, wait before retry
+      // For other errors, one quick retry only
       if (attempt < maxAttempts) {
-        const shortDelay = Math.min(1000 * attempt, 10000); // 1s, 2s, 3s, up to 10s
-        console.log(`General error. Waiting ${shortDelay}ms before retry...`);
+        const shortDelay = 1000; // Just 1 second
+        console.log(`General error. Quick retry in ${shortDelay}ms...`);
         await new Promise(resolve => setTimeout(resolve, shortDelay));
       }
     }
@@ -61,13 +64,15 @@ async function invokeWithAdvancedRetry(
   throw lastError;
 }
 
-// Request queue to handle burst traffic
+// Simplified request queue with fast-fail approach
 class RequestQueue {
   private static instance: RequestQueue;
   private queue: Array<{ resolve: Function; reject: Function; command: InvokeModelCommand }> = [];
   private processing: boolean = false;
-  private readonly maxConcurrent = 2; // Limit concurrent requests
+  private readonly maxConcurrent = 1; // Reduced to prevent cascading throttling
   private activeRequests = 0;
+  private lastThrottleTime = 0;
+  private readonly throttleCooldown = 30000; // 30 seconds
   
   static getInstance(): RequestQueue {
     if (!RequestQueue.instance) {
@@ -77,6 +82,18 @@ class RequestQueue {
   }
   
   async enqueue(command: InvokeModelCommand): Promise<any> {
+    // Check if we're in throttle cooldown
+    const now = Date.now();
+    if (now - this.lastThrottleTime < this.throttleCooldown) {
+      throw {
+        name: 'ThrottlingException',
+        message: 'Service is in throttle cooldown period',
+        isThrottling: true,
+        retryAfter: Math.ceil((this.throttleCooldown - (now - this.lastThrottleTime)) / 1000),
+        fastFail: true
+      };
+    }
+    
     return new Promise((resolve, reject) => {
       this.queue.push({ resolve, reject, command });
       this.processQueue();
@@ -94,18 +111,21 @@ class RequestQueue {
       const { resolve, reject, command } = this.queue.shift()!;
       this.activeRequests++;
       
-      // Process request with staggered delays to avoid burst
-      setTimeout(async () => {
-        try {
-          const result = await invokeWithAdvancedRetry(command);
-          resolve(result);
-        } catch (error) {
-          reject(error);
-        } finally {
-          this.activeRequests--;
-          this.processQueue(); // Process next item
+      // Process immediately without artificial delays
+      try {
+        const result = await invokeWithFastRetry(command);
+        resolve(result);
+      } catch (error: any) {
+        // Track throttling for cooldown management
+        if (error.isThrottling || error.name === 'ThrottlingException') {
+          this.lastThrottleTime = Date.now();
         }
-      }, this.activeRequests * 500); // Stagger by 500ms per concurrent request
+        reject(error);
+      } finally {
+        this.activeRequests--;
+        // Small delay before processing next to prevent burst
+        setTimeout(() => this.processQueue(), 100);
+      }
     }
     
     this.processing = false;
@@ -424,7 +444,7 @@ ${textToAnalyze.length > 4000 ? textToAnalyze.substring(0, 4000) + "..." : textT
     console.error('AI Detection analysis failed:', error);
     
     // Create a proper fallback response structure
-    const createErrorResponse = (summary: string, errorType?: string) => ({
+    const createErrorResponse = (summary: string, errorType?: string, metadata?: any) => ({
       analysis: {
         overallScore: 0,
         confidence: "low" as const,
@@ -454,14 +474,21 @@ ${textToAnalyze.length > 4000 ? textToAnalyze.substring(0, 4000) + "..." : textT
         actualTotalTokens: 0,
         estimatedWords: 0
       },
-      error: errorType || (error instanceof Error ? error.message : 'Unknown error occurred')
+      error: errorType || (error instanceof Error ? error.message : 'Unknown error occurred'),
+      ...(metadata && { metadata })
     });
     
-    // Enhanced error handling with specific throttling response
-    if (error.name === 'ThrottlingException' || error.$metadata?.httpStatusCode === 429) {
+    // Enhanced error handling with fast-fail throttling response
+    if (error.name === 'ThrottlingException' || error.$metadata?.httpStatusCode === 429 || error.isThrottling) {
       return JSON.stringify(createErrorResponse(
-        "Analysis temporarily unavailable due to high demand. Our AI detection service is experiencing heavy traffic. Please try again in a few moments.",
-        'ThrottlingException: Service temporarily unavailable due to high demand'
+        "Service is experiencing high demand. Please try again in a moment.",
+        'ThrottlingException',
+        {
+          isThrottling: true,
+          retryAfter: error.retryAfter || 30,
+          fastFail: error.fastFail || false,
+          retryable: true
+        }
       ));
     }
     
