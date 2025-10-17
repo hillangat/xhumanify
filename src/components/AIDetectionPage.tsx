@@ -157,10 +157,10 @@ const AIDetectionPage: React.FC = () => {
 
   const getConfidenceColor = (confidence: string): string => {
     switch (confidence) {
-      case 'very_high': return '#dc3545';
-      case 'high': return '#fd7e14';
-      case 'medium': return '#ffc107';
-      case 'low': return '#20c997';
+      case 'very_high': return '#28a745'; // Green - highest confidence is good
+      case 'high': return '#20c997';      // Teal - high confidence is good
+      case 'medium': return '#ffc107';    // Yellow - medium confidence is neutral
+      case 'low': return '#dc3545';       // Red - low confidence is concerning
       default: return '#6c757d';
     }
   };
@@ -171,6 +171,15 @@ const AIDetectionPage: React.FC = () => {
     if (score >= 40) return '#ffc107';
     if (score >= 20) return '#17a2b8';
     return '#28a745';
+  };
+
+  const getScoreSeverityColor = (score: number): string => {
+    // For confidence badges - use severity colors based on how concerning the AI detection is
+    if (score >= 80) return '#dc3545';  // Critical - very likely AI
+    if (score >= 60) return '#fd7e14';  // High - likely AI  
+    if (score >= 40) return '#ffc107';  // Medium - possibly AI
+    if (score >= 20) return '#20c997';  // Low - unlikely AI
+    return '#28a745';                   // Very low - likely human
   };
 
   const getScoreLabel = (score: number): string => {
@@ -294,7 +303,10 @@ const AIDetectionPage: React.FC = () => {
                 
                 <div className="score-content">
                   <div className="overall-score">
-                    <div className="score-circle">
+                    <div 
+                      className="score-circle"
+                      style={{ borderColor: getScoreSeverityColor(analysisResult.overallScore) }}
+                    >
                       <span className="score-number" style={{ color: getScoreColor(analysisResult.overallScore) }}>
                         {analysisResult.overallScore}%
                       </span>
@@ -304,7 +316,7 @@ const AIDetectionPage: React.FC = () => {
                     <div className="confidence-badge">
                       <Badge
                         value={`${analysisResult.confidence.replace('_', ' ').toUpperCase()} CONFIDENCE`}
-                        style={{ backgroundColor: getConfidenceColor(analysisResult.confidence) }}
+                        style={{ backgroundColor: getScoreSeverityColor(analysisResult.overallScore) }}
                       />
                     </div>
                   </div>
@@ -384,7 +396,28 @@ const AIDetectionPage: React.FC = () => {
                   <div className="flags-list">
                     <h4>Detailed Flags</h4>
                     {analysisResult.flags.map((flag, index) => (
-                      <Panel key={index} className="flag-panel" toggleable collapsed>
+                      <Panel 
+                        key={index} 
+                        className="flag-panel" 
+                        toggleable 
+                        collapsed
+                        header={
+                          <div className="panel-header">
+                            <span 
+                              className="flag-type"
+                              style={{ color: getSeverityColor(flag.severity) }}
+                            >
+                              {flag.type.replace(/_/g, ' ').toUpperCase()}
+                            </span>
+                            <span 
+                              className="flag-confidence"
+                              style={{ backgroundColor: getSeverityColor(flag.severity) }}
+                            >
+                              {flag.confidence}%
+                            </span>
+                          </div>
+                        }
+                      >
                         <div className="flag-summary">
                           <div className="flag-info">
                             <Tag 

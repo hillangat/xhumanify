@@ -425,6 +425,31 @@
             border: 1px solid var(--surface-border);
             border-radius: 8px;
 
+            // Custom panel header styles
+            .panel-header {
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              gap: 1rem;
+              font-weight: 600;
+              color: var(--text-color);
+
+              .flag-type {
+                font-size: 0.9rem;
+                font-weight: 600;
+                // Color will be set inline based on severity
+              }
+
+              .flag-confidence {
+                font-size: 0.85rem;
+                color: white !important;
+                padding: 0.25rem 0.5rem;
+                border-radius: 12px;
+                font-weight: 600;
+                // Background color will be set inline based on severity
+              }
+            }
+
             .flag-summary {
               display: flex;
               align-items: center;
