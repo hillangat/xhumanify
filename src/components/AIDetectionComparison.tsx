@@ -65,6 +65,57 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [rawAnalysis, setRawAnalysis] = useState<DetectionResponse | null>(null);
   const [processedAnalysis, setProcessedAnalysis] = useState<DetectionResponse | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
+
+  // Advanced retry logic with exponential backoff
+  const retryWithBackoff = async (fn: () => Promise<any>, maxRetries: number = 3): Promise<any> => {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await fn();
+      } catch (error: any) {
+        console.error(`Attempt ${attempt} failed:`, error);
+        
+        // Check if it's a throttling error
+        const isThrottling = error.message?.includes('ThrottlingException') || 
+                           error.message?.includes('Too many requests') ||
+                           error.message?.includes('rate limit') ||
+                           error.name === 'ThrottlingException';
+        
+        if (isThrottling && attempt < maxRetries) {
+          const delay = Math.min(Math.pow(2, attempt) * 2000 + Math.random() * 1000, 30000);
+          console.log(`Throttling detected, waiting ${delay}ms before retry ${attempt + 1}...`);
+          
+          setIsRetrying(true);
+          toast.current?.show({
+            severity: 'info',
+            summary: 'Service Busy',
+            detail: `Analysis queue is busy. Retrying in ${Math.round(delay / 1000)} seconds... (Attempt ${attempt}/${maxRetries})`,
+            life: delay > 5000 ? delay : 5000
+          });
+          
+          await new Promise(resolve => setTimeout(resolve, delay));
+          setIsRetrying(false);
+          continue;
+        }
+        
+        // For non-throttling errors or final attempt, throw the error
+        if (attempt === maxRetries) {
+          throw error;
+        }
+        
+        // Short delay for other types of errors
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+  };
+
+  const analyzeWithRetry = async (text: string, type: 'raw' | 'processed') => {
+    return retryWithBackoff(async () => {
+      const response = await client.queries.detectAIContent({ text });
+      return { type, response };
+    }, 4); // Allow up to 4 attempts for each analysis
+  };
 
   const handleAnalyzeBoth = async () => {
     if (!rawText.trim() && !processedText.trim()) {
@@ -80,23 +131,25 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
     setIsAnalyzing(true);
     setRawAnalysis(null);
     setProcessedAnalysis(null);
+    setRetryCount(0);
 
     try {
       const promises = [];
       
       if (rawText.trim()) {
-        promises.push(
-          client.queries.detectAIContent({ text: rawText })
-            .then(response => ({ type: 'raw', response }))
-        );
+        promises.push(analyzeWithRetry(rawText, 'raw'));
       }
       
       if (processedText.trim()) {
-        promises.push(
-          client.queries.detectAIContent({ text: processedText })
-            .then(response => ({ type: 'processed', response }))
-        );
+        promises.push(analyzeWithRetry(processedText, 'processed'));
       }
+
+      toast.current?.show({
+        severity: 'info',
+        summary: 'Analysis Started',
+        detail: 'Running AI detection analysis. This may take a moment...',
+        life: 3000
+      });
 
       const results = await Promise.all(promises);
       
@@ -125,16 +178,31 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
         detail: `AI detection analysis completed with ${totalFlags} total flags identified.`,
         life: 3000
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('AI detection analysis failed:', error);
-      toast.current?.show({
-        severity: 'error',
-        summary: 'Analysis Failed',
-        detail: 'Failed to analyze text for AI content. Please try again.',
-        life: 5000
-      });
+      
+      const isThrottling = error.message?.includes('ThrottlingException') || 
+                         error.message?.includes('Too many requests') ||
+                         error.message?.includes('rate limit');
+      
+      if (isThrottling) {
+        toast.current?.show({
+          severity: 'warn',
+          summary: 'Service Temporarily Unavailable',
+          detail: 'AI detection service is experiencing high demand. Please wait a few moments and try again.',
+          life: 8000
+        });
+      } else {
+        toast.current?.show({
+          severity: 'error',
+          summary: 'Analysis Failed',
+          detail: 'Failed to analyze text for AI content. Please try again in a moment.',
+          life: 5000
+        });
+      }
     } finally {
       setIsAnalyzing(false);
+      setIsRetrying(false);
     }
   };
 
@@ -269,12 +337,13 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
 
           <div className="input-footer">
             <Button
-              label={isAnalyzing ? "Analyzing..." : "Compare Both Texts"}
+              label={isAnalyzing ? (isRetrying ? "Retrying..." : "Analyzing...") : "Compare Both Texts"}
               icon={isAnalyzing ? "pi pi-spin pi-spinner" : "pi pi-clone"}
               onClick={handleAnalyzeBoth}
               disabled={isAnalyzing || (!rawText.trim() && !processedText.trim())}
               className="compare-button"
               size="large"
+              severity={isRetrying ? "warning" : undefined}
             />
           </div>
         </Card>

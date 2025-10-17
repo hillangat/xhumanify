@@ -5,10 +5,112 @@ import {
   InvokeModelCommandInput,
 } from "@aws-sdk/client-bedrock-runtime";
 
-// Initialize Bedrock runtime client
+// Initialize Bedrock runtime client with enhanced retry configuration
 const client = new BedrockRuntimeClient({ 
-  region: "us-east-1" 
+  region: "us-east-1",
+  maxAttempts: 8 // Increased max attempts
 });
+
+// Advanced retry function with circuit breaker pattern
+async function invokeWithAdvancedRetry(
+  command: InvokeModelCommand, 
+  maxAttempts: number = 8
+): Promise<any> {
+  let lastError;
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      console.log(`Attempt ${attempt}/${maxAttempts} - Invoking Bedrock model...`);
+      return await client.send(command);
+    } catch (error: any) {
+      lastError = error;
+      console.error(`Attempt ${attempt} failed:`, error.message);
+      
+      // Check if it's a throttling error
+      if (error.name === 'ThrottlingException' || error.$metadata?.httpStatusCode === 429) {
+        if (attempt === maxAttempts) {
+          console.error(`All ${maxAttempts} attempts failed with throttling. Giving up.`);
+          break;
+        }
+        
+        // Calculate progressive delay with exponential backoff and jitter
+        const baseDelay = Math.min(Math.pow(2, attempt) * 2000, 300000); // 2s, 4s, 8s, 16s, 32s, 64s, 120s, 300s max
+        const jitter = Math.random() * 2000; // Add 0-2s random jitter
+        const totalDelay = Math.floor(baseDelay + jitter);
+        
+        console.log(`Throttling detected. Waiting ${totalDelay}ms before retry ${attempt + 1}...`);
+        await new Promise(resolve => setTimeout(resolve, totalDelay));
+        continue;
+      }
+      
+      // For non-throttling errors, use shorter delays
+      if (error.name === 'ValidationException' || error.name === 'AccessDeniedException') {
+        console.error(`Non-recoverable error: ${error.name}. Not retrying.`);
+        break;
+      }
+      
+      // For other errors, wait before retry
+      if (attempt < maxAttempts) {
+        const shortDelay = Math.min(1000 * attempt, 10000); // 1s, 2s, 3s, up to 10s
+        console.log(`General error. Waiting ${shortDelay}ms before retry...`);
+        await new Promise(resolve => setTimeout(resolve, shortDelay));
+      }
+    }
+  }
+  
+  throw lastError;
+}
+
+// Request queue to handle burst traffic
+class RequestQueue {
+  private static instance: RequestQueue;
+  private queue: Array<{ resolve: Function; reject: Function; command: InvokeModelCommand }> = [];
+  private processing: boolean = false;
+  private readonly maxConcurrent = 2; // Limit concurrent requests
+  private activeRequests = 0;
+  
+  static getInstance(): RequestQueue {
+    if (!RequestQueue.instance) {
+      RequestQueue.instance = new RequestQueue();
+    }
+    return RequestQueue.instance;
+  }
+  
+  async enqueue(command: InvokeModelCommand): Promise<any> {
+    return new Promise((resolve, reject) => {
+      this.queue.push({ resolve, reject, command });
+      this.processQueue();
+    });
+  }
+  
+  private async processQueue() {
+    if (this.processing || this.activeRequests >= this.maxConcurrent || this.queue.length === 0) {
+      return;
+    }
+    
+    this.processing = true;
+    
+    while (this.queue.length > 0 && this.activeRequests < this.maxConcurrent) {
+      const { resolve, reject, command } = this.queue.shift()!;
+      this.activeRequests++;
+      
+      // Process request with staggered delays to avoid burst
+      setTimeout(async () => {
+        try {
+          const result = await invokeWithAdvancedRetry(command);
+          resolve(result);
+        } catch (error) {
+          reject(error);
+        } finally {
+          this.activeRequests--;
+          this.processQueue(); // Process next item
+        }
+      }, this.activeRequests * 500); // Stagger by 500ms per concurrent request
+    }
+    
+    this.processing = false;
+  }
+}
 
 export const handler: Schema["detectAIContent"]["functionHandler"] = async (
   event,
@@ -76,7 +178,12 @@ RESPOND WITH JSON ONLY - START WITH { AND END WITH }`,
 
   try {
     const command = new InvokeModelCommand(input);
-    const response = await client.send(command);
+    
+    // Use request queue to manage concurrent requests and prevent bursts
+    const requestQueue = RequestQueue.getInstance();
+    console.log('Queuing AI detection request...');
+    const response = await requestQueue.enqueue(command);
+    
     const data = JSON.parse(Buffer.from(response.body).toString());
     
     // Extract token usage from Bedrock response
@@ -250,10 +357,48 @@ RESPOND WITH JSON ONLY - START WITH { AND END WITH }`,
       }
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('AI Detection analysis failed:', error);
     
-    // Return error response with minimal usage
+    // Enhanced error handling with specific throttling response
+    if (error.name === 'ThrottlingException' || error.$metadata?.httpStatusCode === 429) {
+      const errorResponse = {
+        analysis: {
+          overallScore: 0,
+          confidence: "low" as const,
+          summary: "Analysis temporarily unavailable due to high demand. Our AI detection service is experiencing heavy traffic. Please try again in a few moments.",
+          flags: [],
+          metrics: {
+            sentenceVariability: 0,
+            vocabularyDiversity: 0,
+            naturalFlow: 0,
+            personalityPresence: 0,
+            burstiness: 0,
+            perplexity: 0
+          },
+          recommendations: [
+            "Please wait 30-60 seconds before trying again",
+            "Consider analyzing shorter text segments",
+            "Try again during off-peak hours for faster response"
+          ]
+        },
+        originalText: textToAnalyze,
+        usage: {
+          inputTokens: 0,
+          outputTokens: 0,
+          totalTokens: 0,
+          systemPromptTokens: 0,
+          actualInputTokens: 0,
+          actualTotalTokens: 0,
+          estimatedWords: 0
+        },
+        error: 'ThrottlingException: Service temporarily unavailable due to high demand'
+      };
+      
+      return JSON.stringify(errorResponse);
+    }
+    
+    // Return general error response for other types of errors
     return JSON.stringify({
       analysis: {
         overallScore: 0,
@@ -270,7 +415,8 @@ RESPOND WITH JSON ONLY - START WITH { AND END WITH }`,
         },
         recommendations: [
           "Try again with shorter text",
-          "Check text formatting and try again"
+          "Check text formatting and try again",
+          "Contact support if issue persists"
         ]
       },
       originalText: textToAnalyze,
