@@ -12,13 +12,14 @@ import { apiFunction } from "./functions/api-function/resource";
 import { createCheckoutSession, createPortalSession, handleWebhook } from "./functions/stripe/resource";
 import { debugSubscription } from "./functions/debug-subscription/resource";
 import { auth } from "./auth/resource";
-import { data, MODEL_ID, generateHaikuFunction } from "./data/resource";
+import { data, MODEL_ID, generateHaikuFunction, detectAIContentFunction } from "./data/resource";
 
 const backend = defineBackend({
   auth,
   data,
   apiFunction,
   generateHaikuFunction,
+  detectAIContentFunction,
   createCheckoutSession,
   createPortalSession,
   handleWebhook,
@@ -46,6 +47,36 @@ backend.handleWebhook.resources.lambda.addToRolePolicy(
 );
 
 backend.generateHaikuFunction.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
+    resources: [
+      // Foundation model ARNs (legacy format with us. prefix)
+      "arn:aws:bedrock:us-east-1::foundation-model/us.anthropic.claude-3-5-sonnet-20240620-v1:0",
+      "arn:aws:bedrock:us-east-2::foundation-model/us.anthropic.claude-3-5-sonnet-20240620-v1:0",
+      "arn:aws:bedrock:us-west-2::foundation-model/us.anthropic.claude-3-5-sonnet-20240620-v1:0",
+      "arn:aws:bedrock:*::foundation-model/us.anthropic.claude-3-5-sonnet-20240620-v1:0",
+      // Foundation model ARNs (without us. prefix)
+      "arn:aws:bedrock:us-east-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0",
+      "arn:aws:bedrock:us-east-2::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0",
+      "arn:aws:bedrock:us-west-2::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0",
+      "arn:aws:bedrock:*::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0",
+      // Inference profile ARNs (new format for Claude 3.5 Sonnet)
+      "arn:aws:bedrock:us-east-1:*:inference-profile/us.anthropic.claude-3-5-sonnet-20240620-v1:0",
+      "arn:aws:bedrock:us-east-2:*:inference-profile/us.anthropic.claude-3-5-sonnet-20240620-v1:0",
+      "arn:aws:bedrock:us-west-2:*:inference-profile/us.anthropic.claude-3-5-sonnet-20240620-v1:0",
+      "arn:aws:bedrock:*:*:inference-profile/us.anthropic.claude-3-5-sonnet-20240620-v1:0",
+      // Inference profile ARNs (without us. prefix)
+      "arn:aws:bedrock:us-east-1:*:inference-profile/anthropic.claude-3-5-sonnet-20240620-v1:0",
+      "arn:aws:bedrock:us-east-2:*:inference-profile/anthropic.claude-3-5-sonnet-20240620-v1:0",
+      "arn:aws:bedrock:us-west-2:*:inference-profile/anthropic.claude-3-5-sonnet-20240620-v1:0",
+      "arn:aws:bedrock:*:*:inference-profile/anthropic.claude-3-5-sonnet-20240620-v1:0",
+    ],
+  })
+);
+
+// Grant the same Bedrock permissions to detectAIContentFunction
+backend.detectAIContentFunction.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
