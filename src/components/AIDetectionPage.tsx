@@ -330,7 +330,7 @@ const AIDetectionPage: React.FC = () => {
                       <label>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</label>
                       <ProgressBar 
                         value={value} 
-                        style={{ height: '8px' }}
+                        style={{ height: '22px' }}
                         color={value > 70 ? '#28a745' : value > 50 ? '#ffc107' : '#dc3545'}
                       />
                       <span className="metric-value">{value}%</span>

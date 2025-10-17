@@ -4,6 +4,17 @@
   max-width: 1400px;
   margin: 3rem auto;
 
+  // Global badge fixes for this page
+  .p-badge {
+    min-height: 2rem;
+    line-height: 1.2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    box-sizing: border-box;
+  }
+
   .analysis-container {
     display: flex;
     flex-direction: column;
@@ -181,9 +192,15 @@
 
               .p-badge {
                 font-size: 0.9rem;
-                padding: 0.5rem 1rem;
+                padding: 0.75rem 1rem;
                 border-radius: 8px;
                 font-weight: 600;
+                min-height: 2.5rem;
+                line-height: 1.2;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                white-space: nowrap;
               }
             }
           }
@@ -482,17 +499,34 @@
           gap: 0.75rem;
 
           .recommendation-chip {
-            background: var(--primary-color);
-            color: white;
+            background: var(--primary-color) !important;
+            color: white !important;
             padding: 0.5rem 1rem;
             border-radius: 20px;
             font-size: 0.9rem;
             font-weight: 500;
-            border: none;
+            border: none !important;
             cursor: default;
+            transition: all 0.3s ease;
 
             &:hover {
-              background: var(--primary-color-darker);
+              background: #1976d2 !important; /* Fallback for older browsers */
+              background: color-mix(in srgb, var(--primary-color) 85%, black) !important;
+              color: white !important;
+              transform: translateY(-1px);
+              box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            }
+
+            // Override any PrimeReact default styles that might interfere
+            &.p-chip {
+              background: var(--primary-color) !important;
+              color: white !important;
+              
+              &:hover {
+                background: #1976d2 !important; /* Fallback for older browsers */
+                background: color-mix(in srgb, var(--primary-color) 85%, black) !important;
+                color: white !important;
+              }
             }
           }
         }
