@@ -34,10 +34,12 @@ export const handler: Schema["detectAIContent"]["functionHandler"] = async (
       system: `You are an elite AI content detection specialist with deep expertise in identifying AI-generated text patterns. Your mission is to analyze the provided text and detect specific indicators that suggest AI generation, providing granular feedback with precise locations and confidence scores.
 
 CRITICAL OUTPUT REQUIREMENTS:
-1. You MUST respond with ONLY a valid JSON object - no additional text, explanations, or formatting.
+1. You MUST respond with ONLY a valid JSON object - absolutely NO additional text, explanations, or formatting.
 2. The JSON must be properly formatted and parseable.
-3. Do NOT include markdown code blocks, backticks, or any wrapper text.
-4. Start your response immediately with the opening brace "{".
+3. Do NOT include markdown code blocks, backticks, quotes, or any wrapper text.
+4. Do NOT include any introductory phrases like "Here's the analysis:" or concluding remarks.
+5. Start your response immediately with the opening brace "{" and end with the closing brace "}".
+6. If you include any text outside the JSON object, the system will fail.
 
 ANALYSIS FRAMEWORK:
 Examine the text for these AI-generated content indicators:
@@ -131,14 +133,19 @@ Analyze the text character by character, word by word, sentence by sentence. Pro
           content: [
             {
               type: "text",
-              text: `Analyze this text for AI-generated content indicators. Provide detailed detection results in the specified JSON format with specific flags, locations, and confidence scores:\n\n${textToAnalyze}`,
+              text: `Analyze this text for AI-generated content indicators. Return ONLY the JSON object with no additional text or formatting:
+
+TEXT TO ANALYZE:
+${textToAnalyze}
+
+RESPOND WITH JSON ONLY - START WITH { AND END WITH }`,
             },
           ],
         },
       ],
       max_tokens: parseInt(maxTokens.toString()),
-      temperature: 0.1, // Low temperature for consistent analysis
-      top_p: 0.9,
+      temperature: 0.0, // Deterministic output for consistent JSON formatting
+      top_p: 1.0,
     }),
   } as InvokeModelCommandInput;
 
@@ -165,10 +172,30 @@ Analyze the text character by character, word by word, sentence by sentence. Pro
     
     let result = data.content[0].text.trim();
 
-    // Clean up any potential formatting issues
-    result = result.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+    // Enhanced cleanup for various formatting issues
+    result = result.replace(/^```json\s*/i, '').replace(/\s*```$/i, '');
+    result = result.replace(/^```\s*/i, '').replace(/\s*```$/i, '');
     result = result.replace(/^`+|`+$/g, '');
+    
+    // Remove any leading/trailing quotes
+    result = result.replace(/^["']|["']$/g, '');
+    
+    // Remove common AI response prefixes
+    result = result.replace(/^Here's the analysis:\s*/i, '');
+    result = result.replace(/^Here is the analysis:\s*/i, '');
+    result = result.replace(/^Analysis result:\s*/i, '');
+    result = result.replace(/^The analysis shows:\s*/i, '');
+    
+    // Clean whitespace and trim
     result = result.trim();
+    
+    // Find the first { and last } to extract only the JSON part
+    const firstBrace = result.indexOf('{');
+    const lastBrace = result.lastIndexOf('}');
+    
+    if (firstBrace !== -1 && lastBrace !== -1 && firstBrace < lastBrace) {
+      result = result.substring(firstBrace, lastBrace + 1);
+    }
 
     // Validate JSON structure
     let analysisResult;
@@ -176,27 +203,62 @@ Analyze the text character by character, word by word, sentence by sentence. Pro
       analysisResult = JSON.parse(result);
     } catch (parseError) {
       console.error('JSON parsing failed:', parseError);
-      console.error('Raw response:', result);
+      console.error('Raw response length:', result.length);
+      console.error('Raw response preview:', result.substring(0, 500));
+      console.error('Raw response end:', result.substring(result.length - 200));
       
-      // Fallback response if JSON parsing fails
-      analysisResult = {
-        overallScore: 50,
-        confidence: "medium",
-        summary: "Analysis completed but response formatting issue occurred. Manual review recommended.",
-        flags: [],
-        metrics: {
-          sentenceVariability: 50,
-          vocabularyDiversity: 50,
-          naturalFlow: 50,
-          personalityPresence: 50,
-          burstiness: 50,
-          perplexity: 50
-        },
-        recommendations: [
-          "Re-run analysis for detailed results",
-          "Consider manual review of content"
-        ]
-      };
+      // Try to extract JSON from response if it's wrapped in text
+      const jsonMatch = result.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          console.log('Attempting to parse extracted JSON...');
+          analysisResult = JSON.parse(jsonMatch[0]);
+        } catch (secondParseError) {
+          console.error('Second JSON parse attempt failed:', secondParseError);
+          
+          // Final fallback response if all parsing attempts fail
+          analysisResult = {
+            overallScore: 0,
+            confidence: "low",
+            summary: "Unable to parse AI analysis response. The model may have returned improperly formatted data.",
+            flags: [],
+            metrics: {
+              sentenceVariability: 0,
+              vocabularyDiversity: 0,
+              naturalFlow: 0,
+              personalityPresence: 0,
+              burstiness: 0,
+              perplexity: 0
+            },
+            recommendations: [
+              "Try analyzing shorter text segments",
+              "Ensure text is in a supported language",
+              "Contact support if issue persists"
+            ]
+          };
+        }
+      } else {
+        // No JSON found in response
+        analysisResult = {
+          overallScore: 0,
+          confidence: "low", 
+          summary: "No valid JSON analysis found in model response. The AI model may not have followed output format instructions.",
+          flags: [],
+          metrics: {
+            sentenceVariability: 0,
+            vocabularyDiversity: 0,
+            naturalFlow: 0,
+            personalityPresence: 0,
+            burstiness: 0,
+            perplexity: 0
+          },
+          recommendations: [
+            "Try again with different text",
+            "Ensure text is clear and well-formatted",
+            "Contact support if issue persists"
+          ]
+        };
+      }
     }
 
     // Ensure required fields exist
