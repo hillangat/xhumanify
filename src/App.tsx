@@ -7,6 +7,7 @@ import EmptyContent from './EmptyContent';
 import { Button } from 'primereact/button';
 import { ButtonGroup } from 'primereact/buttongroup';
 import { Dialog } from 'primereact/dialog';
+import { Sidebar } from 'primereact/sidebar';
 import { Menu } from 'primereact/menu';
 import { Toast } from 'primereact/toast';
 import { ConfirmPopup, confirmPopup } from 'primereact/confirmpopup';
@@ -16,6 +17,7 @@ import { useSubscription } from './contexts/SubscriptionContext';
 import UsageDisplay from './components/UsageDisplay';
 import UsageBreakdownPopup from './components/UsageBreakdownPopup';
 import FeaturePage from './components/FeaturePage';
+import AIDetectionComparison from './components/AIDetectionComparison';
 import { getPlanLimits } from './config/plans';
 import { FaGooglePlay } from 'react-icons/fa';
 
@@ -39,6 +41,7 @@ export default function App() {
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
   const [selectedTone, setSelectedTone] = useState<string>('neutral');
   const [showUsageBreakdown, setShowUsageBreakdown] = useState(false);
+  const [showAIDetectionSidebar, setShowAIDetectionSidebar] = useState(false);
   const toast = useRef<Toast>(null);
   const feedbackRef = useRef<UserFeedbackRef>(null);
   const toneMenuRef = useRef<Menu>(null);
@@ -519,6 +522,16 @@ export default function App() {
                     className="feedback-button"
                   />
                   <Button
+                    label=""
+                    icon="pi pi-clone"
+                    onClick={() => setShowAIDetectionSidebar(true)}
+                    disabled={!answer || !prompt}
+                    outlined
+                    className="ai-detection-button"
+                    tooltip="Compare AI Detection"
+                    tooltipOptions={{ position: 'bottom' }}
+                  />
+                  <Button
                     label=''
                     outlined
                     icon='pi pi-save'
@@ -676,6 +689,32 @@ export default function App() {
           outputWords={countWords(answer)}
         />
       )}
+
+      {/* AI Detection Comparison Sidebar */}
+      <Sidebar
+        visible={showAIDetectionSidebar}
+        onHide={() => setShowAIDetectionSidebar(false)}
+        position="right"
+        style={{ width: '98vw', maxWidth: '1600px' }}
+        className="ai-detection-sidebar"
+        modal
+        dismissable
+        showCloseIcon
+        header={
+          <div className="sidebar-header">
+            <i className="pi pi-clone" style={{ marginRight: '0.5rem', color: 'var(--primary-color)' }} />
+            <span>AI Detection Comparison</span>
+          </div>
+        }
+      >
+        {showAIDetectionSidebar && prompt && answer && (
+          <AIDetectionComparison
+            rawText={prompt}
+            processedText={answer}
+            readOnly={true}
+          />
+        )}
+      </Sidebar>
       </FeaturePage>
     </>
   );

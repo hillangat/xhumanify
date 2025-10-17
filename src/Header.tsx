@@ -90,6 +90,15 @@ export default function Header() {
       }
     },
     {
+      label: 'AI Comparison',
+      icon: 'pi pi-clone',
+      path: '/ai-detection-comparison',
+      command: () => {
+        navigate('/ai-detection-comparison');
+        setMobileMenuVisible(false);
+      }
+    },
+    {
       label: 'Pricing',
       icon: 'pi pi-dollar',
       path: '/upgrade',

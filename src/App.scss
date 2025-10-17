@@ -719,3 +719,82 @@ $padding: 15px;
 .usage-summary {
   transition: all 0.2s ease;
 }
+
+/* AI Detection Sidebar Styles */
+.ai-detection-sidebar {
+  .p-sidebar-content {
+    padding: 0 !important;
+    height: 100% !important;
+    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  // Override comparison component styles for sidebar usage
+  .ai-detection-comparison {
+    flex: 1;
+    height: 100%;
+    padding: 1rem;
+    margin: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    .input-section {
+      margin-bottom: 1rem;
+    }
+
+    .improvement-summary {
+      margin-bottom: 1rem;
+    }
+
+    .results-section {
+      .results-grid {
+        gap: 1rem;
+      }
+    }
+
+    // Make content more compact in sidebar
+    .ai-detection-results {
+      .score-card,
+      .metrics-card,
+      .flags-card,
+      .recommendations-card {
+        margin-bottom: 0.75rem;
+      }
+
+      .score-content .overall-score {
+        gap: 1rem;
+
+        .score-circle {
+          width: 100px;
+          height: 100px;
+
+          .score-number {
+            font-size: 1.5rem;
+          }
+
+          .score-label {
+            font-size: 0.75rem;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Button styling for AI detection button
+.ai-detection-button {
+  &:hover {
+    background-color: var(--blue-50) !important;
+    border-color: var(--blue-200) !important;
+    color: var(--blue-600) !important;
+  }
+}
