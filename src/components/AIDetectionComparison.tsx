@@ -65,7 +65,6 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [rawAnalysis, setRawAnalysis] = useState<DetectionResponse | null>(null);
   const [processedAnalysis, setProcessedAnalysis] = useState<DetectionResponse | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
   const [isRetrying, setIsRetrying] = useState(false);
 
   // Advanced retry logic with exponential backoff
@@ -131,7 +130,6 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
     setIsAnalyzing(true);
     setRawAnalysis(null);
     setProcessedAnalysis(null);
-    setRetryCount(0);
 
     try {
       const promises = [];
