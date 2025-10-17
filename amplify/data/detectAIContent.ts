@@ -123,56 +123,149 @@ export const handler: Schema["detectAIContent"]["functionHandler"] = async (
     throw new Error("Text content is required for AI detection analysis");
   }
 
+  // Calculate appropriate token limits based on input size
   const inputTokenEstimate = Math.ceil(textToAnalyze.length / 4);
-  const maxTokens = Math.floor(Math.min(inputTokenEstimate * 3, 12000)); // Increased for larger responses
+  // Reserve tokens: system prompt (~800) + user prompt (~200) + JSON structure (~1000) = ~2000
+  const reservedTokens = 2000;
+  const maxTokens = Math.min(
+    Math.max(reservedTokens + 500, inputTokenEstimate + 1500), // Minimum viable response
+    4096 // Claude's context window limit for responses
+  );
 
-  // Configure model invocation
+  // Configure model invocation with structured output using tool calling
   const input = {
     modelId: process.env.MODEL_ID,
     contentType: "application/json",
     accept: "application/json",
     body: JSON.stringify({
       anthropic_version: "bedrock-2023-05-31",
-      system: `You are an AI content detection specialist. Analyze text for AI-generated patterns and return ONLY a JSON object with NO extra text.
+      system: `You are an AI content detection specialist. You will analyze text for AI-generated patterns and provide structured results using the analyze_content tool.
 
-CRITICAL: Respond with ONLY JSON starting with "{" and ending with "}". NO markdown, explanations, or wrapper text.
+Your analysis should focus on:
+- Repetitive structures and excessive transitions
+- Corporate buzzwords and formal language patterns
+- Generic phrasing and lack of specificity
+- Predictable vocabulary and uniform sentence patterns
+- Grammar perfection that seems unnatural
+- Lack of personality or human quirks
 
-Detect these patterns:
-- Repetitive structures, excessive transitions ("Furthermore," "Moreover")
-- Buzzwords, corporate speak, perfect grammar
-- Generic language, lack of personality/specifics
-- Predictable vocabulary, uniform sentences
-
-JSON FORMAT:
-{
-  "overallScore": 0-100,
-  "confidence": "low|medium|high|very_high", 
-  "summary": "brief findings",
-  "flags": [{"type": "pattern_type", "severity": "low|medium|high|critical", "description": "issue", "text": "flagged text", "startIndex": 0, "endIndex": 0, "confidence": 0-100, "suggestion": "fix"}],
-  "metrics": {"sentenceVariability": 0-100, "vocabularyDiversity": 0-100, "naturalFlow": 0-100, "personalityPresence": 0-100, "burstiness": 0-100, "perplexity": 0-100},
-  "recommendations": ["suggestions"]
-}
-
-Flag types: repetitive_structure, transition_overuse, buzzword_heavy, generic_phrasing, perfect_grammar, robotic_flow, lack_personality, encyclopedic_tone, uniform_sentences, predictable_vocabulary, formal_rigidity.`,
+Always use the analyze_content tool to provide your analysis in the required structured format.`,
       messages: [
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: `Analyze this text for AI-generated content indicators. Return ONLY the JSON object with no additional text or formatting:
+              text: `Please analyze the following text for AI-generated content patterns and provide a detailed assessment:
 
-TEXT TO ANALYZE:
-${textToAnalyze}
-
-RESPOND WITH JSON ONLY - START WITH { AND END WITH }`,
+${textToAnalyze.length > 4000 ? textToAnalyze.substring(0, 4000) + "..." : textToAnalyze}`,
             },
           ],
         },
       ],
-      max_tokens: parseInt(maxTokens.toString()),
-      temperature: 0.0, // Deterministic output for consistent JSON formatting
-      top_p: 1.0,
+      tools: [
+        {
+          name: "analyze_content",
+          description: "Provide structured AI content detection analysis",
+          input_schema: {
+            type: "object",
+            properties: {
+              overallScore: {
+                type: "integer",
+                minimum: 0,
+                maximum: 100,
+                description: "Overall AI likelihood score (0-100)"
+              },
+              confidence: {
+                type: "string",
+                enum: ["low", "medium", "high", "very_high"],
+                description: "Confidence level in the analysis"
+              },
+              summary: {
+                type: "string",
+                maxLength: 200,
+                description: "Brief summary of findings"
+              },
+              flags: {
+                type: "array",
+                maxItems: 8,
+                items: {
+                  type: "object",
+                  properties: {
+                    type: {
+                      type: "string",
+                      enum: [
+                        "repetitive_structure", "transition_overuse", "buzzword_heavy",
+                        "generic_phrasing", "perfect_grammar", "robotic_flow",
+                        "lack_personality", "encyclopedic_tone", "uniform_sentences",
+                        "predictable_vocabulary", "formal_rigidity"
+                      ]
+                    },
+                    severity: {
+                      type: "string",
+                      enum: ["low", "medium", "high", "critical"]
+                    },
+                    description: {
+                      type: "string",
+                      maxLength: 80,
+                      description: "Brief description of the issue"
+                    },
+                    text: {
+                      type: "string",
+                      maxLength: 100,
+                      description: "Example text that triggered this flag"
+                    },
+                    startIndex: {
+                      type: "integer",
+                      minimum: 0
+                    },
+                    endIndex: {
+                      type: "integer",
+                      minimum: 0
+                    },
+                    confidence: {
+                      type: "integer",
+                      minimum: 0,
+                      maximum: 100
+                    },
+                    suggestion: {
+                      type: "string",
+                      maxLength: 100,
+                      description: "Brief suggestion for improvement"
+                    }
+                  },
+                  required: ["type", "severity", "description", "text", "startIndex", "endIndex", "confidence", "suggestion"]
+                }
+              },
+              metrics: {
+                type: "object",
+                properties: {
+                  sentenceVariability: { type: "integer", minimum: 0, maximum: 100 },
+                  vocabularyDiversity: { type: "integer", minimum: 0, maximum: 100 },
+                  naturalFlow: { type: "integer", minimum: 0, maximum: 100 },
+                  personalityPresence: { type: "integer", minimum: 0, maximum: 100 },
+                  burstiness: { type: "integer", minimum: 0, maximum: 100 },
+                  perplexity: { type: "integer", minimum: 0, maximum: 100 }
+                },
+                required: ["sentenceVariability", "vocabularyDiversity", "naturalFlow", "personalityPresence", "burstiness", "perplexity"]
+              },
+              recommendations: {
+                type: "array",
+                maxItems: 5,
+                items: {
+                  type: "string",
+                  maxLength: 100
+                }
+              }
+            },
+            required: ["overallScore", "confidence", "summary", "flags", "metrics", "recommendations"]
+          }
+        }
+      ],
+      tool_choice: { type: "tool", name: "analyze_content" },
+      max_tokens: maxTokens,
+      temperature: 0.1, // Low temperature for consistent, structured output
+      top_p: 0.9,
     }),
   } as InvokeModelCommandInput;
 
@@ -192,9 +285,8 @@ RESPOND WITH JSON ONLY - START WITH { AND END WITH }`,
     const outputTokens = usage.output_tokens || 0;
     const totalTokens = inputTokens + outputTokens;
     
-    // Calculate system prompt tokens (estimate based on our system prompt)
-    // Our system prompt is approximately 2000-2500 characters = ~500-625 tokens
-    const systemPromptTokens = Math.ceil(600); // Conservative estimate
+    // Calculate system prompt tokens (estimate based on our system prompt and tool schema)
+    const systemPromptTokens = Math.ceil(800); // More accurate estimate for tool calling
     
     // Calculate user input tokens (exclude system prompt from billing)
     const userInputTokens = Math.max(0, inputTokens - systemPromptTokens);
@@ -202,99 +294,71 @@ RESPOND WITH JSON ONLY - START WITH { AND END WITH }`,
     // Billable tokens = user input + output (excluding system overhead)
     const billableTokens = userInputTokens + outputTokens;
     
-    let result = data.content[0].text.trim();
-
-    // Enhanced cleanup for various formatting issues
-    result = result.replace(/^```json\s*/i, '').replace(/\s*```$/i, '');
-    result = result.replace(/^```\s*/i, '').replace(/\s*```$/i, '');
-    result = result.replace(/^`+|`+$/g, '');
-    
-    // Remove any leading/trailing quotes
-    result = result.replace(/^["']|["']$/g, '');
-    
-    // Remove common AI response prefixes
-    result = result.replace(/^Here's the analysis:\s*/i, '');
-    result = result.replace(/^Here is the analysis:\s*/i, '');
-    result = result.replace(/^Analysis result:\s*/i, '');
-    result = result.replace(/^The analysis shows:\s*/i, '');
-    
-    // Clean whitespace and trim
-    result = result.trim();
-    
-    // Find the first { and last } to extract only the JSON part
-    const firstBrace = result.indexOf('{');
-    const lastBrace = result.lastIndexOf('}');
-    
-    if (firstBrace !== -1 && lastBrace !== -1 && firstBrace < lastBrace) {
-      result = result.substring(firstBrace, lastBrace + 1);
-    }
-
-    // Validate JSON structure
+    // Extract the tool use result from Claude's response
     let analysisResult;
+    
     try {
-      analysisResult = JSON.parse(result);
-    } catch (parseError) {
-      console.error('JSON parsing failed:', parseError);
-      console.error('Raw response length:', result.length);
-      console.error('Raw response preview:', result.substring(0, 500));
-      console.error('Raw response end:', result.substring(result.length - 200));
+      // Claude tool calling returns content with tool_use blocks
+      const content = data.content;
+      if (!content || !Array.isArray(content)) {
+        throw new Error("Invalid response format: missing content array");
+      }
       
-      // Try to extract JSON from response if it's wrapped in text
-      const jsonMatch = result.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
+      // Find the tool_use block
+      const toolUse = content.find(block => block.type === 'tool_use' && block.name === 'analyze_content');
+      if (!toolUse || !toolUse.input) {
+        throw new Error("Invalid response format: missing tool_use block with analyze_content");
+      }
+      
+      // The tool input is already structured JSON - no parsing needed!
+      analysisResult = toolUse.input;
+      console.log('Successfully extracted structured analysis from tool calling');
+      
+    } catch (extractError) {
+      console.error('Tool calling extraction failed:', extractError);
+      console.error('Response data:', JSON.stringify(data, null, 2));
+      
+      // Fallback to text parsing if tool calling fails
+      if (data.content && data.content[0] && data.content[0].text) {
+        console.log('Falling back to text parsing...');
+        
+        let result = data.content[0].text.trim();
+        
+        // Enhanced cleanup for various formatting issues
+        result = result.replace(/^```json\s*/i, '').replace(/\s*```$/i, '');
+        result = result.replace(/^```\s*/i, '').replace(/\s*```$/i, '');
+        result = result.replace(/^`+|`+$/g, '');
+        
+        // Remove any leading/trailing quotes
+        result = result.replace(/^["']|["']$/g, '');
+        
+        // Remove common AI response prefixes
+        result = result.replace(/^Here's the analysis:\s*/i, '');
+        result = result.replace(/^Here is the analysis:\s*/i, '');
+        result = result.replace(/^Analysis result:\s*/i, '');
+        result = result.replace(/^The analysis shows:\s*/i, '');
+        
+        // Clean whitespace and trim
+        result = result.trim();
+        
+        // Find the first { and last } to extract only the JSON part
+        const firstBrace = result.indexOf('{');
+        const lastBrace = result.lastIndexOf('}');
+        
+        if (firstBrace !== -1 && lastBrace !== -1 && firstBrace < lastBrace) {
+          result = result.substring(firstBrace, lastBrace + 1);
+        }
+        
         try {
-          console.log('Attempting to parse extracted JSON...');
-          analysisResult = JSON.parse(jsonMatch[0]);
-        } catch (secondParseError) {
-          console.error('Second JSON parse attempt failed:', secondParseError);
-          
-          // Try to repair truncated JSON
-          console.log('Attempting to repair truncated JSON...');
-          let repairedJson = jsonMatch[0];
-          
-          // Check if JSON is truncated and try to complete it
-          if (!repairedJson.endsWith('}')) {
-            // Count open braces vs close braces
-            const openBraces = (repairedJson.match(/\{/g) || []).length;
-            const closeBraces = (repairedJson.match(/\}/g) || []).length;
-            const missingBraces = openBraces - closeBraces;
-            
-            // Count open brackets vs close brackets  
-            const openBrackets = (repairedJson.match(/\[/g) || []).length;
-            const closeBrackets = (repairedJson.match(/\]/g) || []).length;
-            const missingBrackets = openBrackets - closeBrackets;
-            
-            // Add missing closing brackets and braces
-            for (let i = 0; i < missingBrackets; i++) {
-              repairedJson += ']';
-            }
-            for (let i = 0; i < missingBraces; i++) {
-              repairedJson += '}';
-            }
-            
-            // If still no recommendations array, add empty one
-            if (!repairedJson.includes('"recommendations"')) {
-              repairedJson = repairedJson.slice(0, -1) + ', "recommendations": []}';
-            }
-            
-            console.log('Repaired JSON preview:', repairedJson.substring(0, 200));
-            
-            try {
-              analysisResult = JSON.parse(repairedJson);
-              console.log('Successfully parsed repaired JSON');
-            } catch (repairError) {
-              console.error('JSON repair failed:', repairError);
-              throw secondParseError; // Fall back to original error
-            }
-          } else {
-            throw secondParseError; // JSON wasn't truncated, original error stands
-          }
-          
-          // Final fallback response if all parsing attempts fail
+          analysisResult = JSON.parse(result);
+          console.log('Successfully parsed fallback JSON');
+        } catch (parseError) {
+          console.error('Fallback JSON parsing also failed:', parseError);
+          // Create minimal fallback response
           analysisResult = {
             overallScore: 0,
             confidence: "low",
-            summary: "Unable to parse AI analysis response. The model may have returned improperly formatted data.",
+            summary: "Analysis could not be completed due to response format issues",
             flags: [],
             metrics: {
               sentenceVariability: 0,
@@ -306,17 +370,17 @@ RESPOND WITH JSON ONLY - START WITH { AND END WITH }`,
             },
             recommendations: [
               "Try analyzing shorter text segments",
-              "Ensure text is in a supported language",
+              "Ensure text is properly formatted",
               "Contact support if issue persists"
             ]
           };
         }
       } else {
-        // No JSON found in response
+        // No content to parse - create minimal response
         analysisResult = {
           overallScore: 0,
-          confidence: "low", 
-          summary: "No valid JSON analysis found in model response. The AI model may not have followed output format instructions.",
+          confidence: "low",
+          summary: "No analysis content received from the AI model",
           flags: [],
           metrics: {
             sentenceVariability: 0,
@@ -328,7 +392,6 @@ RESPOND WITH JSON ONLY - START WITH { AND END WITH }`,
           },
           recommendations: [
             "Try again with different text",
-            "Ensure text is clear and well-formatted",
             "Contact support if issue persists"
           ]
         };
@@ -360,50 +423,12 @@ RESPOND WITH JSON ONLY - START WITH { AND END WITH }`,
   } catch (error: any) {
     console.error('AI Detection analysis failed:', error);
     
-    // Enhanced error handling with specific throttling response
-    if (error.name === 'ThrottlingException' || error.$metadata?.httpStatusCode === 429) {
-      const errorResponse = {
-        analysis: {
-          overallScore: 0,
-          confidence: "low" as const,
-          summary: "Analysis temporarily unavailable due to high demand. Our AI detection service is experiencing heavy traffic. Please try again in a few moments.",
-          flags: [],
-          metrics: {
-            sentenceVariability: 0,
-            vocabularyDiversity: 0,
-            naturalFlow: 0,
-            personalityPresence: 0,
-            burstiness: 0,
-            perplexity: 0
-          },
-          recommendations: [
-            "Please wait 30-60 seconds before trying again",
-            "Consider analyzing shorter text segments",
-            "Try again during off-peak hours for faster response"
-          ]
-        },
-        originalText: textToAnalyze,
-        usage: {
-          inputTokens: 0,
-          outputTokens: 0,
-          totalTokens: 0,
-          systemPromptTokens: 0,
-          actualInputTokens: 0,
-          actualTotalTokens: 0,
-          estimatedWords: 0
-        },
-        error: 'ThrottlingException: Service temporarily unavailable due to high demand'
-      };
-      
-      return JSON.stringify(errorResponse);
-    }
-    
-    // Return general error response for other types of errors
-    return JSON.stringify({
+    // Create a proper fallback response structure
+    const createErrorResponse = (summary: string, errorType?: string) => ({
       analysis: {
         overallScore: 0,
-        confidence: "low",
-        summary: "Analysis failed due to technical error. Please try again.",
+        confidence: "low" as const,
+        summary,
         flags: [],
         metrics: {
           sentenceVariability: 0,
@@ -414,8 +439,8 @@ RESPOND WITH JSON ONLY - START WITH { AND END WITH }`,
           perplexity: 0
         },
         recommendations: [
-          "Try again with shorter text",
-          "Check text formatting and try again",
+          "Try analyzing shorter text segments",
+          "Ensure text is properly formatted",
           "Contact support if issue persists"
         ]
       },
@@ -429,7 +454,20 @@ RESPOND WITH JSON ONLY - START WITH { AND END WITH }`,
         actualTotalTokens: 0,
         estimatedWords: 0
       },
-      error: error instanceof Error ? error.message : 'Unknown error occurred'
+      error: errorType || (error instanceof Error ? error.message : 'Unknown error occurred')
     });
+    
+    // Enhanced error handling with specific throttling response
+    if (error.name === 'ThrottlingException' || error.$metadata?.httpStatusCode === 429) {
+      return JSON.stringify(createErrorResponse(
+        "Analysis temporarily unavailable due to high demand. Our AI detection service is experiencing heavy traffic. Please try again in a few moments.",
+        'ThrottlingException: Service temporarily unavailable due to high demand'
+      ));
+    }
+    
+    // Return general error response for other types of errors
+    return JSON.stringify(createErrorResponse(
+      "Analysis failed due to technical error. Please try again."
+    ));
   }
 };
