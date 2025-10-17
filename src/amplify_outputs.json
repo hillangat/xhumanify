@@ -424,6 +424,16 @@
               "properties": {}
             },
             {
+              "type": "key",
+              "properties": {
+                "name": "userSubscriptionsByUserId",
+                "queryField": "listUserSubscriptionsByUserId",
+                "fields": [
+                  "userId"
+                ]
+              }
+            },
+            {
               "type": "auth",
               "properties": {
                 "rules": [
@@ -1048,6 +1058,20 @@
               "isArray": false,
               "type": "String",
               "isRequired": false
+            }
+          }
+        },
+        "detectAIContent": {
+          "name": "detectAIContent",
+          "isArray": false,
+          "type": "String",
+          "isRequired": false,
+          "arguments": {
+            "text": {
+              "name": "text",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
             }
           }
         }
