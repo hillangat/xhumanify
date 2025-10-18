@@ -10,6 +10,201 @@ const client = new BedrockRuntimeClient({
   region: "us-east-1" 
 });
 
+// ========== ADVANCED HUMANIZATION SYSTEM ==========
+
+// Personality Profile Interface
+interface PersonalityProfile {
+  cognitiveStyle: 'analytical' | 'intuitive' | 'systematic' | 'creative';
+  communicationPatterns: {
+    parentheticalFrequency: number; // 0-1
+    questionFrequency: number; // 0-1
+    emphasisStyle: 'italics' | 'caps' | 'repetition' | 'punctuation';
+    transitionPreferences: string[];
+  };
+  linguisticFingerprint: {
+    favoriteFillers: string[]; // "basically", "actually", "sort of"
+    contractionConsistency: number; // 0-1 (how consistently they use contractions)
+    sentenceLengthVariation: number; // standard deviation preference
+    vocabularyLevel: 'colloquial' | 'mixed' | 'formal' | 'technical';
+  };
+  emotionalMarkers: {
+    vulnerabilityLevel: number; // 0-1
+    enthusiasmStyle: 'understated' | 'moderate' | 'effusive';
+    hesitationPatterns: string[]; // "I think", "maybe", "kind of"
+  };
+}
+
+// Situational Context Interface
+interface SituationalContext {
+  timeContext: 'morning-fresh' | 'midday-focused' | 'afternoon-tired' | 'evening-reflective';
+  pressureLevel: 'relaxed' | 'moderate' | 'urgent';
+  audienceRelationship: 'formal' | 'collegial' | 'friendly' | 'intimate';
+  writingEnvironment: 'focused' | 'distracted' | 'collaborative';
+  mentalState: 'clear' | 'working-through' | 'confident' | 'uncertain';
+}
+
+// Generate Dynamic Personality Profile
+const generatePersonalityProfile = (tone: string, contentLength: number): PersonalityProfile => {
+  // Base profiles with randomization for each tone
+  const baseProfiles: { [key: string]: Partial<PersonalityProfile> } = {
+    casual: {
+      cognitiveStyle: Math.random() > 0.5 ? 'intuitive' : 'creative',
+      communicationPatterns: {
+        parentheticalFrequency: 0.2 + Math.random() * 0.3,
+        questionFrequency: 0.15 + Math.random() * 0.2,
+        emphasisStyle: ['repetition', 'punctuation'][Math.floor(Math.random() * 2)] as 'repetition' | 'punctuation',
+        transitionPreferences: ['So', 'Anyway', 'But here\'s the thing', 'Actually', 'Plus']
+      },
+      linguisticFingerprint: {
+        favoriteFillers: ['basically', 'actually', 'sort of', 'kind of', 'like'],
+        contractionConsistency: 0.3 + Math.random() * 0.4, // More inconsistent
+        sentenceLengthVariation: 0.7 + Math.random() * 0.3,
+        vocabularyLevel: 'colloquial'
+      },
+      emotionalMarkers: {
+        vulnerabilityLevel: 0.4 + Math.random() * 0.4,
+        enthusiasmStyle: Math.random() > 0.5 ? 'moderate' : 'effusive',
+        hesitationPatterns: ['I think', 'maybe', 'probably', 'I guess']
+      }
+    },
+    professional: {
+      cognitiveStyle: Math.random() > 0.5 ? 'analytical' : 'systematic',
+      communicationPatterns: {
+        parentheticalFrequency: 0.1 + Math.random() * 0.2,
+        questionFrequency: 0.05 + Math.random() * 0.15,
+        emphasisStyle: 'italics',
+        transitionPreferences: ['Furthermore', 'Additionally', 'However', 'Therefore', 'Subsequently']
+      },
+      linguisticFingerprint: {
+        favoriteFillers: ['certainly', 'indeed', 'particularly', 'specifically'],
+        contractionConsistency: 0.7 + Math.random() * 0.2, // More consistent
+        sentenceLengthVariation: 0.4 + Math.random() * 0.3,
+        vocabularyLevel: 'formal'
+      },
+      emotionalMarkers: {
+        vulnerabilityLevel: 0.2 + Math.random() * 0.3,
+        enthusiasmStyle: 'understated',
+        hesitationPatterns: ['it appears', 'it seems', 'potentially', 'likely']
+      }
+    },
+    conversational: {
+      cognitiveStyle: Math.random() > 0.5 ? 'intuitive' : 'creative',
+      communicationPatterns: {
+        parentheticalFrequency: 0.25 + Math.random() * 0.25,
+        questionFrequency: 0.2 + Math.random() * 0.25,
+        emphasisStyle: ['caps', 'repetition'][Math.floor(Math.random() * 2)] as 'caps' | 'repetition',
+        transitionPreferences: ['You know what?', 'Here\'s the thing', 'Oh, and', 'By the way']
+      },
+      linguisticFingerprint: {
+        favoriteFillers: ['you know', 'right?', 'obviously', 'clearly', 'honestly'],
+        contractionConsistency: 0.2 + Math.random() * 0.3,
+        sentenceLengthVariation: 0.8 + Math.random() * 0.2,
+        vocabularyLevel: 'mixed'
+      },
+      emotionalMarkers: {
+        vulnerabilityLevel: 0.5 + Math.random() * 0.3,
+        enthusiasmStyle: 'moderate',
+        hesitationPatterns: ['I mean', 'you know?', 'sort of', 'kinda']
+      }
+    }
+  };
+
+  // Default neutral profile
+  const neutralProfile: PersonalityProfile = {
+    cognitiveStyle: ['analytical', 'systematic'][Math.floor(Math.random() * 2)] as 'analytical' | 'systematic',
+    communicationPatterns: {
+      parentheticalFrequency: 0.15 + Math.random() * 0.2,
+      questionFrequency: 0.1 + Math.random() * 0.15,
+      emphasisStyle: 'italics',
+      transitionPreferences: ['However', 'Additionally', 'Furthermore', 'Meanwhile']
+    },
+    linguisticFingerprint: {
+      favoriteFillers: ['generally', 'typically', 'often', 'usually'],
+      contractionConsistency: 0.5 + Math.random() * 0.3,
+      sentenceLengthVariation: 0.5 + Math.random() * 0.3,
+      vocabularyLevel: 'mixed'
+    },
+    emotionalMarkers: {
+      vulnerabilityLevel: 0.3 + Math.random() * 0.3,
+      enthusiasmStyle: 'moderate',
+      hesitationPatterns: ['perhaps', 'possibly', 'it seems', 'tends to']
+    }
+  };
+
+  const profile = baseProfiles[tone] || {};
+  return { ...neutralProfile, ...profile } as PersonalityProfile;
+};
+
+// Generate Situational Context
+const generateSituationalContext = (tone: string, textLength: number): SituationalContext => {
+  const contexts: { [key: string]: Partial<SituationalContext> } = {
+    casual: {
+      timeContext: ['morning-fresh', 'evening-reflective'][Math.floor(Math.random() * 2)] as 'morning-fresh' | 'evening-reflective',
+      pressureLevel: 'relaxed',
+      audienceRelationship: 'friendly',
+      writingEnvironment: Math.random() > 0.5 ? 'focused' : 'distracted',
+      mentalState: ['clear', 'working-through'][Math.floor(Math.random() * 2)] as 'clear' | 'working-through'
+    },
+    professional: {
+      timeContext: ['midday-focused', 'morning-fresh'][Math.floor(Math.random() * 2)] as 'midday-focused' | 'morning-fresh',
+      pressureLevel: textLength > 500 ? 'moderate' : 'relaxed',
+      audienceRelationship: 'collegial',
+      writingEnvironment: 'focused',
+      mentalState: 'confident'
+    },
+    conversational: {
+      timeContext: 'evening-reflective',
+      pressureLevel: 'relaxed',
+      audienceRelationship: 'friendly',
+      writingEnvironment: Math.random() > 0.7 ? 'collaborative' : 'focused',
+      mentalState: ['clear', 'working-through'][Math.floor(Math.random() * 2)] as 'clear' | 'working-through'
+    }
+  };
+
+  const defaultContext: SituationalContext = {
+    timeContext: 'midday-focused',
+    pressureLevel: 'moderate',
+    audienceRelationship: 'collegial',
+    writingEnvironment: 'focused',
+    mentalState: 'clear'
+  };
+
+  const context = contexts[tone] || {};
+  return { ...defaultContext, ...context } as SituationalContext;
+};
+
+// Build Advanced System Prompt with Layered Context
+const buildAdvancedSystemPrompt = (
+  tone: string, 
+  personality: PersonalityProfile, 
+  situation: SituationalContext
+): string => {
+  return `You are writing as someone with these authentic characteristics:
+
+COGNITIVE STYLE: You think ${personality.cognitiveStyle}ally, which naturally shows in how you structure and present your thoughts.
+
+CURRENT SITUATION: You're writing this during ${situation.timeContext.replace('-', ' ')}, feeling ${situation.pressureLevel} about timing, addressing a ${situation.audienceRelationship} audience. Your mental state is ${situation.mentalState} - ${situation.mentalState === 'working-through' ? 'you\'re figuring some things out as you write and it shows in your natural thinking process' : 'you have clarity on what you want to communicate'}.
+
+NATURAL WRITING PATTERNS:
+- You naturally include parenthetical thoughts about ${Math.round(personality.communicationPatterns.parentheticalFrequency * 100)}% of the time
+- You engage readers with questions about ${Math.round(personality.communicationPatterns.questionFrequency * 100)}% of the time
+- Your favorite transitions: ${personality.communicationPatterns.transitionPreferences.join(', ')}
+- When uncertain, you naturally use: ${personality.emotionalMarkers.hesitationPatterns.join(', ')}
+
+EMOTIONAL AUTHENTICITY:
+- Vulnerability level: ${personality.emotionalMarkers.vulnerabilityLevel > 0.7 ? 'high (you openly admit uncertainties and show genuine human doubt)' : personality.emotionalMarkers.vulnerabilityLevel > 0.4 ? 'moderate (sometimes uncertain, sometimes confident)' : 'low (generally confident but still human)'}
+- Enthusiasm style: ${personality.emotionalMarkers.enthusiasmStyle}
+
+LINGUISTIC FINGERPRINT:
+- Contraction usage: ${personality.linguisticFingerprint.contractionConsistency > 0.7 ? 'very consistent' : personality.linguisticFingerprint.contractionConsistency > 0.4 ? 'somewhat inconsistent (natural human variation)' : 'quite inconsistent (very human-like)'}
+- Vocabulary: ${personality.linguisticFingerprint.vocabularyLevel}
+- Natural filler words: ${personality.linguisticFingerprint.favoriteFillers.join(', ')}
+
+CRITICAL INSTRUCTION: Write naturally as this specific person would, showing their genuine thought process, personality quirks, and emotional state. Make it so authentically human that it's impossible to detect as AI-generated because it genuinely reflects real human psychology and individual writing patterns.
+
+Transform the provided text using a ${tone} voice while naturally embodying all these characteristics. Never announce what you're doing - just write as this person would.`;
+};
+
 export const handler: Schema["generateHaiku"]["functionHandler"] = async (
   event,
   context
@@ -42,6 +237,11 @@ export const handler: Schema["generateHaiku"]["functionHandler"] = async (
   const inputTokenEstimate = Math.ceil(prompt.length / 4);
   const maxTokens = Math.floor(Math.min(inputTokenEstimate * 1.5, 6000));
 
+  // Generate personality and situational context
+  const personality = generatePersonalityProfile(tone, prompt.length);
+  const situation = generateSituationalContext(tone, prompt.length);
+  const advancedSystemPrompt = buildAdvancedSystemPrompt(tone, personality, situation);
+
   // Configure model invocation
   const input = {
     modelId: process.env.MODEL_ID,
@@ -49,7 +249,9 @@ export const handler: Schema["generateHaiku"]["functionHandler"] = async (
     accept: "application/json",
     body: JSON.stringify({
       anthropic_version: "bedrock-2023-05-31",
-      system: `You are an experienced human copywriter who specializes in creating completely natural, undetectable content. Your expertise is making text sound authentically human - not just casual, but genuinely written by a real person with real thoughts and natural writing habits.
+      system: `${advancedSystemPrompt}
+
+CORE MISSION: Transform the provided text into something that sounds like it came from a human mind, not an AI. The result must be completely undetectable by any AI detection system.
 
 CORE MISSION: Transform the provided text into something that sounds like it came from a human mind, not an AI. The result must be completely undetectable by any AI detection system.
 
@@ -182,9 +384,9 @@ The goal is content so human that it passes every AI detection test because it g
   const outputTokens = usage.output_tokens || 0;
   const totalTokens = inputTokens + outputTokens;
   
-  // Calculate system prompt tokens (estimate based on our enhanced system prompt)
-  // Our system prompt is approximately 1800-2200 characters = ~450-550 tokens
-  const systemPromptTokens = Math.ceil(500); // Conservative estimate for enhanced prompt
+  // Calculate system prompt tokens (estimate based on our advanced system prompt)
+  // Our enhanced system prompt is approximately 2500-3000 characters = ~625-750 tokens
+  const systemPromptTokens = Math.ceil(750); // Conservative estimate for personality-driven prompt
   
   // Calculate user input tokens (exclude system prompt from billing)
   const userInputTokens = Math.max(0, inputTokens - systemPromptTokens);
@@ -266,10 +468,136 @@ The goal is content so human that it passes every AI detection test because it g
     cleanupAttempts++;
   }
 
-  // HUMAN-LIKE IMPERFECTION INJECTION:
-  // Add subtle human characteristics that make text undetectable
+  // ADVANCED HUMANIZATION POST-PROCESSING:
+  // Apply personality-specific patterns and cognitive markers
   
-  // 1. Add occasional typos and natural inconsistencies (very sparingly)
+  // 1. Apply personality-specific communication patterns
+  const applyPersonalityPatterns = (text: string, personality: PersonalityProfile): string => {
+    let processedText = text;
+    
+    // Apply parenthetical thought injection based on personality
+    if (Math.random() < personality.communicationPatterns.parentheticalFrequency) {
+      const parentheticals = [
+        '(which makes sense)',
+        '(at least in my experience)',
+        '(if you ask me)',
+        '(obviously)',
+        '(surprisingly enough)',
+        '(I think)',
+        '(honestly)',
+        '(to be fair)'
+      ];
+      
+      const sentences = processedText.split('. ');
+      if (sentences.length > 2) {
+        const targetSentence = Math.floor(Math.random() * sentences.length);
+        const parenthetical = parentheticals[Math.floor(Math.random() * parentheticals.length)];
+        sentences[targetSentence] += ` ${parenthetical}`;
+        processedText = sentences.join('. ');
+      }
+    }
+    
+    // Apply emphasis style based on personality
+    if (personality.communicationPatterns.emphasisStyle === 'repetition') {
+      processedText = processedText.replace(/\breally important\b/gi, 'really, really important');
+      processedText = processedText.replace(/\bvery\b/gi, 'very, very');
+    } else if (personality.communicationPatterns.emphasisStyle === 'caps') {
+      processedText = processedText.replace(/\bimportant\b/gi, 'IMPORTANT');
+      processedText = processedText.replace(/\bresults\b/gi, 'RESULTS');
+    }
+    
+    // Apply transition preferences
+    const transitions = personality.communicationPatterns.transitionPreferences;
+    if (transitions.length > 0 && Math.random() < 0.3) {
+      const sentences = processedText.split('. ');
+      if (sentences.length > 2) {
+        const randomTransition = transitions[Math.floor(Math.random() * transitions.length)];
+        const insertIndex = Math.floor(sentences.length / 2);
+        sentences[insertIndex] = `${randomTransition}, ${sentences[insertIndex].toLowerCase()}`;
+        processedText = sentences.join('. ');
+      }
+    }
+    
+    return processedText;
+  };
+  
+  // 2. Inject cognitive authenticity markers
+  const injectCognitiveMarkers = (text: string, personality: PersonalityProfile, situation: SituationalContext): string => {
+    let processedText = text;
+    
+    // Add metacognitive markers based on mental state
+    if (situation.mentalState === 'working-through') {
+      const thinkingMarkers = [
+        'Let me think about this...',
+        'Actually, what I mean is...',
+        'Now that I think about it...',
+        'Here\'s how I see it...',
+        'Wait, let me rephrase that...'
+      ];
+      
+      if (Math.random() < 0.25) {
+        const randomMarker = thinkingMarkers[Math.floor(Math.random() * thinkingMarkers.length)];
+        const sentences = processedText.split('. ');
+        const insertIndex = Math.floor(sentences.length * 0.3) + Math.floor(Math.random() * Math.floor(sentences.length * 0.4));
+        if (insertIndex < sentences.length) {
+          sentences[insertIndex] = `${randomMarker} ${sentences[insertIndex]}`;
+          processedText = sentences.join('. ');
+        }
+      }
+    }
+    
+    // Add uncertainty markers based on vulnerability level
+    if (personality.emotionalMarkers.vulnerabilityLevel > 0.5) {
+      personality.emotionalMarkers.hesitationPatterns.forEach(pattern => {
+        if (Math.random() < 0.12) {
+          const regex = new RegExp(`\\b(I believe|I feel|I think|This is)\\b`, 'gi');
+          processedText = processedText.replace(regex, `${pattern} $1`);
+        }
+      });
+    }
+    
+    return processedText;
+  };
+  
+  // 3. Apply linguistic fingerprinting
+  const applyLinguisticFingerprint = (text: string, personality: PersonalityProfile): string => {
+    let processedText = text;
+    
+    // Apply filler words based on personality
+    if (Math.random() < 0.3) {
+      const fillers = personality.linguisticFingerprint.favoriteFillers;
+      const randomFiller = fillers[Math.floor(Math.random() * fillers.length)];
+      
+      // Insert filler words naturally
+      processedText = processedText.replace(/\b(is|are)\b/g, (match, verb) => {
+        return Math.random() < 0.2 ? `${verb} ${randomFiller}` : match;
+      });
+    }
+    
+    // Apply contraction consistency
+    const contractionMap: { [key: string]: string } = {
+      'we are': "we're",
+      'it is': "it's", 
+      'that is': "that's",
+      'cannot': "can't",
+      'will not': "won't",
+      'should not': "shouldn't",
+      'would not': "wouldn't",
+      'do not': "don't",
+      'does not': "doesn't"
+    };
+    
+    Object.entries(contractionMap).forEach(([full, contracted]) => {
+      if (Math.random() < personality.linguisticFingerprint.contractionConsistency) {
+        const regex = new RegExp(`\\b${full}\\b`, 'gi');
+        processedText = processedText.replace(regex, contracted);
+      }
+    });
+    
+    return processedText;
+  };
+  
+  // 4. Add subtle human imperfections (legacy function enhanced)
   const addHumanImperfections = (text: string): string => {
     let processedText = text;
     
@@ -349,7 +677,10 @@ The goal is content so human that it passes every AI detection test because it g
     return processedText;
   };
   
-  // 3. Apply humanization enhancements
+  // 3. Apply advanced humanization pipeline
+  result = applyPersonalityPatterns(result, personality);
+  result = injectCognitiveMarkers(result, personality, situation);
+  result = applyLinguisticFingerprint(result, personality);
   result = addHumanImperfections(result);
   result = addNaturalFlow(result);
 
