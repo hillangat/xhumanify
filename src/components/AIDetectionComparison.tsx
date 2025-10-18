@@ -184,7 +184,7 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
         }
       }
       
-      // Process processed text second (after delay)
+      // Process humanized text second (after delay)
       if (processedText.trim()) {
         setCurrentStep('processed');
         setStepProgress(75);
@@ -192,7 +192,7 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
         toast.current?.show({
           severity: 'info',
           summary: 'Processing Humanized Content',
-          detail: 'Analyzing processed text for AI patterns...',
+          detail: 'Analyzing humanized text for AI patterns...',
           life: 3000
         });
         
@@ -350,7 +350,7 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
               <i className="pi pi-clone" />
               Text Comparison
             </h3>
-            <p>Enter your original and processed text to compare AI detection results side by side.</p>
+            <p>Enter your original and humanized text to compare AI detection results side by side.</p>
           </div>
           
           <div className="input-grid">
@@ -376,7 +376,7 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
             </div>
 
             <div className="input-column">
-              <h4>Processed Text</h4>
+              <h4>Humanized Text</h4>
               <InputTextarea
                 value={processedText}
                 onChange={(e) => onProcessedTextChange?.(e.target.value)}
@@ -459,7 +459,7 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
                   </div>
                   <div className="step-content">
                     <h4>Processed Content Analysis</h4>
-                    <p>{processedText.trim() ? 'Analyzing humanized text for improvements' : 'No processed text provided'}</p>
+                    <p>{processedText.trim() ? 'Analyzing humanized text for improvements' : 'No humanized text provided'}</p>
                     {currentStep === 'processed' && (
                       <Chip label="Processing..." icon="pi pi-clock" className="processing-chip" />
                     )}
@@ -561,15 +561,15 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
                   <AIDetectionResults
                     analysisResult={processedAnalysis.analysis}
                     originalText={processedAnalysis.originalText}
-                    title="Processed Text Results"
+                    title="Humanized Text Results"
                     className="processed-results"
                   />
                 ) : (
                   <Card className="no-analysis">
                     <div className="no-analysis-content">
                       <i className="pi pi-info-circle" />
-                      <h4>No Processed Text Analysis</h4>
-                      <p>Enter processed text and run comparison to see results here.</p>
+                      <h4>No Humanized Text Analysis</h4>
+                      <p>Enter humanized text and run comparison to see results here.</p>
                     </div>
                   </Card>
                 )}

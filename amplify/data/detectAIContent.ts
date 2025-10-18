@@ -132,6 +132,152 @@ class RequestQueue {
   }
 }
 
+// HTML sanitization function to prevent markup contamination
+function sanitizeText(text: string): string {
+  if (!text || typeof text !== 'string') return '';
+  
+  return text
+    // Remove HTML tags completely
+    .replace(/<[^>]*>/g, '')
+    // Decode HTML entities
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+    // Remove data attributes and class attributes
+    .replace(/\s*data-[^=]*="[^"]*"/g, '')
+    .replace(/\s*class="[^"]*"/g, '')
+    // Clean up excessive whitespace
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// Enhanced function to find accurate indices with fuzzy matching
+function findAccurateIndices(originalText: string, searchText: string, contextWindow: number = 50): { startIndex: number, endIndex: number, actualText: string } {
+  // Sanitize both texts to ensure clean comparison
+  const cleanOriginal = sanitizeText(originalText);
+  const cleanSearch = sanitizeText(searchText);
+  
+  if (!cleanSearch || cleanSearch.length === 0) {
+    return { startIndex: 0, endIndex: 0, actualText: '' };
+  }
+  
+  // Strategy 1: Exact match
+  let startIndex = cleanOriginal.indexOf(cleanSearch);
+  if (startIndex !== -1) {
+    return {
+      startIndex,
+      endIndex: startIndex + cleanSearch.length,
+      actualText: cleanOriginal.substring(startIndex, startIndex + cleanSearch.length)
+    };
+  }
+  
+  // Strategy 2: Case-insensitive match
+  const lowerOriginal = cleanOriginal.toLowerCase();
+  const lowerSearch = cleanSearch.toLowerCase();
+  startIndex = lowerOriginal.indexOf(lowerSearch);
+  if (startIndex !== -1) {
+    return {
+      startIndex,
+      endIndex: startIndex + cleanSearch.length,
+      actualText: cleanOriginal.substring(startIndex, startIndex + cleanSearch.length)
+    };
+  }
+  
+  // Strategy 3: Fuzzy match by word boundaries
+  const searchWords = cleanSearch.split(/\s+/).filter(word => word.length > 2);
+  if (searchWords.length > 0) {
+    // Find the first significant word
+    const firstWord = searchWords[0];
+    const firstWordIndex = lowerOriginal.indexOf(firstWord.toLowerCase());
+    
+    if (firstWordIndex !== -1) {
+      // Try to find a reasonable segment around this word
+      const segmentStart = Math.max(0, firstWordIndex - contextWindow);
+      const segmentEnd = Math.min(cleanOriginal.length, firstWordIndex + cleanSearch.length + contextWindow);
+      const segment = cleanOriginal.substring(segmentStart, segmentEnd);
+      
+      // Check if this segment contains most of our search words
+      const foundWords = searchWords.filter(word => 
+        segment.toLowerCase().includes(word.toLowerCase())
+      );
+      
+      if (foundWords.length >= Math.ceil(searchWords.length * 0.6)) { // 60% match threshold
+        return {
+          startIndex: segmentStart,
+          endIndex: Math.min(segmentEnd, segmentStart + cleanSearch.length),
+          actualText: segment.substring(0, Math.min(segment.length, cleanSearch.length))
+        };
+      }
+    }
+  }
+  
+  // Strategy 4: Partial match with longest common substring
+  let bestMatch = { start: 0, length: 0 };
+  const minMatchLength = Math.min(20, Math.floor(cleanSearch.length * 0.3));
+  
+  for (let i = 0; i <= cleanOriginal.length - minMatchLength; i++) {
+    for (let j = minMatchLength; j <= cleanSearch.length && i + j <= cleanOriginal.length; j++) {
+      const originalSubstring = cleanOriginal.substring(i, i + j).toLowerCase();
+      const searchSubstring = cleanSearch.substring(0, j).toLowerCase();
+      
+      if (originalSubstring === searchSubstring && j > bestMatch.length) {
+        bestMatch = { start: i, length: j };
+      }
+    }
+  }
+  
+  if (bestMatch.length >= minMatchLength) {
+    return {
+      startIndex: bestMatch.start,
+      endIndex: bestMatch.start + bestMatch.length,
+      actualText: cleanOriginal.substring(bestMatch.start, bestMatch.start + bestMatch.length)
+    };
+  }
+  
+  // Strategy 5: Return safe fallback
+  return {
+    startIndex: 0,
+    endIndex: Math.min(cleanSearch.length, cleanOriginal.length),
+    actualText: cleanOriginal.substring(0, Math.min(cleanSearch.length, cleanOriginal.length))
+  };
+}
+
+// Function to validate and correct flag indices
+function validateAndCorrectFlags(flags: any[], originalText: string): any[] {
+  const cleanOriginalText = sanitizeText(originalText);
+  
+  return flags.map(flag => {
+    // Skip flags that represent entire text or conceptual patterns
+    if (flag.text === 'Entire text' || 
+        flag.text.includes('...') || 
+        flag.text.toLowerCase().includes('throughout') ||
+        flag.text.toLowerCase().includes('pattern') ||
+        flag.endIndex - flag.startIndex > cleanOriginalText.length * 0.8) {
+      return {
+        ...flag,
+        startIndex: 0,
+        endIndex: cleanOriginalText.length,
+        text: flag.text === 'Entire text' ? 'Entire text' : flag.text,
+        actualText: 'Entire text'
+      };
+    }
+    
+    // For specific text segments, find accurate indices
+    const result = findAccurateIndices(cleanOriginalText, flag.text);
+    
+    return {
+      ...flag,
+      startIndex: result.startIndex,
+      endIndex: result.endIndex,
+      text: result.actualText || flag.text,
+      originalSearchText: flag.text, // Keep original for debugging
+      confidence: result.actualText === sanitizeText(flag.text) ? flag.confidence : Math.max(50, flag.confidence - 20)
+    };
+  });
+}
+
 export const handler: Schema["detectAIContent"]["functionHandler"] = async (
   event,
   context
@@ -143,8 +289,11 @@ export const handler: Schema["detectAIContent"]["functionHandler"] = async (
     throw new Error("Text content is required for AI detection analysis");
   }
 
+  // Sanitize input to prevent HTML contamination
+  const cleanTextToAnalyze = sanitizeText(textToAnalyze);
+
   // Calculate appropriate token limits based on input size
-  const inputTokenEstimate = Math.ceil(textToAnalyze.length / 4);
+  const inputTokenEstimate = Math.ceil(cleanTextToAnalyze.length / 4);
   // Reserve tokens: system prompt (~800) + user prompt (~200) + JSON structure (~1000) = ~2000
   const reservedTokens = 2000;
   const maxTokens = Math.min(
@@ -176,9 +325,9 @@ Always use the analyze_content tool to provide your analysis in the required str
           content: [
             {
               type: "text",
-              text: `Please analyze the following text for AI-generated content patterns and provide a detailed assessment:
+              text: `Please analyze the following text for AI-generated content patterns and provide a detailed assessment. IMPORTANT: When providing text examples in flags, use EXACT quotes from the original text. Do not paraphrase or summarize.
 
-${textToAnalyze.length > 4000 ? textToAnalyze.substring(0, 4000) + "..." : textToAnalyze}`,
+${cleanTextToAnalyze.length > 4000 ? cleanTextToAnalyze.substring(0, 4000) + "..." : cleanTextToAnalyze}`,
             },
           ],
         },
@@ -233,7 +382,7 @@ ${textToAnalyze.length > 4000 ? textToAnalyze.substring(0, 4000) + "..." : textT
                     text: {
                       type: "string",
                       maxLength: 100,
-                      description: "Example text that triggered this flag"
+                      description: "EXACT quote from the original text (not paraphrased)"
                     },
                     startIndex: {
                       type: "integer",
@@ -418,16 +567,19 @@ ${textToAnalyze.length > 4000 ? textToAnalyze.substring(0, 4000) + "..." : textT
       }
     }
 
-    // Ensure required fields exist
+    // Ensure required fields exist and validate/correct indices
     if (!analysisResult.overallScore) analysisResult.overallScore = 0;
     if (!analysisResult.flags) analysisResult.flags = [];
     if (!analysisResult.metrics) analysisResult.metrics = {};
     if (!analysisResult.recommendations) analysisResult.recommendations = [];
 
+    // Validate and correct flag indices for accurate text positioning
+    analysisResult.flags = validateAndCorrectFlags(analysisResult.flags, cleanTextToAnalyze);
+
     // Return structured data with analysis results and usage info
     return JSON.stringify({
       analysis: analysisResult,
-      originalText: textToAnalyze,
+      originalText: cleanTextToAnalyze, // Return sanitized text
       usage: {
         inputTokens: userInputTokens, // Only user input tokens (system prompt excluded)
         outputTokens,
@@ -464,7 +616,7 @@ ${textToAnalyze.length > 4000 ? textToAnalyze.substring(0, 4000) + "..." : textT
           "Contact support if issue persists"
         ]
       },
-      originalText: textToAnalyze,
+      originalText: cleanTextToAnalyze,
       usage: {
         inputTokens: 0,
         outputTokens: 0,
