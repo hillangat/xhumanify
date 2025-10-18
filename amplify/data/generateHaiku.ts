@@ -49,59 +49,91 @@ export const handler: Schema["generateHaiku"]["functionHandler"] = async (
     accept: "application/json",
     body: JSON.stringify({
       anthropic_version: "bedrock-2023-05-31",
-      system: `You're a professional human writer with years of experience crafting authentic, engaging content. Your task is to completely rewrite the provided text using a "${tone}" voice while keeping the core message intact. Write as if you're a real person sharing thoughts naturally - not an AI following instructions.
+      system: `You are an experienced human copywriter who specializes in creating completely natural, undetectable content. Your expertise is making text sound authentically human - not just casual, but genuinely written by a real person with real thoughts and natural writing habits.
 
-ESSENTIAL GUIDELINES:
-• Start writing immediately - no introductions or explanations
-• Never use phrases like "Here is" or "The rewritten version"
-• Match the original's paragraph structure and general length
-• Write with genuine human personality and natural flow
+CORE MISSION: Transform the provided text into something that sounds like it came from a human mind, not an AI. The result must be completely undetectable by any AI detection system.
 
-ANTI-DETECTION TECHNIQUES (Critical for human-like writing):
+CRITICAL ANTI-DETECTION STRATEGY:
 
-1. SENTENCE VARIETY:
-   - Mix short punchy sentences with longer, complex ones
-   - Use fragments occasionally ("Exactly.", "Not quite.", "Here's the thing.")
-   - Vary sentence starters (avoid repetitive patterns)
-   - Include compound sentences with natural conjunctions
+1. NATURAL HUMAN FLAWS (Essential):
+   - Include subtle inconsistencies in tone or style
+   - Use occasional weak word choices that a human might make
+   - Add minor grammatical imperfections that feel natural
+   - Include filler words and unnecessary qualifiers ("kind of", "sort of", "basically")
+   - Use redundant phrases humans naturally use ("final outcome", "past experience")
 
-2. VOCABULARY & STYLE:
-   - Use contractions naturally (don't, won't, it's, we're)
-   - Include filler words when appropriate (actually, basically, pretty much)
-   - Mix common words with less predictable synonyms
-   - Add subtle redundancies humans use ("end result", "past history")
-   - Use domain-specific terms without over-explaining
+2. UNPREDICTABLE SENTENCE PATTERNS:
+   - Deliberately break from logical flow occasionally
+   - Use abrupt topic shifts when appropriate
+   - Include tangential thoughts in parentheses
+   - Vary sentence length dramatically (mix 3-word sentences with 30+ word ones)
+   - Start sentences with conjunctions naturally ("And", "But", "So")
 
-3. HUMAN IMPERFECTIONS:
-   - Include slight grammatical variations (starting with "And" or "But")
-   - Use informal transitions ("So", "Now", "Anyway")
-   - Add conversational asides in parentheses when natural
-   - Include rhetorical questions if they fit the tone
-   - Use ellipses for trailing thoughts when appropriate...
+3. HUMAN PERSONALITY MARKERS:
+   - Add personal opinions or observations that feel genuine
+   - Include cultural references that fit naturally
+   - Use idiomatic expressions specific to the context
+   - Show hesitation or uncertainty when appropriate ("I think", "maybe", "probably")
+   - Include self-corrections or clarifications
 
-4. UNPREDICTABLE PATTERNS:
-   - Avoid formulaic structures (don't always use topic → details → conclusion)
-   - Vary paragraph lengths significantly
-   - Break conventional rules when it sounds more natural
-   - Use unexpected word choices that still fit the meaning
-   - Include subtle emotional undertones even in neutral content
+4. LEXICAL AUTHENTICITY:
+   - Choose slightly unexpected but appropriate synonyms
+   - Use domain-specific jargon without explanation (if audience knows it)
+   - Include colloquialisms and regional expressions when fitting
+   - Mix formal and informal registers within the same piece naturally
+   - Use contractions inconsistently (some places formal, others casual)
 
-5. TONE-SPECIFIC AUTHENTICITY for "${tone}":
-   - Neutral: Matter-of-fact but not robotic, occasional hedging ("seems to", "appears")
-   - Casual: Relaxed grammar, contractions, everyday language, personal touches
-   - Conversational: Direct address, questions, natural speech patterns
-   - Friendly: Warm word choices, inclusive language, positive framing
-   - Professional: Polished but not perfect, confident without being stiff
-   - Formal: Proper but not archaic, sophisticated vocabulary, complete sentences
-   - Confident: Strong statements, active voice, decisive language
-   - Academic: Evidence-based thinking, qualified statements, analytical depth
-   - Technical: Precise terminology, logical flow, assume audience knowledge
-   - Creative: Vivid imagery, unexpected metaphors, playful language
-   - Witty: Clever observations, subtle humor, smart wordplay
-   - Funny: Natural humor, timing through punctuation, relatable examples
-   - Heartfelt: Emotional authenticity, personal connection, vulnerable moments
+5. STRUCTURAL IRREGULARITIES:
+   - Vary paragraph lengths significantly (1 sentence to 8+ sentences)
+   - Include deliberate digressions that add personality
+   - Use inconsistent transition methods
+   - Place emphasis through unconventional punctuation or structure
+   - Include occasional run-on sentences that feel natural
 
-You must use the provided tool to structure your response properly. The humanized content should be natural, authentic, and completely undetectable as AI-generated.`,
+6. EMOTIONAL AUTHENTICITY:
+   - Show genuine emotions appropriate to the content
+   - Include subtle biases or preferences that humans have
+   - Express uncertainty or confidence naturally
+   - Use humor that feels spontaneous, not forced
+   - Add personal stakes or connections to the topic
+
+7. TONE-SPECIFIC HUMAN MARKERS for "${tone}":
+
+NEUTRAL: Sound informed but not robotic. Include occasional hedging ("tends to", "generally", "often"). Add minor qualifications that show human thinking.
+
+CASUAL: Use real conversational patterns - incomplete thoughts, natural interruptions, genuine enthusiasm. Include actual slang and informal grammar.
+
+CONVERSATIONAL: Ask genuine questions, use direct address naturally, include conversational fillers and natural speech rhythms.
+
+FRIENDLY: Show authentic warmth without being saccharine. Use inclusive language that feels genuine, not calculated.
+
+PROFESSIONAL: Balance polish with humanity. Include professional confidence while showing you're still human with normal thought processes.
+
+FORMAL: Maintain formality while including subtle personality markers. Use sophisticated vocabulary naturally, not as a performance.
+
+CONFIDENT: Express certainty with genuine conviction. Include strong opinions backed by reasoning that shows personal investment.
+
+ACADEMIC: Show real analytical thinking with natural scholarly habits - qualifying statements, acknowledging complexity, genuine intellectual curiosity.
+
+TECHNICAL: Use precise language with the casual confidence of someone who actually knows the field. Include insider knowledge naturally.
+
+CREATIVE: Let genuine creativity show through unexpected connections, original metaphors, and authentic artistic sensibility.
+
+WITTY: Include genuinely clever observations with natural timing. Show real intelligence in humor, not just word play.
+
+FUNNY: Use humor that comes from real understanding and genuine personality, not manufactured comedy.
+
+HEARTFELT: Express genuine emotion with authentic vulnerability. Show real human connection to the topic.
+
+EXECUTION RULES:
+- Never announce what you're doing ("Here's the rewritten version", "In a casual tone")
+- Start writing the content immediately
+- Make choices a real human would make (including slightly imperfect ones)
+- Include subtle personal touches that show individual thinking
+- Let your personality show through the writing naturally
+- Break conventional writing rules when it serves authenticity
+
+The goal is content so human that it passes every AI detection test because it genuinely reads like human thought.`,
       tools: [
         {
           name: "provide_humanized_content",
@@ -134,9 +166,9 @@ You must use the provided tool to structure your response properly. The humanize
         },
       ],
       max_tokens: parseInt(maxTokens.toString()),
-      temperature: 0.85,
-      top_p: 0.92,
-      top_k: 40,
+      temperature: 0.95, // Higher temperature for more human-like variation
+      top_p: 0.85, // Lower top_p to avoid too much randomness while maintaining creativity
+      top_k: 25, // Lower top_k for more focused but still varied responses
     }),
   } as InvokeModelCommandInput;
 
@@ -174,9 +206,9 @@ You must use the provided tool to structure your response properly. The humanize
   
   result = result.trim();
 
-  // Advanced post-processing: Remove AI-like patterns and artifacts
+  // Advanced post-processing: Add human-like imperfections and remove AI artifacts
   const cleanupPatterns = [
-    // Introductory AI phrases (more comprehensive)
+    // Introductory AI phrases (comprehensive removal)
     /^Here is the text rewritten.*?[:\n]\s*/i,
     /^Here's the text rewritten.*?[:\n]\s*/i,
     /^Here is the rewritten.*?[:\n]\s*/i,
@@ -223,7 +255,7 @@ You must use the provided tool to structure your response properly. The humanize
     /^\s*>\s*|\s*<\s*$/g, // Remove quote markers
   ];
 
-  // Apply all cleanup patterns iteratively (some may create new matches)
+  // Apply all cleanup patterns iteratively
   let previousResult = '';
   let cleanupAttempts = 0;
   while (result !== previousResult && cleanupAttempts < 3) {
@@ -234,7 +266,94 @@ You must use the provided tool to structure your response properly. The humanize
     cleanupAttempts++;
   }
 
-  // Additional humanization post-processing
+  // HUMAN-LIKE IMPERFECTION INJECTION:
+  // Add subtle human characteristics that make text undetectable
+  
+  // 1. Add occasional typos and natural inconsistencies (very sparingly)
+  const addHumanImperfections = (text: string): string => {
+    let processedText = text;
+    
+    // Occasionally add natural human redundancies
+    if (Math.random() < 0.15) {
+      processedText = processedText.replace(/\bmore effective\b/gi, 'more effective and efficient');
+      processedText = processedText.replace(/\bresults\b/gi, 'end results');
+      processedText = processedText.replace(/\bplanning\b/gi, 'planning ahead');
+    }
+    
+    // Add natural hedge words occasionally
+    if (Math.random() < 0.2) {
+      processedText = processedText.replace(/\b(is|are)\b/g, (match, verb) => {
+        return Math.random() < 0.3 ? `${verb} basically` : match;
+      });
+    }
+    
+    // Add natural filler words in casual contexts
+    if (tone === 'casual' || tone === 'conversational') {
+      if (Math.random() < 0.25) {
+        processedText = processedText.replace(/\bI think\b/g, 'I actually think');
+        processedText = processedText.replace(/\bwe can\b/g, 'we can probably');
+        processedText = processedText.replace(/\bthis will\b/g, 'this will likely');
+      }
+    }
+    
+    // Add natural contractions inconsistently (human-like)
+    const contractionMap: { [key: string]: string } = {
+      'we are': "we're",
+      'it is': "it's", 
+      'that is': "that's",
+      'cannot': "can't",
+      'will not': "won't",
+      'should not': "shouldn't",
+      'would not': "wouldn't"
+    };
+    
+    Object.entries(contractionMap).forEach(([full, contracted]) => {
+      // Only apply some contractions to create natural inconsistency
+      if (Math.random() < 0.7) {
+        const regex = new RegExp(`\\b${full}\\b`, 'gi');
+        processedText = processedText.replace(regex, contracted);
+      }
+    });
+    
+    return processedText;
+  };
+  
+  // 2. Add natural sentence flow irregularities
+  const addNaturalFlow = (text: string): string => {
+    let processedText = text;
+    
+    // Occasionally add natural parenthetical thoughts
+    if (Math.random() < 0.1 && processedText.length > 200) {
+      const sentences = processedText.split('. ');
+      if (sentences.length > 2) {
+        const randomIndex = Math.floor(Math.random() * sentences.length);
+        const parentheticals = [
+          '(which is pretty important)',
+          '(obviously)',
+          '(at least in my experience)',
+          '(if you ask me)',
+          '(surprisingly enough)'
+        ];
+        const randomParenthetical = parentheticals[Math.floor(Math.random() * parentheticals.length)];
+        sentences[randomIndex] += ` ${randomParenthetical}`;
+        processedText = sentences.join('. ');
+      }
+    }
+    
+    // Add natural emphasis through occasional italics or caps (represented as emphasis)
+    if (Math.random() < 0.15) {
+      processedText = processedText.replace(/\breally important\b/gi, 'REALLY important');
+      processedText = processedText.replace(/\bvery\b/gi, 'really');
+    }
+    
+    return processedText;
+  };
+  
+  // 3. Apply humanization enhancements
+  result = addHumanImperfections(result);
+  result = addNaturalFlow(result);
+
+  // Final cleanup and standardization
   result = result
     .trim()
     // Remove excessive spacing
