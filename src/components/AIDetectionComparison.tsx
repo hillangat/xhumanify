@@ -6,6 +6,8 @@ import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Toast } from 'primereact/toast';
 import { Divider } from 'primereact/divider';
+import { ProgressBar } from 'primereact/progressbar';
+import { Chip } from 'primereact/chip';
 import FeaturePage from './FeaturePage';
 import AIDetectionResults from './AIDetectionResults';
 import './AIDetectionComparison.scss';
@@ -66,6 +68,8 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
   const [rawAnalysis, setRawAnalysis] = useState<DetectionResponse | null>(null);
   const [processedAnalysis, setProcessedAnalysis] = useState<DetectionResponse | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [currentStep, setCurrentStep] = useState<'idle' | 'raw' | 'processed' | 'complete'>('idle');
+  const [stepProgress, setStepProgress] = useState(0);
 
   // Advanced retry logic with exponential backoff
   const retryWithBackoff = async (fn: () => Promise<any>, maxRetries: number = 3): Promise<any> => {
@@ -130,26 +134,74 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
     setIsAnalyzing(true);
     setRawAnalysis(null);
     setProcessedAnalysis(null);
+    setCurrentStep('idle');
+    setStepProgress(0);
 
     try {
-      const promises = [];
+      // SEQUENTIAL PROCESSING TO PREVENT THROTTLING
+      const results = [];
+      const totalSteps = (rawText.trim() ? 1 : 0) + (processedText.trim() ? 1 : 0);
+      let completedSteps = 0;
       
+      // Process raw text first
       if (rawText.trim()) {
-        promises.push(analyzeWithRetry(rawText, 'raw'));
+        setCurrentStep('raw');
+        setStepProgress(25);
+        
+        toast.current?.show({
+          severity: 'info',
+          summary: 'Processing Original Content',
+          detail: 'Analyzing original text for AI patterns...',
+          life: 3000
+        });
+        
+        try {
+          const rawResult = await analyzeWithRetry(rawText, 'raw');
+          results.push(rawResult);
+          completedSteps++;
+          setStepProgress(50);
+          
+          // Smart delay between calls to prevent throttling
+          if (processedText.trim()) {
+            console.log('Adding delay between analysis calls to prevent throttling...');
+            
+            toast.current?.show({
+              severity: 'info',
+              summary: 'Preparing Next Analysis',
+              detail: 'Adding delay to prevent service throttling...',
+              life: 2000
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 2000)); // 2 second delay
+          }
+        } catch (error) {
+          console.error('Raw text analysis failed:', error);
+        }
       }
       
+      // Process processed text second (after delay)
       if (processedText.trim()) {
-        promises.push(analyzeWithRetry(processedText, 'processed'));
+        setCurrentStep('processed');
+        setStepProgress(75);
+        
+        toast.current?.show({
+          severity: 'info',
+          summary: 'Processing Humanized Content',
+          detail: 'Analyzing processed text for AI patterns...',
+          life: 3000
+        });
+        
+        try {
+          const processedResult = await analyzeWithRetry(processedText, 'processed');
+          results.push(processedResult);
+          completedSteps++;
+        } catch (error) {
+          console.error('Processed text analysis failed:', error);
+        }
       }
-
-      toast.current?.show({
-        severity: 'info',
-        summary: 'Analysis Started',
-        detail: 'Running AI detection analysis. This may take a moment...',
-        life: 3000
-      });
-
-      const results = await Promise.all(promises);
+      
+      setCurrentStep('complete');
+      setStepProgress(100);
       
       results.forEach(({ type, response }) => {
         if (response.data) {
@@ -201,6 +253,8 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
     } finally {
       setIsAnalyzing(false);
       setIsRetrying(false);
+      setCurrentStep('idle');
+      setStepProgress(0);
     }
   };
 
@@ -345,6 +399,100 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
             />
           </div>
         </Card>
+
+        {/* Professional Progress Panel */}
+        {isAnalyzing && (
+          <Card className="progress-panel">
+            <div className="progress-header">
+              <h3>
+                <i className="pi pi-cog pi-spin" />
+                Processing Analysis Pipeline
+              </h3>
+              <p>Sequential processing to ensure optimal performance and accuracy</p>
+            </div>
+            
+            <div className="progress-content">
+              <div className="progress-steps">
+                <div className={`step-item ${currentStep === 'raw' || currentStep === 'processed' || currentStep === 'complete' ? 'active' : ''} ${(currentStep === 'processed' || currentStep === 'complete') && rawText.trim() ? 'completed' : ''}`}>
+                  <div className="step-icon">
+                    {(currentStep === 'processed' || currentStep === 'complete') && rawText.trim() ? (
+                      <i className="pi pi-check" />
+                    ) : currentStep === 'raw' ? (
+                      <i className="pi pi-spin pi-spinner" />
+                    ) : (
+                      <i className="pi pi-file-edit" />
+                    )}
+                  </div>
+                  <div className="step-content">
+                    <h4>Original Content Analysis</h4>
+                    <p>{rawText.trim() ? 'Analyzing original text for AI patterns' : 'No original text provided'}</p>
+                    {currentStep === 'raw' && (
+                      <Chip label="Processing..." icon="pi pi-clock" className="processing-chip" />
+                    )}
+                    {(currentStep === 'processed' || currentStep === 'complete') && rawText.trim() && (
+                      <Chip label="Completed" icon="pi pi-check" className="completed-chip" />
+                    )}
+                  </div>
+                </div>
+
+                <div className="step-divider">
+                  <div className={`divider-line ${currentStep === 'processed' || currentStep === 'complete' ? 'active' : ''}`}>
+                    <i className="pi pi-arrow-right" />
+                  </div>
+                </div>
+
+                <div className={`step-item ${currentStep === 'processed' || currentStep === 'complete' ? 'active' : ''} ${currentStep === 'complete' && processedText.trim() ? 'completed' : ''}`}>
+                  <div className="step-icon">
+                    {currentStep === 'complete' && processedText.trim() ? (
+                      <i className="pi pi-check" />
+                    ) : currentStep === 'processed' ? (
+                      <i className="pi pi-spin pi-spinner" />
+                    ) : (
+                      <i className="pi pi-user" />
+                    )}
+                  </div>
+                  <div className="step-content">
+                    <h4>Processed Content Analysis</h4>
+                    <p>{processedText.trim() ? 'Analyzing humanized text for improvements' : 'No processed text provided'}</p>
+                    {currentStep === 'processed' && (
+                      <Chip label="Processing..." icon="pi pi-clock" className="processing-chip" />
+                    )}
+                    {currentStep === 'complete' && processedText.trim() && (
+                      <Chip label="Completed" icon="pi pi-check" className="completed-chip" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="progress-bar-section">
+                <div className="progress-info">
+                  <span className="progress-text">
+                    {currentStep === 'raw' && rawText.trim() && 'Processing original content...'}
+                    {currentStep === 'processed' && processedText.trim() && 'Processing humanized content...'}
+                    {currentStep === 'complete' && 'Analysis complete!'}
+                    {currentStep === 'idle' && 'Initializing...'}
+                  </span>
+                  <span className="progress-percentage">{stepProgress}%</span>
+                </div>
+                <ProgressBar 
+                  value={stepProgress} 
+                  showValue={false}
+                  className="analysis-progress-bar"
+                />
+              </div>
+
+              {isRetrying && (
+                <div className="retry-notice">
+                  <Chip 
+                    label="Service is busy - retrying with intelligent backoff"
+                    icon="pi pi-exclamation-triangle"
+                    className="retry-chip"
+                  />
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
 
         {/* Improvement Summary */}
         {improvement && (
