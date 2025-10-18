@@ -140,7 +140,6 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
     try {
       // SEQUENTIAL PROCESSING TO PREVENT THROTTLING
       const results = [];
-      const totalSteps = (rawText.trim() ? 1 : 0) + (processedText.trim() ? 1 : 0);
       let completedSteps = 0;
       
       // Process raw text first
