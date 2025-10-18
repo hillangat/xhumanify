@@ -70,6 +70,7 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
   const [isRetrying, setIsRetrying] = useState(false);
   const [currentStep, setCurrentStep] = useState<'idle' | 'raw' | 'processed' | 'complete'>('idle');
   const [stepProgress, setStepProgress] = useState(0);
+  const progressPanelRef = useRef<HTMLDivElement>(null);
 
   // Advanced retry logic with exponential backoff
   const retryWithBackoff = async (fn: () => Promise<any>, maxRetries: number = 3): Promise<any> => {
@@ -136,6 +137,11 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
     setProcessedAnalysis(null);
     setCurrentStep('idle');
     setStepProgress(0);
+
+    // Scroll to progress panel after state updates
+    setTimeout(() => {
+      progressPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
 
     try {
       // SEQUENTIAL PROCESSING TO PREVENT THROTTLING
@@ -401,8 +407,9 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
 
         {/* Professional Progress Panel */}
         {isAnalyzing && (
-          <Card className="progress-panel">
-            <div className="progress-header">
+          <div ref={progressPanelRef}>
+            <Card className="progress-panel">
+              <div className="progress-header">
               <h3>
                 <i className="pi pi-cog pi-spin" />
                 Processing Analysis Pipeline
@@ -490,7 +497,8 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
                 </div>
               )}
             </div>
-          </Card>
+            </Card>
+          </div>
         )}
 
         {/* Improvement Summary */}
