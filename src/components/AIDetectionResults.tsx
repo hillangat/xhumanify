@@ -6,6 +6,7 @@ import { Divider } from 'primereact/divider';
 import { Panel } from 'primereact/panel';
 import { Chip } from 'primereact/chip';
 import { ProgressBar } from 'primereact/progressbar';
+import { Tooltip } from 'primereact/tooltip';
 import './AIDetectionResults.scss';
 
 interface AIFlag {
@@ -65,7 +66,15 @@ const AIDetectionResults: React.FC<AIDetectionResultsProps> = ({
       const severityClass = getSeverityClass(flag.severity);
       const flagId = `flag-${index}`;
       
-      const highlightedSpan = `<span class="ai-flag ${severityClass}" data-flag-id="${flagId}" data-severity="${flag.severity}" data-confidence="${flag.confidence}" title="${flag.description}">${flagText}</span>`;
+      // Escape HTML attributes properly
+      const escapedDescription = flag.description
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      
+      const highlightedSpan = `<span class="ai-flag ${severityClass}" data-pr-tooltip="${escapedDescription}" data-pr-position="top" data-flag-id="${flagId}" data-severity="${flag.severity}" data-confidence="${flag.confidence}">${flagText}</span>`;
       
       highlightedText = 
         highlightedText.substring(0, flag.startIndex) +
@@ -125,6 +134,9 @@ const AIDetectionResults: React.FC<AIDetectionResultsProps> = ({
 
   return (
     <div className={`ai-detection-results ${className}`}>
+      {/* Tooltip for AI flags */}
+      <Tooltip target=".ai-flag" />
+      
       {/* Overall Score */}
       <Card className="score-card">
         <div className="score-header">
