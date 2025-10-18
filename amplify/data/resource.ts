@@ -26,13 +26,7 @@ export const detectAIContentFunction = defineFunction({
   timeoutSeconds: 180, // Increase timeout to 180 seconds for Bedrock API calls
 });
 
-export const processContentPipelineFunction = defineFunction({
-  entry: "./processContentPipeline.ts",
-  environment: {
-    MODEL_ID,
-  },
-  timeoutSeconds: 300, // 5 minutes for sequential processing
-});
+
 
 const schema = a.schema({
   Todo: a
@@ -173,12 +167,7 @@ const schema = a.schema({
     .returns(a.string())
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(detectAIContentFunction)),
-  processContentPipeline: a
-    .query()
-    .arguments({ text: a.string().required(), tone: a.string() })
-    .returns(a.string())
-    .authorization((allow) => [allow.authenticated()])
-    .handler(a.handler.function(processContentPipelineFunction))
+
 }).authorization((allow) => [allow.resource(handleWebhook)]);
 
 export type Schema = ClientSchema<typeof schema>;
