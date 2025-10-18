@@ -220,49 +220,127 @@ async function deactivateExistingSubscriptions(userId: string) {
     return;
   }
 
+  console.log('🔍 Checking for existing active subscriptions for user:', userId);
+  
+  // Strategy 1: Try Models API first (preferred)
+  let existingSubscriptions: any[] = [];
+  let useModelsAPI = false;
+  
   try {
-    console.log('🔍 Checking for existing active subscriptions for user:', userId);
-    
-    // Use Models API to find existing active subscriptions for this user
-    const { data: activeSubscriptions } = await client.models.UserSubscription.list({
-      filter: {
-        userId: { eq: userId },
-        status: { eq: 'active' }
-      },
-      authMode: 'iam'
-    });
-    
-    console.log(`📊 Found ${activeSubscriptions?.length || 0} existing active subscriptions`);
-    
-    const existingSubscriptions = activeSubscriptions || [];
-    
-    if (existingSubscriptions.length > 0) {
-      console.log(`🔄 Found ${existingSubscriptions.length} existing active subscriptions to mark as canceled`);
+    if (client?.models?.UserSubscription?.list) {
+      console.log('🔄 Attempting Models API approach...');
+      const { data: activeSubscriptions } = await client.models.UserSubscription.list({
+        filter: {
+          userId: { eq: userId },
+          status: { eq: 'active' }
+        },
+        authMode: 'iam'
+      });
       
-      // Deactivate each existing subscription using Models API
-      for (const sub of existingSubscriptions) {
-        try {
-          console.log(`📝 Marking subscription ${sub.id} as canceled (${sub.planName})`);
-          
-          await client.models.UserSubscription.update({
-            id: sub.id,
-            status: 'canceled',
-            updatedAt: new Date().toISOString()
-          }, {
-            authMode: 'iam'
-          });
-          
-          console.log(`✅ Successfully marked subscription ${sub.id} as canceled`);
-        } catch (updateError) {
-          console.error(`❌ Failed to mark subscription ${sub.id} as canceled:`, updateError);
-        }
-      }
+      existingSubscriptions = activeSubscriptions || [];
+      useModelsAPI = true;
+      console.log(`✅ Models API successful: Found ${existingSubscriptions.length} active subscriptions`);
     } else {
-      console.log('✅ No existing active subscriptions found');
+      throw new Error('Models API not available');
     }
-  } catch (error) {
-    console.error('❌ Error checking/marking existing subscriptions as canceled:', error);
+  } catch (modelsError) {
+    console.log('⚠️ Models API failed, falling back to GraphQL:', modelsError instanceof Error ? modelsError.message : 'Unknown error');
+    
+    // Strategy 2: Fallback to direct GraphQL
+    try {
+      console.log('🔄 Attempting GraphQL fallback...');
+      const listQuery = /* GraphQL */ `
+        query ListUserSubscriptions($filter: ModelUserSubscriptionFilterInput) {
+          listUserSubscriptions(filter: $filter) {
+            items {
+              id
+              userId
+              stripeSubscriptionId
+              status
+              planName
+              createdAt
+              updatedAt
+            }
+          }
+        }
+      `;
+      
+      const result = await client.graphql({
+        query: listQuery,
+        variables: {
+          filter: {
+            userId: { eq: userId },
+            status: { eq: 'active' }
+          }
+        },
+        authMode: 'iam'
+      }) as any;
+      
+      existingSubscriptions = result?.data?.listUserSubscriptions?.items || [];
+      useModelsAPI = false;
+      console.log(`✅ GraphQL successful: Found ${existingSubscriptions.length} active subscriptions`);
+    } catch (graphqlError) {
+      console.error('❌ Both Models API and GraphQL failed:', graphqlError);
+      console.error('❌ Cannot proceed with subscription deactivation');
+      return;
+    }
   }
+  
+  // Process found subscriptions
+  if (existingSubscriptions.length === 0) {
+    console.log('✅ No existing active subscriptions found for user');
+    return;
+  }
+  
+  console.log(`🔄 Found ${existingSubscriptions.length} existing active subscriptions to mark as canceled`);
+  
+  // Mark each subscription as canceled
+  for (const sub of existingSubscriptions) {
+    try {
+      console.log(`📝 Marking subscription ${sub.id} as canceled (plan: ${sub.planName || 'unknown'})`);
+      
+      if (useModelsAPI) {
+        // Use Models API for update
+        await client.models.UserSubscription.update({
+          id: sub.id,
+          status: 'canceled',
+          updatedAt: new Date().toISOString()
+        }, {
+          authMode: 'iam'
+        });
+      } else {
+        // Use GraphQL for update
+        const updateMutation = /* GraphQL */ `
+          mutation UpdateUserSubscription($input: UpdateUserSubscriptionInput!) {
+            updateUserSubscription(input: $input) {
+              id
+              status
+              updatedAt
+            }
+          }
+        `;
+        
+        await client.graphql({
+          query: updateMutation,
+          variables: {
+            input: {
+              id: sub.id,
+              status: 'canceled',
+              updatedAt: new Date().toISOString()
+            }
+          },
+          authMode: 'iam'
+        });
+      }
+      
+      console.log(`✅ Successfully marked subscription ${sub.id} as canceled`);
+    } catch (updateError) {
+      console.error(`❌ Failed to mark subscription ${sub.id} as canceled:`, updateError);
+      // Continue with other subscriptions even if one fails
+    }
+  }
+  
+  console.log(`✅ Completed deactivation process for user ${userId}`);
 }
 
 async function handleSubscriptionCreated(event: any) {
