@@ -223,61 +223,32 @@ async function deactivateExistingSubscriptions(userId: string) {
   try {
     console.log('🔍 Checking for existing active subscriptions for user:', userId);
     
-    // Use the new GSI query for efficient userId lookups with status filtering
-    const existingSubscriptionsQuery = /* GraphQL */ `
-      query ListUserSubscriptionsByUserId($userId: ID!, $filter: ModelUserSubscriptionFilterInput) {
-        listUserSubscriptionsByUserId(userId: $userId, filter: $filter) {
-          items {
-            id
-            userId
-            stripeSubscriptionId
-            status
-            planName
-          }
-        }
-      }
-    `;
-    
-    const result = await client.graphql({
-      query: existingSubscriptionsQuery,
-      variables: {
-        userId: userId,
-        filter: {
-          status: { eq: 'active' }
-        }
+    // Use Models API to find existing active subscriptions for this user
+    const { data: activeSubscriptions } = await client.models.UserSubscription.list({
+      filter: {
+        userId: { eq: userId },
+        status: { eq: 'active' }
       },
       authMode: 'iam'
-    }) as any;
+    });
     
-    const existingSubscriptions = result?.data?.listUserSubscriptionsByUserId?.items || [];
+    console.log(`📊 Found ${activeSubscriptions?.length || 0} existing active subscriptions`);
+    
+    const existingSubscriptions = activeSubscriptions || [];
     
     if (existingSubscriptions.length > 0) {
       console.log(`🔄 Found ${existingSubscriptions.length} existing active subscriptions to mark as canceled`);
       
-      // Deactivate each existing subscription
-      const updateMutation = /* GraphQL */ `
-        mutation UpdateUserSubscription($input: UpdateUserSubscriptionInput!) {
-          updateUserSubscription(input: $input) {
-            id
-            status
-            updatedAt
-          }
-        }
-      `;
-      
+      // Deactivate each existing subscription using Models API
       for (const sub of existingSubscriptions) {
         try {
           console.log(`📝 Marking subscription ${sub.id} as canceled (${sub.planName})`);
           
-          await client.graphql({
-            query: updateMutation,
-            variables: {
-              input: {
-                id: sub.id,
-                status: 'canceled',
-                updatedAt: new Date().toISOString()
-              }
-            },
+          await client.models.UserSubscription.update({
+            id: sub.id,
+            status: 'canceled',
+            updatedAt: new Date().toISOString()
+          }, {
             authMode: 'iam'
           });
           
