@@ -7,53 +7,103 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { Toast } from 'primereact/toast';
 import { ProgressBar } from 'primereact/progressbar';
 import { Chip } from 'primereact/chip';
+import { Badge } from 'primereact/badge';
 import FeaturePage from './FeaturePage';
-import AIDetectionResults from './AIDetectionResults';
 import useRetryableRequest from '../hooks/useRetryableRequest';
 import './AIDetectionPage.scss';
 
-interface DetectionResponse {
-  analysis: {
-    overallScore: number;
-    confidence: 'low' | 'medium' | 'high' | 'very_high';
-    summary: string;
-    flags: Array<{
-      type: string;
-      severity: 'low' | 'medium' | 'high' | 'critical';
-      description: string;
-      text: string;
-      startIndex: number;
-      endIndex: number;
-      confidence: number;
-      suggestion: string;
-    }>;
-    metrics: {
-      sentenceVariability: number;
-      vocabularyDiversity: number;
-      naturalFlow: number;
-      personalityPresence: number;
-      burstiness: number;
-      perplexity: number;
+interface PipelineResponse {
+  success: boolean;
+  pipeline: {
+    originalText: string;
+    originalAnalysis: {
+      overall_assessment: {
+        ai_likelihood: number;
+        confidence_level: 'high' | 'medium' | 'low';
+        primary_indicators: string[];
+      };
+      detailed_flags: Array<{
+        category: string;
+        severity: 'high' | 'medium' | 'low';
+        description: string;
+        examples: string[];
+        recommendation: string;
+      }>;
+      human_like_elements: string[];
+      recommendations: string[];
     };
-    recommendations: string[];
+    humanizedText: string;
+    humanizedAnalysis?: {
+      overall_assessment: {
+        ai_likelihood: number;
+        confidence_level: 'high' | 'medium' | 'low';
+        primary_indicators: string[];
+      };
+      detailed_flags: Array<{
+        category: string;
+        severity: 'high' | 'medium' | 'low';
+        description: string;
+        examples: string[];
+        recommendation: string;
+      }>;
+      human_like_elements: string[];
+      recommendations: string[];
+    };
+    throttled: boolean;
   };
-  originalText: string;
   usage: {
-    inputTokens: number;
-    outputTokens: number;
-    totalTokens: number;
-    estimatedWords: number;
+    detection: {
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+    };
+    humanization: {
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+    };
+    total: {
+      inputTokens: number;
+      outputTokens: number;
+      totalTokens: number;
+    };
   };
 }
+
+// Helper functions for styling and severity mapping
+const getScoreClass = (score: number) => {
+  if (score >= 80) return 'high-ai';
+  if (score >= 60) return 'medium-ai';
+  if (score >= 30) return 'low-ai';
+  return 'human-like';
+};
+
+const getConfidenceSeverity = (confidence: string) => {
+  switch (confidence) {
+    case 'high': return 'success';
+    case 'medium': return 'warning';
+    case 'low': return 'danger';
+    default: return 'info';
+  }
+};
+
+const getFlagSeverity = (severity: string) => {
+  switch (severity) {
+    case 'high': return 'danger';
+    case 'medium': return 'warning';
+    case 'low': return 'info';
+    default: return 'secondary';
+  }
+};
 
 const AIDetectionPage: React.FC = () => {
   const client = generateClient<Schema>();
   const toast = useRef<Toast>(null);
 
   const [inputText, setInputText] = useState('');
-  const [analysisResult, setAnalysisResult] = useState<DetectionResponse | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<PipelineResponse | null>(null);
 
-  // Retryable request hook for AI detection
+  // Retryable request hook for pipeline processing
   const {
     execute: executeAnalysis,
     cancel,
@@ -64,11 +114,11 @@ const AIDetectionPage: React.FC = () => {
     error
   } = useRetryableRequest(
     async () => {
-      const response = await client.queries.detectAIContent({ text: inputText });
+      const response = await client.queries.processContentPipeline({ text: inputText, tone: 'neutral' });
       if (!response.data) {
         throw new Error('No response data received');
       }
-      return JSON.parse(response.data) as DetectionResponse;
+      return JSON.parse(response.data) as PipelineResponse;
     },
     {
       maxRetries: 3,
@@ -124,19 +174,25 @@ const AIDetectionPage: React.FC = () => {
     try {
       toast.current?.show({
         severity: 'info',
-        summary: 'Analysis Started',
-        detail: 'Running AI detection analysis...',
+        summary: 'Pipeline Started',
+        detail: 'Running AI detection and humanization sequentially...',
         life: 3000
       });
 
       const result = await executeAnalysis();
       setAnalysisResult(result);
 
+      const flagCount = result.pipeline.originalAnalysis.detailed_flags.length;
+      const improvement = result.pipeline.humanizedAnalysis ? 
+        result.pipeline.originalAnalysis.overall_assessment.ai_likelihood - result.pipeline.humanizedAnalysis.overall_assessment.ai_likelihood : 0;
+      
       toast.current?.show({
         severity: 'success',
-        summary: 'Analysis Complete',
-        detail: `AI detection analysis completed with ${result.analysis.flags.length} flags identified.`,
-        life: 3000
+        summary: 'Pipeline Complete',
+        detail: result.pipeline.throttled ? 
+          `Analysis completed with ${flagCount} flags identified. Humanization was throttled - try again later.` :
+          `Analysis and humanization completed! Improved AI likelihood by ${improvement.toFixed(1)}%.`,
+        life: 5000
       });
     } catch (error: any) {
       // Error handling is done in the onError callback
@@ -248,8 +304,8 @@ const AIDetectionPage: React.FC = () => {
                   )}
                   
                   <Button
-                    label={isAnalyzing ? (isRetrying ? "Retrying..." : "Analyzing...") : "Analyze Text"}
-                    icon={isAnalyzing ? "pi pi-spin pi-spinner" : "pi pi-search"}
+                    label={isAnalyzing ? (isRetrying ? "Retrying Pipeline..." : "Processing Pipeline...") : "Analyze & Humanize"}
+                    icon={isAnalyzing ? "pi pi-spin pi-spinner" : "pi pi-cog"}
                     onClick={handleAnalyzeText}
                     disabled={isAnalyzing || !inputText.trim()}
                     className="analyze-button"
@@ -280,13 +336,156 @@ const AIDetectionPage: React.FC = () => {
             </Card>
           )}
 
-          {/* Results Section */}
-          {analysisResult && (
-            <AIDetectionResults
-              analysisResult={analysisResult.analysis}
-              originalText={analysisResult.originalText}
-              title="Detection Results"
-            />
+          {/* Results Section - Side by Side Comparison */}
+          {analysisResult && analysisResult.success && (
+            <div className="pipeline-results">
+              <div className="results-grid">
+                {/* Original Content Analysis */}
+                <Card className="original-results">
+                  <div className="result-header">
+                    <h3>
+                      <i className="pi pi-file-edit" />
+                      Original Content Analysis
+                    </h3>
+                    <div className="analysis-score">
+                      <Chip 
+                        label={`${analysisResult.pipeline.originalAnalysis.overall_assessment.ai_likelihood}% AI-like`}
+                        className={`score-chip ${getScoreClass(analysisResult.pipeline.originalAnalysis.overall_assessment.ai_likelihood)}`}
+                      />
+                      <Badge 
+                        value={analysisResult.pipeline.originalAnalysis.overall_assessment.confidence_level.toUpperCase()}
+                        severity={getConfidenceSeverity(analysisResult.pipeline.originalAnalysis.overall_assessment.confidence_level)}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="content-preview">
+                    <h4>Content Preview</h4>
+                    <div className="text-preview">
+                      {analysisResult.pipeline.originalText.substring(0, 300)}
+                      {analysisResult.pipeline.originalText.length > 300 && '...'}
+                    </div>
+                  </div>
+                  
+                  <div className="flags-summary">
+                    <h4>Detection Flags ({analysisResult.pipeline.originalAnalysis.detailed_flags.length})</h4>
+                    {analysisResult.pipeline.originalAnalysis.detailed_flags.map((flag, index) => (
+                      <div key={index} className={`flag-item ${flag.severity}`}>
+                        <div className="flag-header">
+                          <strong>{flag.category}</strong>
+                          <Badge value={flag.severity.toUpperCase()} severity={getFlagSeverity(flag.severity)} />
+                        </div>
+                        <p>{flag.description}</p>
+                        <div className="flag-examples">
+                          {flag.examples.map((example, exIndex) => (
+                            <Chip key={exIndex} label={example} className="example-chip" />
+                          ))}
+                        </div>
+                        <div className="flag-recommendation">
+                          <small><strong>Suggestion:</strong> {flag.recommendation}</small>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+
+                {/* Humanized Content Analysis */}
+                <Card className="humanized-results">
+                  <div className="result-header">
+                    <h3>
+                      <i className="pi pi-user" />
+                      Humanized Content Analysis
+                    </h3>
+                    {!analysisResult.pipeline.throttled && analysisResult.pipeline.humanizedAnalysis ? (
+                      <div className="analysis-score">
+                        <Chip 
+                          label={`${analysisResult.pipeline.humanizedAnalysis.overall_assessment.ai_likelihood}% AI-like`}
+                          className={`score-chip ${getScoreClass(analysisResult.pipeline.humanizedAnalysis.overall_assessment.ai_likelihood)}`}
+                        />
+                        <Badge 
+                          value={analysisResult.pipeline.humanizedAnalysis.overall_assessment.confidence_level.toUpperCase()}
+                          severity={getConfidenceSeverity(analysisResult.pipeline.humanizedAnalysis.overall_assessment.confidence_level)}
+                        />
+                        <div className="improvement-badge">
+                          {(() => {
+                            const improvement = analysisResult.pipeline.originalAnalysis.overall_assessment.ai_likelihood - 
+                                              analysisResult.pipeline.humanizedAnalysis.overall_assessment.ai_likelihood;
+                            return improvement > 0 ? (
+                              <Chip 
+                                label={`↓ ${improvement.toFixed(1)}% improvement`}
+                                className="improvement-chip positive"
+                                icon="pi pi-arrow-down"
+                              />
+                            ) : null;
+                          })()}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="throttled-notice">
+                        <Chip 
+                          label="Humanization Throttled" 
+                          icon="pi pi-exclamation-triangle"
+                          className="throttled-chip"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="content-preview">
+                    <h4>Humanized Content Preview</h4>
+                    <div className="text-preview">
+                      {analysisResult.pipeline.humanizedText.substring(0, 300)}
+                      {analysisResult.pipeline.humanizedText.length > 300 && '...'}
+                    </div>
+                  </div>
+                  
+                  {analysisResult.pipeline.humanizedAnalysis && (
+                    <div className="flags-summary">
+                      <h4>Remaining Flags ({analysisResult.pipeline.humanizedAnalysis.detailed_flags.length})</h4>
+                      {analysisResult.pipeline.humanizedAnalysis.detailed_flags.length === 0 ? (
+                        <div className="no-flags">
+                          <i className="pi pi-check-circle" />
+                          <span>No AI detection flags found! Content appears human-written.</span>
+                        </div>
+                      ) : (
+                        analysisResult.pipeline.humanizedAnalysis.detailed_flags.map((flag, index) => (
+                          <div key={index} className={`flag-item ${flag.severity}`}>
+                            <div className="flag-header">
+                              <strong>{flag.category}</strong>
+                              <Badge value={flag.severity.toUpperCase()} severity={getFlagSeverity(flag.severity)} />
+                            </div>
+                            <p>{flag.description}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </Card>
+              </div>
+              
+              {/* Usage Statistics */}
+              <Card className="usage-stats">
+                <h4>Processing Statistics</h4>
+                <div className="stats-grid">
+                  <div className="stat-item">
+                    <span className="stat-label">Total Tokens Used</span>
+                    <span className="stat-value">{analysisResult.usage.total.totalTokens.toLocaleString()}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Detection Tokens</span>
+                    <span className="stat-value">{analysisResult.usage.detection.totalTokens.toLocaleString()}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Humanization Tokens</span>
+                    <span className="stat-value">{analysisResult.usage.humanization.totalTokens.toLocaleString()}</span>
+                  </div>
+                  <div className="stat-item">
+                    <span className="stat-label">Processing Mode</span>
+                    <span className="stat-value">Sequential Pipeline</span>
+                  </div>
+                </div>
+              </Card>
+            </div>
           )}
         </div>
       </div>

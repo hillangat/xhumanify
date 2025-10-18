@@ -19,6 +19,208 @@
     display: flex;
     flex-direction: column;
     gap: 2rem;
+  }
+
+  // Pipeline Results Styles
+  .pipeline-results {
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      margin-bottom: 2rem;
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .original-results,
+    .humanized-results {
+      .result-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+
+        h3 {
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          color: var(--primary-color);
+        }
+
+        .analysis-score {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 0.5rem;
+
+          .improvement-badge {
+            .improvement-chip.positive {
+              background: var(--green-100);
+              color: var(--green-800);
+            }
+          }
+        }
+
+        .throttled-notice {
+          .throttled-chip {
+            background: var(--orange-100);
+            color: var(--orange-800);
+          }
+        }
+      }
+
+      .content-preview {
+        margin-bottom: 1.5rem;
+
+        h4 {
+          margin: 0 0 0.5rem 0;
+          color: var(--text-color);
+          font-size: 1rem;
+        }
+
+        .text-preview {
+          background: var(--surface-50);
+          padding: 1rem;
+          border-radius: 8px;
+          font-family: var(--font-family);
+          line-height: 1.6;
+          border-left: 4px solid var(--primary-color);
+          max-height: 120px;
+          overflow-y: auto;
+        }
+      }
+
+      .flags-summary {
+        h4 {
+          margin: 0 0 1rem 0;
+          color: var(--text-color);
+          font-size: 1rem;
+        }
+
+        .flag-item {
+          background: var(--surface-0);
+          border: 1px solid var(--surface-200);
+          border-radius: 8px;
+          padding: 1rem;
+          margin-bottom: 1rem;
+
+          &.high {
+            border-left: 4px solid var(--red-500);
+          }
+
+          &.medium {
+            border-left: 4px solid var(--orange-500);
+          }
+
+          &.low {
+            border-left: 4px solid var(--blue-500);
+          }
+
+          .flag-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+          }
+
+          .flag-examples {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+
+            .example-chip {
+              background: var(--surface-100);
+              font-size: 0.8rem;
+            }
+          }
+
+          .flag-recommendation {
+            margin-top: 0.5rem;
+            font-style: italic;
+            color: var(--text-color-secondary);
+          }
+        }
+
+        .no-flags {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          padding: 1rem;
+          background: var(--green-50);
+          border: 1px solid var(--green-200);
+          border-radius: 8px;
+          color: var(--green-800);
+
+          .pi {
+            color: var(--green-600);
+          }
+        }
+      }
+    }
+
+    .usage-stats {
+      h4 {
+        margin: 0 0 1rem 0;
+        color: var(--text-color);
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+
+        .stat-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 1rem;
+          background: var(--surface-50);
+          border-radius: 8px;
+          text-align: center;
+
+          .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-color-secondary);
+            margin-bottom: 0.5rem;
+          }
+
+          .stat-value {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-color);
+          }
+        }
+      }
+    }
+
+    // Score chip styling
+    .score-chip {
+      &.high-ai {
+        background: var(--red-100);
+        color: var(--red-800);
+      }
+
+      &.medium-ai {
+        background: var(--orange-100);
+        color: var(--orange-800);
+      }
+
+      &.low-ai {
+        background: var(--yellow-100);
+        color: var(--yellow-800);
+      }
+
+      &.human-like {
+        background: var(--green-100);
+        color: var(--green-800);
+      }
+    }
 
     // Input Section
     .input-section {
