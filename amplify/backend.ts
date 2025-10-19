@@ -12,13 +12,13 @@ import { apiFunction } from "./functions/api-function/resource";
 import { createCheckoutSession, createPortalSession, handleWebhook } from "./functions/stripe/resource";
 import { debugSubscription } from "./functions/debug-subscription/resource";
 import { auth } from "./auth/resource";
-import { data, MODEL_ID, generateHaikuFunction, detectAIContentFunction } from "./data/resource";
+import { data, MODEL_ID, humanizeFunction, detectAIContentFunction } from "./data/resource";
 
 const backend = defineBackend({
   auth,
   data,
   apiFunction,
-  generateHaikuFunction,
+  humanizeFunction,
   detectAIContentFunction,
   createCheckoutSession,
   createPortalSession,
@@ -46,7 +46,7 @@ backend.handleWebhook.resources.lambda.addToRolePolicy(
   })
 );
 
-backend.generateHaikuFunction.resources.lambda.addToRolePolicy(
+backend.humanizeFunction.resources.lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],

@@ -10,8 +10,8 @@ specifies that any user authenticated via an API key can "create", "read",
 
 export const MODEL_ID = "us.anthropic.claude-3-5-sonnet-20240620-v1:0";
 
-export const generateHaikuFunction = defineFunction({
-  entry: "./generateHaiku.ts",
+export const humanizeFunction = defineFunction({
+  entry: "./humanize.ts",
   environment: {
     MODEL_ID,
   },
@@ -155,12 +155,12 @@ const schema = a.schema({
       allow.ownerDefinedIn('userId').to(['create', 'update', 'delete']),
       allow.guest().to(['read'])
     ]),
-  generateHaiku: a
+  humanize: a
     .query()
     .arguments({ prompt: a.string().required(), tone: a.string() })
     .returns(a.string())
     .authorization((allow) => [allow.publicApiKey()])
-    .handler(a.handler.function(generateHaikuFunction)),
+    .handler(a.handler.function(humanizeFunction)),
   detectAIContent: a
     .query()
     .arguments({ text: a.string().required() })
@@ -176,7 +176,7 @@ export const data = defineData({
   schema,
   authorizationModes: {
     defaultAuthorizationMode: "userPool",
-    // API Key is used for public operations like generateHaiku
+    // API Key is used for public operations like humanize
     apiKeyAuthorizationMode: {
       expiresInDays: 30,
     },

@@ -89,7 +89,7 @@ export default function App() {
     setUsageInfo(null);
     setAnimatedWordCount(0);
     try {
-      const { data, errors } = await client.queries.generateHaiku({
+      const { data, errors } = await client.queries.humanize({
         prompt,
         tone: selectedTone
       }, {

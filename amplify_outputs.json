@@ -1041,8 +1041,8 @@
       },
       "nonModels": {},
       "queries": {
-        "generateHaiku": {
-          "name": "generateHaiku",
+        "humanize": {
+          "name": "humanize",
           "isArray": false,
           "type": "String",
           "isRequired": false,
