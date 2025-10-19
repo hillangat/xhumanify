@@ -10,6 +10,14 @@ specifies that any user authenticated via an API key can "create", "read",
 
 export const MODEL_ID = "us.anthropic.claude-3-5-sonnet-20240620-v1:0";
 
+export const refineHumanizationFunction = defineFunction({
+  entry: "./refineHumanization.ts",
+  environment: {
+    MODEL_ID
+  },
+  timeoutSeconds: 60,
+});
+
 export const humanizeFunction = defineFunction({
   entry: "./humanize.ts",
   environment: {
@@ -155,6 +163,14 @@ const schema = a.schema({
       allow.ownerDefinedIn('userId').to(['create', 'update', 'delete']),
       allow.guest().to(['read'])
     ]),
+  refineHumanization: a
+    .query()
+    .arguments({
+      detectAIResult: a.string().required(),
+      tone: a.string()
+    })
+    .returns(a.string())
+    .handler(a.handler.function(refineHumanizationFunction)),
   humanize: a
     .query()
     .arguments({ prompt: a.string().required(), tone: a.string() })

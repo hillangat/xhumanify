@@ -12,13 +12,14 @@ import { apiFunction } from "./functions/api-function/resource";
 import { createCheckoutSession, createPortalSession, handleWebhook } from "./functions/stripe/resource";
 import { debugSubscription } from "./functions/debug-subscription/resource";
 import { auth } from "./auth/resource";
-import { data, MODEL_ID, humanizeFunction, detectAIContentFunction } from "./data/resource";
+import { data, MODEL_ID, humanizeFunction, refineHumanizationFunction, detectAIContentFunction } from "./data/resource";
 
 const backend = defineBackend({
   auth,
   data,
   apiFunction,
   humanizeFunction,
+  refineHumanizationFunction,
   detectAIContentFunction,
   createCheckoutSession,
   createPortalSession,
@@ -43,6 +44,18 @@ backend.handleWebhook.resources.lambda.addToRolePolicy(
       "appsync:GraphQL"
     ],
     resources: ["*"]
+  })
+);
+
+backend.refineHumanizationFunction.resources.lambda.addToRolePolicy(
+  new PolicyStatement({
+    effect: Effect.ALLOW,
+    actions: [
+      "bedrock:InvokeModel"
+    ],
+    resources: [
+      `arn:aws:bedrock:us-east-1::foundation-model/${MODEL_ID}`
+    ]
   })
 );
 

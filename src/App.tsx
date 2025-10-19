@@ -27,6 +27,9 @@ export default function App() {
 
   const [prompt, setPrompt] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
+  const [isRefining, setIsRefining] = useState<boolean>(false);
+  const [processingStage, setProcessingStage] = useState<string>(''); // 'humanizing' | 'detecting' | 'refining'
+  const [aiDetectionScore, setAiDetectionScore] = useState<number | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState<boolean>(true);
   const [answer, setAnswer] = useState<string | null>(null);
   const [usageInfo, setUsageInfo] = useState<any>(null);
@@ -85,44 +88,147 @@ export default function App() {
     }
 
     setIsRunning(true);
+    setIsRefining(false);
     setAnswer(null);
     setUsageInfo(null);
     setAnimatedWordCount(0);
+    setAiDetectionScore(null);
+    setProcessingStage('humanizing');
+    
     try {
-      const { data, errors } = await client.queries.humanize({
+      // Stage 1: Initial Humanization
+      const { data: humanizeData, errors: humanizeErrors } = await client.queries.humanize({
         prompt,
         tone: selectedTone
       }, {
         authMode: 'apiKey'
       });
-      if (!errors && data) {
-        try {
-          // Parse the JSON response containing content and usage data
-          const response = JSON.parse(data);
-          const content = response.content;
-          const usage = response.usage;
+      
+      if (humanizeErrors || !humanizeData) {
+        console.log('Humanization errors:', humanizeErrors);
+        throw new Error('Humanization failed');
+      }
 
-          setAnswer(content);
-          setUsageInfo(usage);
+      let humanizedContent: string;
+      let humanizeUsage: any;
+      
+      try {
+        const humanizeResponse = JSON.parse(humanizeData);
+        humanizedContent = humanizeResponse.content;
+        humanizeUsage = humanizeResponse.usage;
+      } catch (parseError) {
+        // Fallback: treat as plain text
+        humanizedContent = humanizeData;
+        humanizeUsage = null;
+      }
 
-          // Track usage with actual token data
-          if (content && usage) {
-            await trackUsageWithTokens(prompt, content, usage);
+      // Stage 2: AI Detection
+      setProcessingStage('detecting');
+      const { data: detectData, errors: detectErrors } = await client.queries.detectAIContent({
+        text: humanizedContent
+      });
+      
+      if (detectErrors || !detectData) {
+        console.log('Detection errors:', detectErrors);
+        // Continue without detection if it fails
+        setAnswer(humanizedContent);
+        setUsageInfo(humanizeUsage);
+        if (humanizedContent && humanizeUsage) {
+          await trackUsageWithTokens(prompt, humanizedContent, humanizeUsage);
+        }
+        return;
+      }
+
+      const detectionResult = JSON.parse(detectData);
+      const overallScore = detectionResult.analysis?.overallScore || 0;
+      setAiDetectionScore(overallScore);
+
+      // Stage 3: Conditional Refinement
+      if (overallScore > 30) {
+        setIsRefining(true);
+        setProcessingStage('refining');
+        
+        const { data: refineData, errors: refineErrors } = await client.queries.refineHumanization({
+          detectAIResult: detectData,
+          tone: selectedTone
+        });
+        
+        if (!refineErrors && refineData) {
+          try {
+            const refineResponse = JSON.parse(refineData);
+            const refinedContent = refineResponse.content;
+            const refineUsage = refineResponse.usage;
+            
+            setAnswer(refinedContent);
+            
+            // Combine usage from both operations
+            const combinedUsage = {
+              ...humanizeUsage,
+              refinement: refineUsage,
+              totalTokens: (humanizeUsage?.totalTokens || 0) + (refineUsage?.totalTokens || 0),
+              estimatedWords: (humanizeUsage?.estimatedWords || 0) + (refineUsage?.estimatedWords || 0)
+            };
+            setUsageInfo(combinedUsage);
+            
+            if (refinedContent && combinedUsage) {
+              await trackUsageWithTokens(prompt, refinedContent, combinedUsage);
+            }
+            
+            // Show refinement success message
+            toast.current?.show({
+              severity: 'success',
+              summary: 'Content Refined',
+              detail: `AI detection score was ${overallScore}%. Content has been automatically refined for better human authenticity.`,
+              life: 5000
+            });
+          } catch (parseError) {
+            console.warn('Refinement response parsing failed:', parseError);
+            // Fall back to original humanized content
+            setAnswer(humanizedContent);
+            setUsageInfo(humanizeUsage);
           }
-        } catch (parseError) {
-          // Fallback: treat as plain text (backward compatibility)
-          console.warn('Response parsing failed, using as plain text:', parseError);
-          setAnswer(data);
-          // Use old tracking method as fallback
-          await trackUsage(prompt, data);
+        } else {
+          console.log('Refinement errors:', refineErrors);
+          // Fall back to original humanized content
+          setAnswer(humanizedContent);
+          setUsageInfo(humanizeUsage);
+          
+          toast.current?.show({
+            severity: 'warn',
+            summary: 'Refinement Unavailable',
+            detail: `AI detection score was ${overallScore}%. Refinement failed, showing original result.`,
+            life: 4000
+          });
         }
       } else {
-        console.log(errors);
+        // No refinement needed
+        setAnswer(humanizedContent);
+        setUsageInfo(humanizeUsage);
+        
+        if (humanizedContent && humanizeUsage) {
+          await trackUsageWithTokens(prompt, humanizedContent, humanizeUsage);
+        }
+        
+        toast.current?.show({
+          severity: 'success',
+          summary: 'High Quality Result',
+          detail: `AI detection score: ${overallScore}%. No refinement needed!`,
+          life: 4000
+        });
       }
+      
     } catch (err) {
-      console.log(err);
+      console.log('Processing error:', err);
+      toast.current?.show({
+        severity: 'error',
+        summary: 'Processing Failed',
+        detail: 'Unable to process your content. Please try again.',
+        life: 5000
+      });
     } finally {
       setIsRunning(false);
+      setIsRefining(false);
+      setProcessingStage('');
     }
   };
 
@@ -470,11 +576,11 @@ export default function App() {
                   />
                   <Button
                     label='Humanize'
-                    loading={isRunning}
-                    loadingIcon="pi pi-spin pi-spinner"
+                    loading={isRunning || isRefining}
+                    loadingIcon={isRefining ? "pi pi-spin pi-cog" : "pi pi-spin pi-spinner"}
                     icon={<FaGooglePlay />}
                     onClick={handleButtonClick}
-                    disabled={loading || !prompt || isRunning || !canUseService}
+                    disabled={loading || !prompt || isRunning || isRefining || !canUseService}
                     severity={!canUseService ? 'danger' : undefined}
                     style={!canUseService || (!!prompt && !checkUsageLimit(prompt)) ? {
                       backgroundColor: '#f44336',
@@ -559,6 +665,16 @@ export default function App() {
                     }}>
                       <div>
                         <span style={{ fontWeight: '600' }}>💰 <strong>Usage Charged:</strong> {usageInfo.estimatedWords} words</span>
+                        {usageInfo.refinement && (
+                          <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '0.25rem' }}>
+                            🔄 Content was automatically refined for better quality
+                          </div>
+                        )}
+                        {aiDetectionScore !== null && (
+                          <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '0.25rem' }}>
+                            🎯 AI Detection Score: {aiDetectionScore}%
+                          </div>
+                        )}
                         <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '0.25rem' }}>
                           ({Math.ceil((usageInfo.inputTokens + usageInfo.outputTokens) / 1.3)} word equivalent)
                         </div>
@@ -576,9 +692,19 @@ export default function App() {
                 </>
               ) : (
                 <EmptyContent
-                  icon={isRunning ? <ProgressSpinner style={{ width: '45px', height: '45px' }} /> : <i className="pi pi-hourglass" style={{ fontSize: '2.5rem', color: 'var(--text-color-secondary)' }}></i>}
-                  title={isRunning ? 'Processing...' : 'No Processed Content'}
-                  subtitle={isRunning ? 'Please wait while we humanize your content.' : 'Processed Content will appear here after a successful processing.'}
+                  icon={isRunning || isRefining ? <ProgressSpinner style={{ width: '45px', height: '45px' }} /> : <i className="pi pi-hourglass" style={{ fontSize: '2.5rem', color: 'var(--text-color-secondary)' }}></i>}
+                  title={isRunning || isRefining ? (
+                    processingStage === 'humanizing' ? 'Humanizing Content...' :
+                    processingStage === 'detecting' ? 'Analyzing Quality...' :
+                    processingStage === 'refining' ? 'Refining Result...' :
+                    'Processing...'
+                  ) : 'No Processed Content'}
+                  subtitle={isRunning || isRefining ? (
+                    processingStage === 'humanizing' ? 'Transforming your content to sound more human...' :
+                    processingStage === 'detecting' ? 'Checking AI detection patterns...' :
+                    processingStage === 'refining' ? 'Enhancing content for better human authenticity...' :
+                    'Please wait while we process your content.'
+                  ) : 'Processed Content will appear here after a successful processing.'}
                 />
               )}
             </div>
