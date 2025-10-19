@@ -1041,6 +1041,26 @@
       },
       "nonModels": {},
       "queries": {
+        "refineHumanization": {
+          "name": "refineHumanization",
+          "isArray": false,
+          "type": "String",
+          "isRequired": false,
+          "arguments": {
+            "detectAIResult": {
+              "name": "detectAIResult",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true
+            },
+            "tone": {
+              "name": "tone",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            }
+          }
+        },
         "humanize": {
           "name": "humanize",
           "isArray": false,
