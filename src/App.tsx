@@ -23,7 +23,7 @@ import { FaGooglePlay } from 'react-icons/fa';
 
 export default function App() {
   const client = generateClient<Schema>();
-  const { trackUsage, trackUsageWithTokens, checkUsageLimit, canUseService, currentTier, loading, usageCount, usageLimit } = useSubscription();
+  const { trackUsageWithTokens, checkUsageLimit, canUseService, currentTier, loading, usageCount, usageLimit } = useSubscription();
 
   const [prompt, setPrompt] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(false);
