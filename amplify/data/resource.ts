@@ -170,6 +170,7 @@ const schema = a.schema({
       tone: a.string()
     })
     .returns(a.string())
+    .authorization((allow) => [allow.publicApiKey()])
     .handler(a.handler.function(refineHumanizationFunction)),
   humanize: a
     .query()
