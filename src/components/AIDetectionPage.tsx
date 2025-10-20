@@ -64,7 +64,11 @@ const AIDetectionPage: React.FC = () => {
     error
   } = useRetryableRequest(
     async () => {
-      const response = await client.queries.detectAIContent({ text: inputText });
+      const response = await client.queries.detectAIContent({ 
+        text: inputText,
+        forceMode: 'natural', // Use natural mode for standalone detection
+        maxScore: 100 // Allow full score range
+      });
       if (!response.data) {
         throw new Error('No response data received');
       }

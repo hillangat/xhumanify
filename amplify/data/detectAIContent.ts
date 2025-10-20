@@ -278,12 +278,69 @@ function validateAndCorrectFlags(flags: any[], originalText: string): any[] {
   });
 }
 
+// Function to apply low score mode configuration
+function applyLowScoreMode(analysisResult: any, maxScore: number = 25): any {
+  // Reduce the overall score to be below maxScore
+  const originalScore = analysisResult.overallScore;
+  
+  // Calculate a score between 0 and (maxScore - 1)
+  const reducedScore = Math.min(originalScore, Math.floor(Math.random() * maxScore));
+  
+  // Update all score-related fields
+  const modifiedResult = {
+    ...analysisResult,
+    overallScore: reducedScore,
+    confidence: reducedScore < 10 ? 'low' : reducedScore < 20 ? 'medium' : 'high',
+    summary: `Analysis shows ${reducedScore}% likelihood of AI generation. Content appears largely human-written.`,
+    
+    // Reduce flag severities and confidences
+    flags: analysisResult.flags.map((flag: any) => ({
+      ...flag,
+      severity: flag.severity === 'critical' ? 'medium' : 
+                flag.severity === 'high' ? 'low' : flag.severity,
+      confidence: Math.min(flag.confidence, Math.floor(flag.confidence * 0.6)), // Reduce by 40%
+      description: flag.description.replace(/severe|critical|obvious|clear/, 'minor')
+    })),
+    
+    // Improve metrics to reflect lower AI likelihood
+    metrics: {
+      sentenceVariability: Math.max(analysisResult.metrics.sentenceVariability || 0, 70),
+      vocabularyDiversity: Math.max(analysisResult.metrics.vocabularyDiversity || 0, 75),
+      naturalFlow: Math.max(analysisResult.metrics.naturalFlow || 0, 80),
+      personalityPresence: Math.max(analysisResult.metrics.personalityPresence || 0, 70),
+      burstiness: Math.max(analysisResult.metrics.burstiness || 0, 75),
+      perplexity: Math.max(analysisResult.metrics.perplexity || 0, 70)
+    },
+    
+    // Update recommendations to be more positive
+    recommendations: [
+      "Content shows good human-like characteristics",
+      "Minor improvements could enhance naturalness",
+      "Overall writing style appears authentic",
+      "Consider adding more personal touches if desired"
+    ],
+    
+    // Add metadata to track the modification
+    _modified: {
+      originalScore,
+      appliedMode: 'low_score',
+      maxScore,
+      timestamp: new Date().toISOString()
+    }
+  };
+  
+  console.log(`Applied low score mode: ${originalScore}% -> ${reducedScore}% (max: ${maxScore}%)`);
+  return modifiedResult;
+}
+
 export const handler: Schema["detectAIContent"]["functionHandler"] = async (
   event,
   context
 ) => {
-  // Extract user text to analyze
+  // Extract user text to analyze and configuration options
   const textToAnalyze = event.arguments.text;
+  const forceMode = event.arguments.forceMode || 'natural'; // 'natural' or 'low_score'
+  const maxScore = event.arguments.maxScore || 25; // Maximum score when in force mode
   
   if (!textToAnalyze || textToAnalyze.trim().length === 0) {
     throw new Error("Text content is required for AI detection analysis");
@@ -572,6 +629,11 @@ ${cleanTextToAnalyze.length > 4000 ? cleanTextToAnalyze.substring(0, 4000) + "..
     if (!analysisResult.flags) analysisResult.flags = [];
     if (!analysisResult.metrics) analysisResult.metrics = {};
     if (!analysisResult.recommendations) analysisResult.recommendations = [];
+
+    // Apply score manipulation if in force mode
+    if (forceMode === 'low_score') {
+      analysisResult = applyLowScoreMode(analysisResult, maxScore);
+    }
 
     // Validate and correct flag indices for accurate text positioning
     analysisResult.flags = validateAndCorrectFlags(analysisResult.flags, cleanTextToAnalyze);

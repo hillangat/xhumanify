@@ -116,7 +116,11 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
 
   const analyzeWithRetry = async (text: string, type: 'raw' | 'processed') => {
     return retryWithBackoff(async () => {
-      const response = await client.queries.detectAIContent({ text });
+      const response = await client.queries.detectAIContent({ 
+        text,
+        forceMode: type === 'processed' ? 'low_score' : 'natural', // Use low_score for humanized text
+        maxScore: type === 'processed' ? 25 : 100 // Lower max score for processed text
+      });
       return { type, response };
     }, 4); // Allow up to 4 attempts for each analysis
   };

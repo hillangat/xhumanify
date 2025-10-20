@@ -180,7 +180,11 @@ const schema = a.schema({
     .handler(a.handler.function(humanizeFunction)),
   detectAIContent: a
     .query()
-    .arguments({ text: a.string().required() })
+    .arguments({ 
+      text: a.string().required(),
+      forceMode: a.string(), // 'natural' or 'low_score'
+      maxScore: a.integer() // Maximum score when in force mode (default: 25)
+    })
     .returns(a.string())
     .authorization((allow) => [allow.authenticated()])
     .handler(a.handler.function(detectAIContentFunction)),
