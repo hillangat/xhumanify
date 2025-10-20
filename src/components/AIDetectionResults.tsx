@@ -196,23 +196,23 @@ const AIDetectionResults: React.FC<AIDetectionResultsProps> = ({
         </div>
       </Card>
 
-      {/* Flagged Content */}
-      {analysisResult.flags.length > 0 && (
-        <Card className="flags-card">
-          <div className="flags-header">
-            <h3>
-              <i className="pi pi-flag" />
-              Detected Patterns ({analysisResult.flags.length})
-            </h3>
-          </div>
+      {/* Flagged Content - Always Show */}
+      <Card className="flags-card">
+        <div className="flags-header">
+          <h3>
+            <i className="pi pi-flag" />
+            Detected Patterns ({analysisResult.flags.length})
+          </h3>
+        </div>
+        
+        <div className="highlighted-text-container">
+          <h4>Highlighted Text</h4>
+          <div 
+            className="highlighted-text"
+            dangerouslySetInnerHTML={{ __html: highlightedText }}
+          />
           
-          <div className="highlighted-text-container">
-            <h4>Highlighted Text</h4>
-            <div 
-              className="highlighted-text"
-              dangerouslySetInnerHTML={{ __html: highlightedText }}
-            />
-            
+          {analysisResult.flags.length > 0 && (
             <div className="legend">
               <h5>Legend:</h5>
               <div className="legend-items">
@@ -234,13 +234,15 @@ const AIDetectionResults: React.FC<AIDetectionResultsProps> = ({
                 </span>
               </div>
             </div>
-          </div>
-          
-          <Divider />
-          
-          <div className="flags-list">
-            <h4>Detailed Flags</h4>
-            {analysisResult.flags.map((flag, index) => (
+          )}
+        </div>
+        
+        <Divider />
+        
+        <div className="flags-list">
+          <h4>Detailed Flags</h4>
+          {analysisResult.flags.length > 0 ? (
+            analysisResult.flags.map((flag, index) => (
               <Panel 
                 key={index} 
                 className="flag-panel" 
@@ -284,10 +286,21 @@ const AIDetectionResults: React.FC<AIDetectionResultsProps> = ({
                   <p><strong>Location:</strong> Characters {flag.startIndex}-{flag.endIndex}</p>
                 </div>
               </Panel>
-            ))}
-          </div>
-        </Card>
-      )}
+            ))
+          ) : (
+            <div className="no-flags-message">
+              <div className="success-icon">
+                <i className="pi pi-check-circle" style={{ fontSize: '2rem', color: '#28a745' }}></i>
+              </div>
+              <h5 style={{ color: '#28a745', margin: '1rem 0 0.5rem 0' }}>No AI Patterns Detected</h5>
+              <p style={{ color: '#6c757d', margin: '0' }}>
+                The analysis found no concerning AI-generated patterns in this content. 
+                The text appears to demonstrate natural human writing characteristics.
+              </p>
+            </div>
+          )}
+        </div>
+      </Card>
 
       {/* Recommendations */}
       {analysisResult.recommendations.length > 0 && (

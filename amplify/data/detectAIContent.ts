@@ -285,10 +285,42 @@ function applyLowScoreMode(analysisResult: any, maxScore: number = 25): any {
   // Generate random overall score between 10-23
   const randomScore = Math.floor(Math.random() * 14) + 10; // 10-23
   
-  // Filter flags to only keep 'low' severity and random count (1-4)
-  const lowSeverityFlags = analysisResult.flags.filter((flag: any) => flag.severity === 'low');
-  const maxFlags = Math.floor(Math.random() * 4) + 1; // 1-4
-  const filteredFlags = lowSeverityFlags.slice(0, maxFlags);
+  // Ensure we have meaningful flags by keeping original flags but reducing their severity
+  let processedFlags = [...analysisResult.flags];
+  
+  // If we have flags, modify them to be less severe but still visible
+  if (processedFlags.length > 0) {
+    processedFlags = processedFlags.map((flag: any) => ({
+      ...flag,
+      // Reduce severity levels but keep them visible
+      severity: flag.severity === 'critical' ? 'medium' : 
+                flag.severity === 'high' ? 'low' : 
+                flag.severity,
+      // Reduce confidence slightly but keep it meaningful
+      confidence: Math.max(40, Math.floor(flag.confidence * 0.7)),
+      // Make suggestions more positive for demo
+      suggestion: flag.suggestion || "Consider minor refinements to enhance natural flow"
+    }));
+  } else {
+    // If no flags exist, create some minimal demo flags
+    const textLength = analysisResult.originalText?.length || 100;
+    processedFlags = [
+      {
+        type: "generic_phrasing",
+        severity: "low",
+        description: "Minor generic phrasing detected",
+        text: analysisResult.originalText?.substring(0, Math.min(50, textLength)) || "Sample text",
+        startIndex: 0,
+        endIndex: Math.min(50, textLength),
+        confidence: 45,
+        suggestion: "Consider adding more specific details"
+      }
+    ];
+  }
+  
+  // Keep 2-5 flags for meaningful display (not too few, not overwhelming)
+  const flagCount = Math.min(Math.max(2, processedFlags.length), 5);
+  const finalFlags = processedFlags.slice(0, flagCount);
   
   // Generate improved metrics (85-100)
   const improvedMetrics = {
@@ -305,26 +337,29 @@ function applyLowScoreMode(analysisResult: any, maxScore: number = 25): any {
     ...analysisResult,
     overallScore: randomScore,
     confidence: 'high',
-    summary: `Analysis shows ${randomScore}% likelihood of AI generation. Content appears largely human-written with excellent natural flow.`,
-    flags: filteredFlags,
+    summary: `Analysis shows ${randomScore}% likelihood of AI generation. Content appears largely human-written with excellent natural flow and authentic characteristics.`,
+    flags: finalFlags,
     metrics: improvedMetrics,
     recommendations: [
-      "Content shows excellent human-like characteristics",
-      "Writing demonstrates natural flow and personality",
-      "Vocabulary usage appears authentic and varied",
-      "Sentence structure shows good variability"
+      "Content demonstrates strong human-like characteristics",
+      "Writing shows natural personality and authentic voice",
+      "Vocabulary usage appears varied and contextual",
+      "Sentence structure displays good organic variation",
+      "Overall quality suggests human authorship"
     ],
     
     // Add metadata to track the modification
     _modified: {
       originalScore,
+      originalFlagCount: analysisResult.flags?.length || 0,
+      processedFlagCount: finalFlags.length,
       appliedMode: 'low_score',
       maxScore,
       timestamp: new Date().toISOString()
     }
   };
   
-  console.log(`Applied low score mode: ${originalScore}% -> ${randomScore}% (max: ${maxScore}%)`);
+  console.log(`Applied low score mode: ${originalScore}% -> ${randomScore}% (flags: ${analysisResult.flags?.length || 0} -> ${finalFlags.length})`);
   return modifiedResult;
 }
 
