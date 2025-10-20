@@ -22,6 +22,7 @@
     "@aws-sdk/types": "^3.893.0",
     "@stripe/stripe-js": "^8.0.0",
     "aws-amplify": "^6.15.6",
+    "chart.js": "^4.5.1",
     "primeicons": "^7.0.0",
     "primereact": "^10.9.7",
     "react": "^18.2.0",

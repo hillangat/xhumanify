@@ -8,18 +8,19 @@ import HistoryDetails from "./HistoryDetails.tsx";
 import PricingComponent from "./PricingComponent.tsx";
 import PaymentSuccess from "./PaymentSuccess.tsx";
 import FeatureRequestPage from "./components/FeatureRequestPage.tsx";
-import AIDetectionPage from "./components/AIDetectionPage.tsx";
-import AIDetectionComparison from "./components/AIDetectionComparison.tsx";
+
 import AboutPage from "./components/AboutPage.tsx";
 import TermsOfService from "./components/TermsOfService.tsx";
 import ContactPage from "./components/ContactPage.tsx";
+import UserProfile from "./components/UserProfile.tsx";
 import Layout from "./Layout.tsx";
 import { SubscriptionProvider } from "./contexts/SubscriptionContext.tsx";
-import "./index.scss";
+import './index.scss';
 import './HistoryView.scss';
 import './HistoryDetails.scss';
 import './PricingComponent.scss';
 import './PaymentSuccess.scss';
+import './components/UserProfile.scss';
 import { Amplify } from "aws-amplify";
 import outputs from "./amplify_outputs.json";
 
@@ -67,8 +68,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
               <Route path="/upgrade" element={<PricingComponent />} />
               <Route path="/payment/success" element={<PaymentSuccess />} />
               <Route path="/features" element={<FeatureRequestPage />} />
-              <Route path="/ai-detection" element={<AIDetectionPage />} />
-              <Route path="/ai-detection-comparison" element={<AIDetectionComparison rawText="" processedText="" />} />
+              <Route path="/profile" element={<UserProfile />} />
+              {/* <Route path="/ai-detection" element={<AIDetectionPage />} /> */}
+              {/* <Route path="/ai-detection-comparison" element={<AIDetectionComparison rawText="" processedText="" />} /> */}
               <Route path="/about" element={<AboutPage />} />
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/contact" element={<ContactPage />} />

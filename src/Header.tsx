@@ -80,24 +80,24 @@ export default function Header() {
         setMobileMenuVisible(false);
       }
     },
-    {
-      label: 'AI Detection',
-      icon: 'pi pi-search',
-      path: '/ai-detection',
-      command: () => {
-        navigate('/ai-detection');
-        setMobileMenuVisible(false);
-      }
-    },
-    {
-      label: 'AI Comparison',
-      icon: 'pi pi-clone',
-      path: '/ai-detection-comparison',
-      command: () => {
-        navigate('/ai-detection-comparison');
-        setMobileMenuVisible(false);
-      }
-    },
+    // {
+    //   label: 'AI Detection',
+    //   icon: 'pi pi-search',
+    //   path: '/ai-detection',
+    //   command: () => {
+    //     navigate('/ai-detection');
+    //     setMobileMenuVisible(false);
+    //   }
+    // },
+    // {
+    //   label: 'AI Comparison',
+    //   icon: 'pi pi-clone',
+    //   path: '/ai-detection-comparison',
+    //   command: () => {
+    //     navigate('/ai-detection-comparison');
+    //     setMobileMenuVisible(false);
+    //   }
+    // },
     {
       label: 'Pricing',
       icon: 'pi pi-dollar',
@@ -150,7 +150,7 @@ export default function Header() {
       label: 'Profile',
       icon: 'pi pi-user',
       command: () => {
-        console.log('Navigate to profile');
+        navigate('/profile');
       }
     },
     {
@@ -312,7 +312,7 @@ export default function Header() {
                 className="mobile-action-button"
                 onClick={() => {
                   setMobileMenuVisible(false);
-                  console.log('Navigate to profile');
+                  navigate('/profile');
                 }}
               />
               <Button
