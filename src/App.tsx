@@ -466,7 +466,7 @@ export default function App() {
                     outlined
                     icon="pi pi-times"
                     onClick={handleResetClick}
-                    disabled={!prompt}
+                    disabled={!prompt || isRunning}
                   />
                   <Button
                     label='Humanize'
@@ -512,6 +512,8 @@ export default function App() {
                     icon={copiedProcessed ? "pi pi-check" : "pi pi-copy"}
                     onClick={handleCopyProcessedClick}
                     disabled={!answer}
+                    tooltip="Copy processed text to clipboard"
+                    tooltipOptions={{ position: 'bottom' }}
                   />
                   <Button
                     label=""
@@ -520,15 +522,7 @@ export default function App() {
                     disabled={!answer || !prompt}
                     outlined
                     className="feedback-button"
-                  />
-                  <Button
-                    label=""
-                    icon="pi pi-clone"
-                    onClick={() => setShowAIDetectionSidebar(true)}
-                    disabled={!answer || !prompt}
-                    outlined
-                    className="ai-detection-button"
-                    tooltip="Compare AI Detection"
+                    tooltip="Provide feedback on the results"
                     tooltipOptions={{ position: 'bottom' }}
                   />
                   <Button
@@ -537,6 +531,17 @@ export default function App() {
                     icon='pi pi-save'
                     onClick={() => setShowSaveDialog(true)}
                     disabled={!answer || !prompt}
+                    tooltip="Save content to history"
+                    tooltipOptions={{ position: 'bottom' }}
+                  />
+                  <Button
+                    label="Detect AI"
+                    icon="pi pi-clone"
+                    onClick={() => setShowAIDetectionSidebar(true)}
+                    disabled={!answer || !prompt}
+                    className="ai-detection-button"
+                    tooltip="Run AI detection on both texts and compare results side by side"
+                    tooltipOptions={{ position: 'bottom' }}
                   />
                 </ButtonGroup>
               </div>

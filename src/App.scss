@@ -792,9 +792,10 @@ $padding: 15px;
 
 // Button styling for AI detection button
 .ai-detection-button {
-  &:hover {
-    background-color: var(--blue-50) !important;
-    border-color: var(--blue-200) !important;
-    color: var(--blue-600) !important;
+  transition: all 0.2s ease;
+  
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 }

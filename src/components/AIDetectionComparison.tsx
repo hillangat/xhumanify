@@ -6,6 +6,7 @@ import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Toast } from 'primereact/toast';
 import { Divider } from 'primereact/divider';
+import { Splitter, SplitterPanel } from 'primereact/splitter';
 import { ProgressBar } from 'primereact/progressbar';
 import { Chip } from 'primereact/chip';
 import FeaturePage from './FeaturePage';
@@ -352,48 +353,117 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
           <div className="input-header">
             <h3>
               <i className="pi pi-clone" />
-              Text Comparison
+              Original Text Vs. Humanized Text
             </h3>
             <p>Enter your original and humanized text to compare AI detection results side by side.</p>
           </div>
           
-          <div className="input-grid">
-            <div className="input-column">
-              <h4>Original Text</h4>
-              <InputTextarea
-                value={rawText}
-                onChange={(e) => onRawTextChange?.(e.target.value)}
-                placeholder="Enter your original text here..."
-                rows={8}
-                className="comparison-input"
-                disabled={isAnalyzing || readOnly}
-              />
-              <div className="text-stats">
-                <span>Characters: {rawText.length}</span>
-                <span>Words: {rawText.trim() ? rawText.trim().split(/\s+/).length : 0}</span>
-              </div>
-            </div>
-
-            <div className="input-divider">
-              <Divider layout="vertical" />
-              <div className="vs-badge">VS</div>
-            </div>
-
-            <div className="input-column">
-              <h4>Humanized Text</h4>
-              <InputTextarea
-                value={processedText}
-                onChange={(e) => onProcessedTextChange?.(e.target.value)}
-                placeholder="Enter your processed/humanized text here..."
-                rows={8}
-                className="comparison-input"
-                disabled={isAnalyzing || readOnly}
-              />
-              <div className="text-stats">
-                <span>Characters: {processedText.length}</span>
-                <span>Words: {processedText.trim() ? processedText.trim().split(/\s+/).length : 0}</span>
-              </div>
-            </div>
+          <div className="input-container">
+            <Splitter style={{ height: '600px' }}>
+              <SplitterPanel className="input-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className="panel-header" style={{ 
+                  padding: '16px 20px 12px', 
+                  borderBottom: '1px solid var(--surface-border)', 
+                  background: 'var(--surface-50)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start'
+                }}>
+                  <div className="header-main" style={{ flex: 1 }}>
+                    <h4 style={{ 
+                      margin: '0 0 8px 0', 
+                      fontSize: '1.1rem', 
+                      fontWeight: '600', 
+                      color: 'var(--primary-color)',
+                      letterSpacing: '-0.02em'
+                    }}>Original Text</h4>
+                    <div className="header-stats" style={{
+                      display: 'flex',
+                      gap: '16px',
+                      alignItems: 'center'
+                    }}>
+                      <span className="word-count" style={{
+                        fontSize: '0.85rem',
+                        fontWeight: '500',
+                        color: 'var(--text-color)',
+                        background: 'var(--primary-50)',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        border: '1px solid var(--primary-200)'
+                      }}>{rawText.trim() ? rawText.trim().split(/\s+/).length : 0} words</span>
+                      <span className="text-stats" style={{
+                        fontSize: '0.8rem',
+                        color: 'var(--text-color-secondary)',
+                        fontWeight: '400'
+                      }}>Characters: {rawText.length.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="panel-content" style={{ flex: 1, padding: '16px 20px' }}>
+                  <InputTextarea
+                    value={rawText}
+                    onChange={(e) => onRawTextChange?.(e.target.value)}
+                    placeholder="Enter your original text here..."
+                    rows={12}
+                    className="comparison-input"
+                    disabled={isAnalyzing || readOnly}
+                    style={{ width: '100%', height: '100%', maxHeight: '450px', resize: 'none', border: 'none' }}
+                  />
+                </div>
+              </SplitterPanel>
+              
+              <SplitterPanel className="input-panel processed-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+                <div className="panel-header" style={{ 
+                  padding: '16px 20px 12px', 
+                  borderBottom: '1px solid var(--surface-border)', 
+                  background: 'var(--surface-50)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start'
+                }}>
+                  <div className="header-main" style={{ flex: 1 }}>
+                    <h4 style={{ 
+                      margin: '0 0 8px 0', 
+                      fontSize: '1.1rem', 
+                      fontWeight: '600', 
+                      color: 'var(--green-600)',
+                      letterSpacing: '-0.02em'
+                    }}>Humanized Text</h4>
+                    <div className="header-stats" style={{
+                      display: 'flex',
+                      gap: '16px',
+                      alignItems: 'center'
+                    }}>
+                      <span className="word-count" style={{
+                        fontSize: '0.85rem',
+                        fontWeight: '500',
+                        color: 'var(--text-color)',
+                        background: 'var(--green-50)',
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        border: '1px solid var(--green-200)'
+                      }}>{processedText.trim() ? processedText.trim().split(/\s+/).length : 0} words</span>
+                      <span className="text-stats" style={{
+                        fontSize: '0.8rem',
+                        color: 'var(--text-color-secondary)',
+                        fontWeight: '400'
+                      }}>Characters: {processedText.length.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="panel-content" style={{ flex: 1, padding: '16px 20px' }}>
+                  <InputTextarea
+                    value={processedText}
+                    onChange={(e) => onProcessedTextChange?.(e.target.value)}
+                    placeholder="Enter your processed/humanized text here..."
+                    rows={12}
+                    className="comparison-input"
+                    disabled={isAnalyzing || readOnly}
+                    style={{ width: '100%', height: '100%', maxHeight: '450px', resize: 'none', border: 'none' }}
+                  />
+                </div>
+              </SplitterPanel>
+            </Splitter>
           </div>
 
           <div className="input-footer">
