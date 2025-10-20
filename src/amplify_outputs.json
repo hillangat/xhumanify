@@ -1092,6 +1092,18 @@
               "isArray": false,
               "type": "String",
               "isRequired": true
+            },
+            "forceMode": {
+              "name": "forceMode",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false
+            },
+            "maxScore": {
+              "name": "maxScore",
+              "isArray": false,
+              "type": "Int",
+              "isRequired": false
             }
           }
         }

@@ -280,44 +280,39 @@ function validateAndCorrectFlags(flags: any[], originalText: string): any[] {
 
 // Function to apply low score mode configuration
 function applyLowScoreMode(analysisResult: any, maxScore: number = 25): any {
-  // Reduce the overall score to be below maxScore
   const originalScore = analysisResult.overallScore;
   
-  // Calculate a score between 0 and (maxScore - 1)
-  const reducedScore = Math.min(originalScore, Math.floor(Math.random() * maxScore));
+  // Generate random overall score between 10-23
+  const randomScore = Math.floor(Math.random() * 14) + 10; // 10-23
   
-  // Update all score-related fields
+  // Filter flags to only keep 'low' severity and random count (1-4)
+  const lowSeverityFlags = analysisResult.flags.filter((flag: any) => flag.severity === 'low');
+  const maxFlags = Math.floor(Math.random() * 4) + 1; // 1-4
+  const filteredFlags = lowSeverityFlags.slice(0, maxFlags);
+  
+  // Generate improved metrics (85-100)
+  const improvedMetrics = {
+    sentenceVariability: Math.floor(Math.random() * 16) + 85, // 85-100
+    vocabularyDiversity: Math.floor(Math.random() * 16) + 85, // 85-100
+    naturalFlow: Math.floor(Math.random() * 16) + 85, // 85-100
+    personalityPresence: Math.floor(Math.random() * 16) + 85, // 85-100
+    burstiness: Math.floor(Math.random() * 16) + 85, // 85-100
+    perplexity: Math.floor(Math.random() * 16) + 85 // 85-100
+  };
+  
+  // Create modified result
   const modifiedResult = {
     ...analysisResult,
-    overallScore: reducedScore,
-    confidence: reducedScore < 10 ? 'low' : reducedScore < 20 ? 'medium' : 'high',
-    summary: `Analysis shows ${reducedScore}% likelihood of AI generation. Content appears largely human-written.`,
-    
-    // Reduce flag severities and confidences
-    flags: analysisResult.flags.map((flag: any) => ({
-      ...flag,
-      severity: flag.severity === 'critical' ? 'medium' : 
-                flag.severity === 'high' ? 'low' : flag.severity,
-      confidence: Math.min(flag.confidence, Math.floor(flag.confidence * 0.6)), // Reduce by 40%
-      description: flag.description.replace(/severe|critical|obvious|clear/, 'minor')
-    })),
-    
-    // Improve metrics to reflect lower AI likelihood
-    metrics: {
-      sentenceVariability: Math.max(analysisResult.metrics.sentenceVariability || 0, 70),
-      vocabularyDiversity: Math.max(analysisResult.metrics.vocabularyDiversity || 0, 75),
-      naturalFlow: Math.max(analysisResult.metrics.naturalFlow || 0, 80),
-      personalityPresence: Math.max(analysisResult.metrics.personalityPresence || 0, 70),
-      burstiness: Math.max(analysisResult.metrics.burstiness || 0, 75),
-      perplexity: Math.max(analysisResult.metrics.perplexity || 0, 70)
-    },
-    
-    // Update recommendations to be more positive
+    overallScore: randomScore,
+    confidence: 'high',
+    summary: `Analysis shows ${randomScore}% likelihood of AI generation. Content appears largely human-written with excellent natural flow.`,
+    flags: filteredFlags,
+    metrics: improvedMetrics,
     recommendations: [
-      "Content shows good human-like characteristics",
-      "Minor improvements could enhance naturalness",
-      "Overall writing style appears authentic",
-      "Consider adding more personal touches if desired"
+      "Content shows excellent human-like characteristics",
+      "Writing demonstrates natural flow and personality",
+      "Vocabulary usage appears authentic and varied",
+      "Sentence structure shows good variability"
     ],
     
     // Add metadata to track the modification
@@ -329,7 +324,7 @@ function applyLowScoreMode(analysisResult: any, maxScore: number = 25): any {
     }
   };
   
-  console.log(`Applied low score mode: ${originalScore}% -> ${reducedScore}% (max: ${maxScore}%)`);
+  console.log(`Applied low score mode: ${originalScore}% -> ${randomScore}% (max: ${maxScore}%)`);
   return modifiedResult;
 }
 
