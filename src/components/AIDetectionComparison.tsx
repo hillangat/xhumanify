@@ -5,7 +5,7 @@ import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Toast } from 'primereact/toast';
-import { Divider } from 'primereact/divider';
+// Divider removed (unused) to fix TypeScript build warning
 import { Splitter, SplitterPanel } from 'primereact/splitter';
 import { ProgressBar } from 'primereact/progressbar';
 import { Chip } from 'primereact/chip';
