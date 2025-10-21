@@ -9,20 +9,18 @@
     justify-content: center;
     padding: 1rem;
     margin-bottom: 1.5rem;
-    background: var(--surface-100);
+    background: var(--surface-section);
     border: 1px solid var(--surface-border);
-    border-radius: 8px;
+    border-radius: var(--border-radius, 8px);
     color: var(--text-color-secondary);
     font-size: 0.9rem;
     font-weight: 500;
-    
-    .p-dark & {
-      background: var(--surface-800);
-      border-color: var(--surface-700);
-    }
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
     
     .pi-spinner {
       color: var(--primary-color);
+      animation: spin 1s linear infinite;
     }
   }
   
@@ -38,16 +36,46 @@
 
     .history-card {
       border: 1px solid var(--surface-border);
-      border-radius: 12px;
-      transition: all 0.3s ease;
+      border-radius: var(--border-radius, 12px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
       overflow: hidden;
-      background: var(--surface-0);
+      background: var(--surface-section);
+      box-shadow: var(--card-shadow, 0 2px 4px rgba(0, 0, 0, 0.05));
+      backdrop-filter: blur(10px);
+
+      // Theme family specific adaptations
+      &.theme-lara, &.theme-saga {
+        border-radius: 8px;
+      }
+      
+      &.theme-vela, &.theme-arya {
+        background: rgba(var(--surface-section-rgb, 255, 255, 255), 0.8);
+        border: 1px solid rgba(var(--surface-border-rgb, 226, 232, 240), 0.6);
+      }
+      
+      &.theme-material {
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+      }
+      
+      &.theme-bootstrap {
+        border-radius: 6px;
+      }
+      
+      &.theme-fluent {
+        border-radius: 2px;
+        border: 2px solid var(--surface-border);
+      }
 
       &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        transform: translateY(-3px) scale(1.002);
+        box-shadow: var(--hover-shadow, 0 12px 40px rgba(0, 0, 0, 0.15));
         border-color: var(--primary-color);
+        
+        &.theme-material {
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), 0 0 12px rgba(0, 0, 0, 0.08);
+        }
       }
 
       .p-card-body {
@@ -288,23 +316,141 @@
   }
 }
 
-/* Dark mode support */
-[data-theme="dark"], .p-dark {
+/* Enhanced theme family support */
+.history-view-page {
+  // Lara theme (modern, clean)
+  &.theme-lara {
+    .history-card {
+      border-radius: 16px;
+      
+      .card-header {
+        border-radius: 16px 16px 0 0;
+      }
+    }
+  }
+  
+  // Material Design theme
+  &.theme-material-design {
+    .history-card {
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+      
+      &:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.16);
+      }
+    }
+  }
+  
+  // Bootstrap theme
+  &.theme-bootstrap {
+    .history-card {
+      border-radius: 6px;
+    }
+  }
+  
+  // Rhea theme (square)
+  &.theme-rhea {
+    .history-card {
+      border-radius: 0;
+      
+      .card-header {
+        border-radius: 0;
+      }
+    }
+  }
+}
+
+/* Enhanced dark mode support with theme transitions */
+[data-theme="dark"], .p-dark, .dark-mode {
   .history-view-content,
   .history-view {
+    .refresh-indicator {
+      background: var(--surface-800);
+      border-color: var(--surface-600);
+      
+      .pi-spinner {
+        color: var(--primary-400);
+      }
+    }
+    
     .history-card {
-      background: var(--surface-900);
-      border-color: var(--surface-700);
-
+      background: var(--surface-card);
+      border-color: var(--surface-border);
+      
       &:hover {
         border-color: var(--primary-color);
-        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 8px 25px var(--maskbg, rgba(0, 0, 0, 0.3));
+        
+        &::before {
+          opacity: 0.05;
+        }
       }
 
       .card-header {
-        background: var(--surface-800);
-        border-color: var(--surface-700);
+        background: var(--surface-section);
+        border-color: var(--surface-border);
       }
+      
+      .card-content {
+        .content-type {
+          color: var(--primary-400);
+        }
+      }
+    }
+  }
+}
+
+/* Light mode enhancements */
+.light-mode {
+  .history-view-content {
+    .history-card {
+      &:hover::before {
+        opacity: 0.08;
+      }
+    }
+  }
+}
+
+/* Theme transition animations */
+.history-view-content {
+  transition: background-color 0.3s ease;
+  
+  .history-card {
+    * {
+      transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+    }
+  }
+}
+
+/* Responsive enhancements */
+@media (max-width: 768px) {
+  .history-view-content {
+    .history-card {
+      &:hover {
+        transform: none; // Disable hover lift on mobile
+      }
+    }
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .history-view-content .history-card {
+    border-width: 2px;
+    
+    &:hover {
+      border-width: 3px;
+    }
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .history-view-content .history-card {
+    transition: none;
+    
+    &:hover {
+      transform: none;
     }
   }
 }

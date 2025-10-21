@@ -9,6 +9,7 @@ import { Toast } from 'primereact/toast';
 import EmptyContent from './EmptyContent';
 import FeaturePage from './components/FeaturePage';
 import { MdHistory } from 'react-icons/md';
+import { useTheme } from './contexts/ThemeContext';
 import './HistoryView.scss';
 
 interface HistoryItem {
@@ -21,6 +22,7 @@ interface HistoryItem {
 
 export default function HistoryView() {
   const client = generateClient<Schema>();
+  const { isDarkMode } = useTheme();
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -140,6 +142,7 @@ export default function HistoryView() {
       subtitle="Your AI Humanification Journey"
       description="Track and revisit all your previous content transformations. Each entry represents a step in your journey to create more authentic, human-like content that resonates with your audience."
       icon="pi pi-history"
+      className={`history-view-page ${isDarkMode ? 'dark-mode' : 'light-mode'}`}
       badge={totalItems > 0 ? {
         text: `${totalItems} Items`,
         severity: "info"
@@ -196,7 +199,7 @@ export default function HistoryView() {
           icon: "pi-history"
         }
       ]}
-      headerGradient="linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #d946ef 100%)"
+
       animated={true}
       loading={isInitialLoading}
     >

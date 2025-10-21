@@ -1,0 +1,212 @@
+.settings-page {
+  margin-top: 4.5rem;
+  min-height: 100vh;
+  background: var(--surface-ground);
+  padding: 2rem 1rem;
+
+  .settings-container {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .settings-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+
+    .page-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--text-color);
+      margin: 0 0 0.75rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+
+      .pi {
+        color: var(--primary-color);
+      }
+    }
+
+    .page-subtitle {
+      font-size: 1.1rem;
+      color: var(--text-color-secondary);
+      margin: 0;
+      font-weight: 400;
+    }
+  }
+
+  .settings-content {
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.5rem;
+      align-items: start;
+
+      .settings-section {
+        .settings-card {
+          border: 1px solid var(--surface-border);
+          border-radius: 12px;
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+
+          .card-title {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+            color: var(--text-color);
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            .pi {
+              color: var(--primary-color);
+            }
+          }
+
+          .setting-item {
+            display: flex;
+            flex-direction: column;
+            padding: 0.75rem 0;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+            border-radius: 6px;
+            position: relative;
+
+            &:hover {
+              background: var(--surface-hover);
+              padding: 0.75rem;
+              margin: 0 -0.75rem;
+            }
+
+            .setting-label {
+              font-weight: 600;
+              color: var(--text-color);
+              margin-bottom: 0.25rem;
+              font-size: 1rem;
+            }
+
+            .setting-description {
+              color: var(--text-color-secondary);
+              margin: 0;
+              font-size: 0.9rem;
+              line-height: 1.4;
+            }
+
+            .setting-actions {
+              position: absolute;
+              right: 0;
+              top: 50%;
+              transform: translateY(-50%);
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+
+              .setting-value {
+                font-size: 0.9rem;
+                color: var(--text-color-secondary);
+                font-weight: 500;
+              }
+
+              .pi-chevron-right {
+                color: var(--text-color-secondary);
+                font-size: 0.8rem;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .settings-page {
+    padding: 1rem 0.5rem;
+
+    .settings-header {
+      margin-bottom: 2rem;
+
+      .page-title {
+        font-size: 2rem;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        .pi {
+          font-size: 2rem;
+        }
+      }
+
+      .page-subtitle {
+        font-size: 1rem;
+        padding: 0 1rem;
+      }
+    }
+
+    .settings-content {
+      .settings-grid {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        align-items: stretch;
+
+        .settings-section {
+          .settings-card {
+            .setting-item {
+              .setting-actions {
+                .setting-value {
+                  display: none; // Hide values on mobile for cleaner look
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .settings-page {
+    .settings-content {
+      .settings-grid {
+        grid-template-columns: 1fr;
+        
+        .settings-section {
+          .settings-card {
+            .card-title {
+              font-size: 1.1rem;
+              margin-bottom: 1rem;
+            }
+
+            .setting-item {
+              .setting-label {
+                font-size: 0.95rem;
+              }
+
+              .setting-description {
+                font-size: 0.85rem;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// Dark mode adjustments
+.p-dark {
+  .settings-page {
+    .settings-content {
+      .settings-grid {
+        .settings-section {
+          .settings-card {
+            background: var(--surface-card);
+            border-color: var(--surface-border);
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,9 +1,9 @@
 {
   "auth": {
-    "user_pool_id": "us-east-2_l8yafCojK",
+    "user_pool_id": "us-east-2_tjUejrx7U",
     "aws_region": "us-east-2",
-    "user_pool_client_id": "4tsgpch48pcjhd49pqffv02hcj",
-    "identity_pool_id": "us-east-2:378e41f1-380f-4f07-891e-1f19e5201951",
+    "user_pool_client_id": "2jd2jsjr0if9f5414gosuagobi",
+    "identity_pool_id": "us-east-2:70106958-d254-4701-8996-9e75ff610f1b",
     "mfa_methods": [],
     "standard_required_attributes": [
       "email"
@@ -26,9 +26,9 @@
     "unauthenticated_identities_enabled": true
   },
   "data": {
-    "url": "https://22wtmqe72zhfzdeizh3zkfb7lq.appsync-api.us-east-2.amazonaws.com/graphql",
+    "url": "https://nx4ozgivkfhobbisxwpq6dzfaa.appsync-api.us-east-2.amazonaws.com/graphql",
     "aws_region": "us-east-2",
-    "api_key": "da2-iigfrobnfjaojfophngtorpkga",
+    "api_key": "da2-z5hmqnp2erffhnran74x4vyfuq",
     "default_authorization_type": "AMAZON_COGNITO_USER_POOLS",
     "authorization_types": [
       "API_KEY",
@@ -545,6 +545,117 @@
                       "update",
                       "delete",
                       "read"
+                    ]
+                  }
+                ]
+              }
+            }
+          ],
+          "primaryKeyInfo": {
+            "isCustomPrimaryKey": false,
+            "primaryKeyFieldName": "id",
+            "sortKeyFieldNames": []
+          }
+        },
+        "UserSettings": {
+          "name": "UserSettings",
+          "fields": {
+            "id": {
+              "name": "id",
+              "isArray": false,
+              "type": "ID",
+              "isRequired": true,
+              "attributes": []
+            },
+            "userId": {
+              "name": "userId",
+              "isArray": false,
+              "type": "String",
+              "isRequired": true,
+              "attributes": []
+            },
+            "theme": {
+              "name": "theme",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "darkMode": {
+              "name": "darkMode",
+              "isArray": false,
+              "type": "Boolean",
+              "isRequired": false,
+              "attributes": []
+            },
+            "language": {
+              "name": "language",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "timezone": {
+              "name": "timezone",
+              "isArray": false,
+              "type": "String",
+              "isRequired": false,
+              "attributes": []
+            },
+            "createdAt": {
+              "name": "createdAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            },
+            "updatedAt": {
+              "name": "updatedAt",
+              "isArray": false,
+              "type": "AWSDateTime",
+              "isRequired": false,
+              "attributes": []
+            }
+          },
+          "syncable": true,
+          "pluralName": "UserSettings",
+          "attributes": [
+            {
+              "type": "model",
+              "properties": {}
+            },
+            {
+              "type": "key",
+              "properties": {
+                "name": "userSettingsByUserId",
+                "queryField": "listUserSettingsByUserId",
+                "fields": [
+                  "userId"
+                ]
+              }
+            },
+            {
+              "type": "auth",
+              "properties": {
+                "rules": [
+                  {
+                    "provider": "userPools",
+                    "ownerField": "userId",
+                    "allow": "owner",
+                    "identityClaim": "cognito:username",
+                    "operations": [
+                      "create",
+                      "update",
+                      "delete",
+                      "read"
+                    ]
+                  },
+                  {
+                    "allow": "private",
+                    "operations": [
+                      "read",
+                      "create",
+                      "update"
                     ]
                   }
                 ]
@@ -1114,7 +1225,7 @@
   "custom": {
     "API": {
       "myRestApi": {
-        "endpoint": "https://kkvzaxfqai.execute-api.us-east-2.amazonaws.com/dev/",
+        "endpoint": "https://ksr2arplo3.execute-api.us-east-2.amazonaws.com/dev/",
         "region": "us-east-2",
         "apiName": "myRestApi"
       }

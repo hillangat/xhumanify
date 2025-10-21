@@ -93,6 +93,23 @@ const schema = a.schema({
       timestamp: a.datetime().required(),
     })
     .authorization((allow) => [allow.owner().identityClaim("sub")]),
+  UserSettings: a
+    .model({
+      userId: a.string().required(),
+      theme: a.string().default('lara-light-teal'), // PrimeReact theme name
+      darkMode: a.boolean().default(false), // true for dark variant, false for light
+      language: a.string().default('en'), // For future internationalization
+      timezone: a.string(), // User's timezone preference
+      createdAt: a.datetime(),
+      updatedAt: a.datetime()
+    })
+    .secondaryIndexes((index) => [
+      index("userId").queryField("listUserSettingsByUserId"),
+    ])
+    .authorization((allow) => [
+      allow.ownerDefinedIn("userId"), // User can manage their own settings
+      allow.authenticated().to(['read', 'create', 'update']) // Authenticated users can manage settings
+    ]),
   FeatureRequest: a
     .model({
       title: a.string().required(),

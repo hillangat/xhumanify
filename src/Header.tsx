@@ -157,7 +157,7 @@ export default function Header() {
       label: 'Settings',
       icon: 'pi pi-cog',
       command: () => {
-        console.log('Navigate to settings');
+        navigate('/settings');
       }
     },
     {
@@ -322,7 +322,7 @@ export default function Header() {
                 className="mobile-action-button"
                 onClick={() => {
                   setMobileMenuVisible(false);
-                  console.log('Navigate to settings');
+                  navigate('/settings');
                 }}
               />
               <Button

@@ -13,8 +13,10 @@ import AboutPage from "./components/AboutPage.tsx";
 import TermsOfService from "./components/TermsOfService.tsx";
 import ContactPage from "./components/ContactPage.tsx";
 import UserProfile from "./components/UserProfile.tsx";
+import { SettingsPage } from "./components/SettingsPage.tsx";
 import Layout from "./Layout.tsx";
 import { SubscriptionProvider } from "./contexts/SubscriptionContext.tsx";
+import { ThemeProvider } from "./contexts/ThemeContext.tsx";
 import './index.scss';
 import './HistoryView.scss';
 import './HistoryDetails.scss';
@@ -25,8 +27,7 @@ import { Amplify } from "aws-amplify";
 import outputs from "./amplify_outputs.json";
 
 import '@aws-amplify/ui-react/styles.css';
-// import 'primereact/resources/themes/saga-blue/theme.css';
-// import 'primereact/resources/themes/md-dark-indigo/theme.css';
+// Default theme loaded initially, ThemeProvider will replace it
 import 'primereact/resources/themes/lara-light-teal/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
@@ -58,26 +59,29 @@ Amplify.configure(
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Authenticator>
-      <SubscriptionProvider>
-        <BrowserRouter>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<App />} />
-              <Route path="/history" element={<HistoryView />} />
-              <Route path="/history/:id" element={<HistoryDetails />} />
-              <Route path="/upgrade" element={<PricingComponent />} />
-              <Route path="/payment/success" element={<PaymentSuccess />} />
-              <Route path="/features" element={<FeatureRequestPage />} />
-              <Route path="/profile" element={<UserProfile />} />
-              {/* <Route path="/ai-detection" element={<AIDetectionPage />} /> */}
-              {/* <Route path="/ai-detection-comparison" element={<AIDetectionComparison rawText="" processedText="" />} /> */}
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/terms" element={<TermsOfService />} />
-              <Route path="/contact" element={<ContactPage />} />
-            </Routes>
-          </Layout>
-        </BrowserRouter>
-      </SubscriptionProvider>
+      <ThemeProvider>
+        <SubscriptionProvider>
+          <BrowserRouter>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<App />} />
+                <Route path="/history" element={<HistoryView />} />
+                <Route path="/history/:id" element={<HistoryDetails />} />
+                <Route path="/upgrade" element={<PricingComponent />} />
+                <Route path="/payment/success" element={<PaymentSuccess />} />
+                <Route path="/features" element={<FeatureRequestPage />} />
+                <Route path="/profile" element={<UserProfile />} />
+                <Route path="/settings" element={<SettingsPage />} />
+                {/* <Route path="/ai-detection" element={<AIDetectionPage />} /> */}
+                {/* <Route path="/ai-detection-comparison" element={<AIDetectionComparison rawText="" processedText="" />} /> */}
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/terms" element={<TermsOfService />} />
+                <Route path="/contact" element={<ContactPage />} />
+              </Routes>
+            </Layout>
+          </BrowserRouter>
+        </SubscriptionProvider>
+      </ThemeProvider>
     </Authenticator>
   </React.StrictMode>
 );

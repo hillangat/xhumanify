@@ -4,6 +4,7 @@ import { Button } from 'primereact/button';
 import { Splitter, SplitterPanel } from 'primereact/splitter';
 import { Toast } from 'primereact/toast';
 import FeaturePage from './components/FeaturePage';
+import { useTheme } from './contexts/ThemeContext';
 import './HistoryDetails.scss';
 
 interface HistoryItem {
@@ -18,6 +19,7 @@ const HistoryDetails: React.FC = () => {
 //   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
+  const { currentTheme, isDarkMode } = useTheme();
   const [copiedOriginal, setCopiedOriginal] = useState(false);
   const [copiedProcessed, setCopiedProcessed] = useState(false);
   
@@ -61,6 +63,7 @@ const HistoryDetails: React.FC = () => {
         subtitle="History Item Missing"
         description="The requested history item could not be found. It may have been deleted or the link is invalid."
         icon="pi pi-exclamation-triangle"
+        className={`history-details-error ${isDarkMode ? 'dark-mode' : 'light-mode'}`}
         badge={{
           text: "Error",
           severity: "danger"
@@ -93,6 +96,7 @@ const HistoryDetails: React.FC = () => {
       subtitle="Humanification History"
       description="Compare your original content with the AI-humanified version. Copy either version to use in your projects."
       icon="pi pi-file-edit"
+      className={`history-details-page ${isDarkMode ? 'dark-mode' : 'light-mode'} theme-${currentTheme.family.toLowerCase().replace(/\s+/g, '-')}`}
       badge={{
         text: formatDate(item.createdAt),
         severity: "info"

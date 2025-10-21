@@ -3,6 +3,8 @@ import FeaturePage from './FeaturePage';
 import { Dropdown } from 'primereact/dropdown';
 import { Card } from 'primereact/card';
 import { Button } from 'primereact/button';
+import { InputSwitch } from 'primereact/inputswitch';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface ThemeOption {
   label: string;
@@ -22,36 +24,38 @@ const themes: ThemeOption[] = [
 ];
 
 const FeaturePageThemeDemo: React.FC = () => {
-  const [selectedTheme, setSelectedTheme] = useState<ThemeOption>(themes[0]);
+  const { 
+    currentTheme, 
+    isDarkMode, 
+    availableThemes, 
+    changeTheme, 
+    toggleDarkMode, 
+    isLoading: themeLoading,
+    error: themeError 
+  } = useTheme();
   const [isChangingTheme, setIsChangingTheme] = useState(false);
 
-  const changeTheme = async (theme: ThemeOption) => {
+  const handleThemeChange = async (themeId: string) => {
     setIsChangingTheme(true);
     
     try {
-      // Remove existing theme link
-      const existingThemeLink = document.querySelector('link[data-theme]');
-      if (existingThemeLink) {
-        existingThemeLink.remove();
-      }
-      
-      // Add new theme link
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = `https://unpkg.com/${theme.import}`;
-      link.setAttribute('data-theme', theme.value);
-      document.head.appendChild(link);
-      
-      // Update body class for theme-specific styling
-      document.body.className = document.body.className.replace(/p-theme-\S+/g, '');
-      document.body.classList.add(`p-theme-${theme.value}`);
-      
-      setSelectedTheme(theme);
-      
-      // Small delay to let the theme load
+      await changeTheme(themeId);
+      // Small delay for visual feedback
       setTimeout(() => setIsChangingTheme(false), 300);
     } catch (error) {
-      console.error('Failed to load theme:', error);
+      console.error('Failed to change theme:', error);
+      setIsChangingTheme(false);
+    }
+  };
+
+  const handleDarkModeToggle = async () => {
+    setIsChangingTheme(true);
+    
+    try {
+      await toggleDarkMode();
+      setTimeout(() => setIsChangingTheme(false), 300);
+    } catch (error) {
+      console.error('Failed to toggle dark mode:', error);
       setIsChangingTheme(false);
     }
   };
@@ -76,16 +80,22 @@ const FeaturePageThemeDemo: React.FC = () => {
       }}
       stats={[
         {
-          label: "Supported Themes",
-          value: "22+",
+          label: "Available Themes",
+          value: availableThemes.length.toString(),
           icon: "pi-palette",
           color: "#8b5cf6"
         },
         {
-          label: "Auto-Adaptation",
-          value: "100%",
-          icon: "pi-check-circle",
+          label: "Current Mode",
+          value: isDarkMode ? "Dark" : "Light",
+          icon: isDarkMode ? "pi-moon" : "pi-sun",
           color: "#10b981"
+        },
+        {
+          label: "Theme Family",
+          value: currentTheme.family,
+          icon: "pi-bookmark",
+          color: "#3b82f6"
         }
       ]}
       actions={[
@@ -103,53 +113,110 @@ const FeaturePageThemeDemo: React.FC = () => {
           outlined: true
         }
       ]}
-      headerGradient="linear-gradient(135deg, var(--primary-500) 0%, var(--primary-700) 100%)"
       animated={true}
-      loading={isChangingTheme}
+      loading={isChangingTheme || themeLoading}
     >
       <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        {themeError && (
+          <Card className="mb-4" style={{ borderColor: 'var(--red-500)', borderWidth: '2px' }}>
+            <h3 style={{ color: 'var(--red-500)' }}>⚠️ Theme Error</h3>
+            <p style={{ color: 'var(--red-600)' }}>{themeError}</p>
+          </Card>
+        )}
+
         <Card className="mb-4">
-          <h3>🎨 Theme Selector</h3>
+          <h3>🎨 Live Theme System</h3>
           <p className="mb-3">
-            Select a PrimeReact theme below to see how the FeaturePage component
-            automatically adapts its colors, shadows, borders, and styling.
+            This demo uses the integrated ThemeContext to show real-time theme switching. 
+            All {availableThemes.length} themes are available with automatic persistence.
           </p>
           
+          <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label htmlFor="darkModeSwitch">
+                <i className={`pi ${isDarkMode ? 'pi-moon' : 'pi-sun'}`} style={{ marginRight: '0.5rem' }} />
+                Dark Mode
+              </label>
+              <InputSwitch
+                inputId="darkModeSwitch"
+                checked={isDarkMode}
+                onChange={handleDarkModeToggle}
+                disabled={isChangingTheme}
+              />
+            </div>
+          </div>
+          
           <Dropdown
-            value={selectedTheme}
-            options={themes}
-            onChange={(e) => changeTheme(e.value)}
+            value={currentTheme.id}
+            options={availableThemes.map(theme => ({ 
+              label: `${theme.name} (${theme.category})`, 
+              value: theme.id,
+              family: theme.family
+            }))}
+            onChange={(e) => handleThemeChange(e.value)}
             optionLabel="label"
             placeholder="Select a theme..."
             className="w-full mb-3"
             disabled={isChangingTheme}
+            filter
+            filterBy="label,family"
+            filterPlaceholder="Search themes..."
+            emptyFilterMessage="No themes found"
           />
           
           {isChangingTheme && (
             <div className="text-center p-3">
               <i className="pi pi-spin pi-spinner mr-2" />
-              Loading theme...
+              Applying theme changes...
             </div>
           )}
         </Card>
 
-        <Card>
-          <h3>📋 Current Theme: {selectedTheme.label}</h3>
-          <p>
-            The FeaturePage is currently using the <strong>{selectedTheme.label}</strong> theme.
-            All colors, shadows, borders, and styling are automatically derived from the
-            theme's CSS variables.
-          </p>
+        <Card className="mb-4">
+          <h3>📋 Current Configuration</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+            <div>
+              <strong>Theme:</strong> {currentTheme.name}
+            </div>
+            <div>
+              <strong>Family:</strong> {currentTheme.family}
+            </div>
+            <div>
+              <strong>Category:</strong> {currentTheme.category}
+            </div>
+            <div>
+              <strong>Mode:</strong> {isDarkMode ? 'Dark' : 'Light'}
+            </div>
+          </div>
+          
+          {currentTheme.description && (
+            <p style={{ marginTop: '1rem', fontStyle: 'italic' }}>
+              {currentTheme.description}
+            </p>
+          )}
           
           <div className="mt-3">
             <Button 
               label="Reset to Default" 
               icon="pi pi-refresh" 
-              onClick={() => changeTheme(themes[0])}
+              onClick={() => handleThemeChange('lara-light-teal')}
               className="p-button-outlined"
-              disabled={isChangingTheme || selectedTheme === themes[0]}
+              disabled={isChangingTheme || currentTheme.id === 'lara-light-teal'}
             />
           </div>
+        </Card>
+
+        <Card>
+          <h3>✨ Theme Features Demonstrated</h3>
+          <ul style={{ lineHeight: '1.6' }}>
+            <li><strong>Dynamic Gradients:</strong> Header background adapts to theme colors</li>
+            <li><strong>Responsive Colors:</strong> All text and UI elements use theme variables</li>
+            <li><strong>Smart Shadows:</strong> Shadow depth adjusts for light/dark themes</li>
+            <li><strong>Border Radius:</strong> Corners adapt to theme design language</li>
+            <li><strong>Smooth Transitions:</strong> Theme changes animate smoothly</li>
+            <li><strong>Persistent Preferences:</strong> Theme selection is saved to your account</li>
+            <li><strong>Dark Mode Intelligence:</strong> Automatically finds matching dark/light variants</li>
+          </ul>
         </Card>
       </div>
     </FeaturePage>

@@ -1,6 +1,8 @@
-/* History Details Component Styles - Updated for FeaturePage wrapper */
+/* History Details Component Styles - Enhanced for comprehensive theme responsiveness */
 .history-details-page,
 .history-details-error {
+  transition: all 0.3s ease;
+  
   .error-container {
     display: flex;
     flex-direction: column;
@@ -8,6 +10,28 @@
     justify-content: center;
     padding: 4rem 2rem;
     text-align: center;
+    background: var(--surface-section);
+    border-radius: var(--border-radius, 12px);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--surface-border);
+    margin: 2rem 0;
+    transition: all 0.3s ease;
+
+    // Theme family specific error styling
+    &.theme-material {
+      border-radius: 4px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    }
+    
+    &.theme-bootstrap {
+      border-radius: 8px;
+      background: var(--surface-ground);
+    }
+    
+    &.theme-fluent {
+      border-radius: 2px;
+      border: 2px solid var(--surface-border);
+    }
 
     p {
       color: var(--text-color-secondary);
@@ -15,30 +39,83 @@
       line-height: 1.6;
       margin: 0;
       max-width: 600px;
+      transition: color 0.3s ease;
     }
   }
 
   .content-container {
     max-width: 1400px;
     margin: 0 auto;
+    transition: all 0.3s ease;
 
     .p-splitter {
       border: 1px solid var(--surface-border);
-      border-radius: 12px;
+      border-radius: var(--border-radius, 12px);
       overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: var(--card-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
+      backdrop-filter: blur(10px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      // Theme family specific splitter styling
+      &.theme-lara, &.theme-saga {
+        border-radius: 8px;
+      }
+      
+      &.theme-vela, &.theme-arya {
+        background: rgba(var(--surface-section-rgb, 255, 255, 255), 0.9);
+        border: 1px solid rgba(var(--surface-border-rgb, 226, 232, 240), 0.7);
+      }
+      
+      &.theme-material {
+        border-radius: 4px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), 0 0 12px rgba(0, 0, 0, 0.08);
+      }
+      
+      &.theme-bootstrap {
+        border-radius: 6px;
+        border: 1px solid var(--surface-300);
+      }
+      
+      &.theme-fluent {
+        border-radius: 2px;
+        border: 2px solid var(--surface-border);
+      }
 
       .content-panel {
         display: flex;
         flex-direction: column;
+        background: var(--surface-ground);
+        transition: background-color 0.3s ease;
 
         .panel-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
           padding: 1rem 1.5rem;
-          background: var(--surface-50);
+          background: var(--surface-section);
           border-bottom: 1px solid var(--surface-border);
+          transition: all 0.3s ease;
+          backdrop-filter: blur(5px);
+
+          // Theme family specific panel header styling
+          .theme-vela &, .theme-arya & {
+            background: rgba(var(--surface-100-rgb, 248, 250, 252), 0.7);
+          }
+          
+          .theme-material & {
+            background: var(--surface-100);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+          }
+          
+          .theme-bootstrap & {
+            background: var(--surface-200);
+            border-bottom: 1px solid var(--surface-300);
+          }
+          
+          .theme-fluent & {
+            background: var(--surface-50);
+            border-bottom: 2px solid var(--surface-border);
+          }
 
           @media (max-width: 768px) {
             padding: 0.75rem 1rem;
@@ -68,10 +145,32 @@
             .word-count {
               font-size: 0.875rem;
               color: var(--text-color-secondary);
-              background: var(--surface-100);
+              background: var(--surface-section);
               padding: 0.25rem 0.75rem;
-              border-radius: 15px;
+              border-radius: var(--border-radius, 15px);
               font-weight: 500;
+              border: 1px solid var(--surface-border);
+              transition: all 0.3s ease;
+              backdrop-filter: blur(5px);
+
+              // Theme family specific badge styling
+              .theme-material & {
+                border-radius: 4px;
+                background: var(--surface-200);
+              }
+              
+              .theme-bootstrap & {
+                border-radius: 6px;
+                background: var(--primary-50);
+                color: var(--primary-600);
+                border: 1px solid var(--primary-200);
+              }
+              
+              .theme-fluent & {
+                border-radius: 2px;
+                background: var(--surface-200);
+                border: 1px solid var(--surface-300);
+              }
             }
           }
 
@@ -86,7 +185,29 @@
           flex: 1;
           padding: 1.5rem;
           overflow-y: auto;
-          background: var(--surface-0);
+          background: var(--surface-ground);
+          transition: all 0.3s ease;
+          backdrop-filter: blur(5px);
+
+          // Theme family specific content styling
+          .theme-vela &, .theme-arya & {
+            background: rgba(var(--surface-ground-rgb, 255, 255, 255), 0.9);
+          }
+          
+          .theme-material & {
+            background: var(--surface-0);
+            padding: 2rem 1.5rem;
+          }
+          
+          .theme-bootstrap & {
+            background: var(--surface-50);
+            border: 1px solid rgba(var(--surface-border-rgb, 226, 232, 240), 0.5);
+          }
+          
+          .theme-fluent & {
+            background: var(--surface-ground);
+            border-left: 3px solid var(--primary-color);
+          }
 
           @media (max-width: 768px) {
             padding: 1rem;
@@ -100,6 +221,7 @@
             line-height: 1.6;
             color: var(--text-color);
             font-size: 0.95rem;
+            transition: color 0.3s ease;
 
             @media (max-width: 768px) {
               font-size: 0.9rem;

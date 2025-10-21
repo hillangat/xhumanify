@@ -4,18 +4,25 @@
 
 // Design System Variables - Now theme-aware using PrimeReact CSS variables
 :root {
-  // Gradient defaults - can be overridden per component
+  // Dynamic gradients that adapt to current theme
   --feature-primary-gradient: linear-gradient(135deg, var(--primary-500, #667eea) 0%, var(--primary-700, #764ba2) 100%);
   --feature-secondary-gradient: linear-gradient(135deg, var(--primary-400, #667eea) 0%, var(--primary-600, #764ba2) 50%, var(--primary-500, #f093fb) 100%);
+  --feature-dark-gradient: linear-gradient(135deg, var(--primary-600, #4c51bf) 0%, var(--primary-800, #2d3748) 100%);
+  --feature-light-gradient: linear-gradient(135deg, var(--primary-400, #7c3aed) 0%, var(--primary-600, #5b21b6) 100%);
   
   // Colors - Use PrimeReact theme variables with fallbacks
-  --feature-accent-color: var(--primary-500, #667eea);
+  --feature-accent-color: var(--primary-color, #667eea);
+  --feature-accent-light: var(--primary-100, #e0e7ff);
+  --feature-accent-dark: var(--primary-700, #4c51bf);
   --feature-text-primary: var(--text-color, #2d3748);
   --feature-text-secondary: var(--text-color-secondary, #4a5568);
   --feature-text-muted: var(--text-color-secondary, #718096);
-  --feature-bg-primary: var(--surface-0, #ffffff);
-  --feature-bg-secondary: var(--surface-50, #f7fafc);
+  --feature-text-inverse: var(--primary-color-text, #ffffff);
+  --feature-bg-primary: var(--surface-card, #ffffff);
+  --feature-bg-secondary: var(--surface-ground, #f7fafc);
+  --feature-bg-section: var(--surface-section, #ffffff);
   --feature-border: var(--surface-border, #e2e8f0);
+  --feature-overlay: var(--surface-overlay, rgba(255, 255, 255, 0.8));
   
   // Shadows - Adapt to theme
   --feature-shadow-light: 0 1px 3px var(--maskbg, rgba(0, 0, 0, 0.1));
@@ -46,16 +53,43 @@
 // Theme-specific adaptations
 // Light themes
 .p-component {
-  --feature-card-bg: var(--surface-0);
+  --feature-card-bg: var(--surface-card);
   --feature-card-border: var(--surface-border);
   --feature-overlay-bg: var(--surface-overlay);
 }
 
 // Dark themes - automatically detected via PrimeReact theme classes
-.p-dark {
-  --feature-shadow-light: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --feature-shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.3);
-  --feature-shadow-large: 0 10px 25px rgba(0, 0, 0, 0.4);
+.p-dark, [data-theme-category="Dark"] {
+  --feature-primary-gradient: var(--feature-dark-gradient);
+  --feature-shadow-light: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --feature-shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --feature-shadow-large: 0 10px 25px rgba(0, 0, 0, 0.5);
+  --feature-overlay: var(--surface-overlay, rgba(0, 0, 0, 0.8));
+  
+  // Enhanced contrast for dark themes
+  .feature-page {
+    .feature-page-header {
+      .header-background-pattern {
+        opacity: 0.05;
+      }
+      
+      .feature-badge {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.25);
+      }
+    }
+  }
+}
+
+// Light themes get enhanced brightness
+.feature-page.light-mode {
+  --feature-primary-gradient: var(--feature-light-gradient);
+  
+  .feature-page-header {
+    .header-background-pattern {
+      opacity: 0.12;
+    }
+  }
 }
 
 // Bootstrap theme compatibility
@@ -96,16 +130,36 @@
   position: relative;
   overflow-x: hidden;
   padding-top: 4rem; // Account for fixed header height
+  transition: background-color var(--feature-transition-medium);
 
   // Animation states
   &.animated {
     opacity: 0;
     transform: translateY(20px);
-    transition: all var(--feature-transition-medium);
+    transition: all var(--feature-transition-medium), background-color var(--feature-transition-medium);
 
     &.visible {
       opacity: 1;
       transform: translateY(0);
+    }
+  }
+  
+  // Theme-aware styling
+  &.dark-mode {
+    .feature-page-header {
+      .decoration-circle {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(15px);
+      }
+    }
+  }
+  
+  &.light-mode {
+    .feature-page-header {
+      .decoration-circle {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+      }
     }
   }
 
@@ -113,14 +167,15 @@
   .feature-page-header {
     position: relative;
     background: var(--feature-primary-gradient);
-    color: white;
+    color: var(--feature-text-inverse);
     padding: var(--feature-spacing-xl) var(--feature-spacing-lg);
     min-height: 400px;
     display: flex;
     align-items: center;
     overflow: hidden;
+    transition: background var(--feature-transition-medium);
 
-    // Animated background pattern
+    // Animated background pattern with theme awareness
     .header-background-pattern {
       position: absolute;
       top: 0;
@@ -129,11 +184,12 @@
       bottom: 0;
       opacity: 0.1;
       background-image: 
-        radial-gradient(circle at 25% 25%, white 2px, transparent 2px),
-        radial-gradient(circle at 75% 75%, white 2px, transparent 2px);
+        radial-gradient(circle at 25% 25%, currentColor 2px, transparent 2px),
+        radial-gradient(circle at 75% 75%, currentColor 2px, transparent 2px);
       background-size: 50px 50px;
       background-position: 0 0, 25px 25px;
       animation: backgroundFloat 20s ease-in-out infinite;
+      transition: opacity var(--feature-transition-medium);
     }
 
     .header-content {
@@ -402,7 +458,7 @@
     }
   }
 
-  // Content Section
+  // Content Section with enhanced theme responsiveness
   .feature-page-content {
     position: relative;
     z-index: 1;
@@ -411,6 +467,7 @@
     margin-top: -2rem;
     box-shadow: var(--feature-shadow-large);
     border: 1px solid var(--feature-border);
+    transition: all var(--feature-transition-medium);
 
     .content-container {
       max-width: 1200px;
@@ -418,6 +475,12 @@
       padding: var(--feature-spacing-xl) var(--feature-spacing-lg);
       min-height: 200px;
       color: var(--feature-text-primary);
+      transition: color var(--feature-transition-medium);
+      
+      // Ensure child elements inherit theme transitions
+      * {
+        transition: color var(--feature-transition-fast), background-color var(--feature-transition-fast), border-color var(--feature-transition-fast);
+      }
     }
   }
 
@@ -600,22 +663,37 @@
 @keyframes pulse {
   0%, 100% {
     transform: translate(-50%, -50%) scale(1);
-    box-shadow: 0 4px 20px rgba(var(--primary-500-rgb, 102, 126, 234), 0.3);
+    box-shadow: 0 4px 20px var(--feature-accent-color, rgba(102, 126, 234, 0.3));
   }
   50% {
     transform: translate(-50%, -50%) scale(1.1);
-    box-shadow: 0 6px 25px rgba(var(--primary-500-rgb, 102, 126, 234), 0.5);
+    box-shadow: 0 6px 25px var(--feature-accent-color, rgba(102, 126, 234, 0.5));
   }
 }
 
 @keyframes pulse-simple {
   0%, 100% {
     transform: translate(-50%, -50%) scale(1);
-    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 15px var(--feature-accent-light, rgba(102, 126, 234, 0.4));
   }
   50% {
     transform: translate(-50%, -50%) scale(1.05);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 6px 20px var(--feature-accent-color, rgba(102, 126, 234, 0.6));
+  }
+}
+
+@keyframes themeTransition {
+  0% {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
@@ -766,6 +844,26 @@
   }
 }
 
+// Theme transition animations
+.feature-page {
+  // Apply smooth transition when theme changes
+  &[data-theme-id] {
+    animation: themeTransition 0.6s ease-out;
+  }
+  
+  // Enhanced transitions for all interactive elements
+  .feature-page-header {
+    .feature-action-btn,
+    .feature-badge,
+    .stat-item {
+      transition: all var(--feature-transition-fast), 
+                  background-color var(--feature-transition-medium),
+                  border-color var(--feature-transition-medium),
+                  box-shadow var(--feature-transition-medium);
+    }
+  }
+}
+
 // Reduced motion support
 @media (prefers-reduced-motion: reduce) {
   .feature-page {
@@ -778,17 +876,40 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+    
+    &[data-theme-id] {
+      animation: none;
+    }
   }
 }
 
-// Additional theme adaptations
-// Saga themes
+// Enhanced theme family support for all PrimeReact themes
+// Lara themes (modern, clean)
+.theme-lara, [data-theme-id*="lara"] {
+  .feature-page {
+    --feature-radius-sm: 6px;
+    --feature-radius-md: 12px;
+    --feature-radius-lg: 16px;
+    
+    .feature-page-header {
+      .feature-badge {
+        border-radius: 20px;
+      }
+    }
+  }
+}
+
+// Saga themes (professional)
+.theme-saga, [data-theme-id*="saga"],
 .p-theme-saga-blue,
 .p-theme-saga-green,
 .p-theme-saga-orange,
 .p-theme-saga-purple {
   .feature-page {
-    --feature-primary-gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-700) 100%);
+    --feature-primary-gradient: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-700, var(--primary-color)) 100%);
+    --feature-radius-sm: 4px;
+    --feature-radius-md: 8px;
+    --feature-radius-lg: 12px;
   }
 }
 

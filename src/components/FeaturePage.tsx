@@ -3,6 +3,7 @@ import { Button } from 'primereact/button';
 import { Badge } from 'primereact/badge';
 import './FeaturePage.scss';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface FeaturePageProps {
   /** The main title/name of the feature */
@@ -67,6 +68,7 @@ const FeaturePage: React.FC<FeaturePageProps> = ({
   className = ''
 }) => {
   const [isVisible, setIsVisible] = useState(false);
+  const { currentTheme, isDarkMode } = useTheme();
 
   useEffect(() => {
     if (animated) {
@@ -78,9 +80,20 @@ const FeaturePage: React.FC<FeaturePageProps> = ({
     }
   }, [animated]);
 
-  const defaultGradient = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+  // Create dynamic gradient based on current theme
+  const getThemeAwareGradient = () => {
+    if (headerGradient) return headerGradient;
+    
+    // Use theme-aware gradient that adapts to current theme
+    if (isDarkMode || currentTheme.category === 'Dark') {
+      return `linear-gradient(135deg, var(--primary-600, #667eea) 0%, var(--primary-800, #4c51bf) 100%)`;
+    } else {
+      return `linear-gradient(135deg, var(--primary-500, #667eea) 0%, var(--primary-700, #764ba2) 100%)`;
+    }
+  };
+  
   const gradientStyle = {
-    background: headerGradient || defaultGradient
+    background: getThemeAwareGradient()
   };
 
   const renderBreadcrumbs = () => {
@@ -157,7 +170,7 @@ const FeaturePage: React.FC<FeaturePageProps> = ({
         left: 0,
         right: 0,
         bottom: 0,
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: getThemeAwareGradient(),
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -259,7 +272,9 @@ const FeaturePage: React.FC<FeaturePageProps> = ({
 
   return (
     <div 
-      className={`feature-page ${animated ? 'animated' : ''} ${isVisible ? 'visible' : ''} ${className}`}
+      className={`feature-page ${animated ? 'animated' : ''} ${isVisible ? 'visible' : ''} ${isDarkMode ? 'dark-mode' : 'light-mode'} theme-${currentTheme.family.toLowerCase().replace(/\s+/g, '-')} ${className}`}
+      data-theme-id={currentTheme.id}
+      data-theme-category={currentTheme.category}
     >
       {/* Header Section */}
       <div className="feature-page-header" style={gradientStyle}>
