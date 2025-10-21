@@ -6,22 +6,6 @@ import { Button } from 'primereact/button';
 import { InputSwitch } from 'primereact/inputswitch';
 import { useTheme } from '../contexts/ThemeContext';
 
-interface ThemeOption {
-  label: string;
-  value: string;
-  import: string;
-}
-
-const themes: ThemeOption[] = [
-  { label: 'Lara Light Teal (Current)', value: 'lara-light-teal', import: 'primereact/resources/themes/lara-light-teal/theme.css' },
-  { label: 'Lara Dark Teal', value: 'lara-dark-teal', import: 'primereact/resources/themes/lara-dark-teal/theme.css' },
-  { label: 'Saga Blue', value: 'saga-blue', import: 'primereact/resources/themes/saga-blue/theme.css' },
-  { label: 'Saga Green', value: 'saga-green', import: 'primereact/resources/themes/saga-green/theme.css' },
-  { label: 'Vela Blue (Dark)', value: 'vela-blue', import: 'primereact/resources/themes/vela-blue/theme.css' },
-  { label: 'Material Design Light', value: 'md-light-indigo', import: 'primereact/resources/themes/md-light-indigo/theme.css' },
-  { label: 'Material Design Dark', value: 'md-dark-indigo', import: 'primereact/resources/themes/md-dark-indigo/theme.css' },
-  { label: 'Bootstrap Light', value: 'bootstrap4-light-blue', import: 'primereact/resources/themes/bootstrap4-light-blue/theme.css' }
-];
 
 const FeaturePageThemeDemo: React.FC = () => {
   const { 

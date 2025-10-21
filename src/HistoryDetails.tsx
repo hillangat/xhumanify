@@ -81,7 +81,6 @@ const HistoryDetails: React.FC = () => {
           { label: 'History', url: '/history', icon: "pi-history" },
           { label: 'Not Found', icon: 'pi-exclamation-triangle' }
         ]}
-        className="history-details-error"
       >
         <div className="error-container">
           <p>The history item you're looking for doesn't exist or has been removed.</p>
@@ -140,7 +139,6 @@ const HistoryDetails: React.FC = () => {
         { label: 'History', url: '/history', icon: 'pi-history' },
         { label: item.description || 'Content Details', icon: 'pi-file-edit' }
       ]}
-      className="history-details-page"
     >
       <Toast position="top-right" />
       

@@ -410,8 +410,8 @@ export default function App() {
 
       <main className="app-content">
         {/* Main Action Bar */}
-        <div className="main-action-bar">
-          <div className="main-action-bar-content">
+        <div className="main-action-bar theme-responsive">
+          <div className="main-action-bar-content theme-responsive">
             <div className="action-group-left">
               <div className="tone-selector-wrapper">
                 <i className="pi pi-palette tone-icon"></i>
@@ -476,11 +476,7 @@ export default function App() {
                     onClick={handleButtonClick}
                     disabled={loading || !prompt || isRunning || !canUseService}
                     severity={!canUseService ? 'danger' : undefined}
-                    style={!canUseService || (!!prompt && !checkUsageLimit(prompt)) ? {
-                      backgroundColor: '#f44336',
-                      borderColor: '#f44336',
-                      color: 'white'
-                    } : undefined}
+                    className={!canUseService || (!!prompt && !checkUsageLimit(prompt)) ? 'p-button-danger' : undefined}
                   />
                 </ButtonGroup>
               </div>
@@ -493,7 +489,7 @@ export default function App() {
                 onChange={(event) => setPrompt(event.target.value)}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                style={{ width: '100%', padding: '8px', fontSize: '16px', resize: 'none' }}
+                className="app-textarea"
                 disabled={isRunning}
               />
             </form>
@@ -551,20 +547,10 @@ export default function App() {
                 <>
                   <pre>{answer}</pre>
                   {usageInfo && (
-                    <div className="usage-summary" style={{
-                      fontSize: '0.8rem',
-                      color: 'var(--text-color-secondary)',
-                      marginTop: '1rem',
-                      padding: '0.75rem',
-                      background: 'var(--surface-100)',
-                      borderLeft: '3px solid var(--primary-color)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
+                    <div className="usage-summary theme-responsive">
                       <div>
-                        <span style={{ fontWeight: '600' }}>💰 <strong>Usage Charged:</strong> {usageInfo.estimatedWords} words</span>
-                        <div style={{ fontSize: '0.7rem', opacity: 0.8, marginTop: '0.25rem' }}>
+                        <span className="usage-charged-text">💰 <strong>Usage Charged:</strong> {usageInfo.estimatedWords} words</span>
+                        <div className="usage-detail-text">
                           ({Math.ceil((usageInfo.inputTokens + usageInfo.outputTokens) / 1.3)} word equivalent)
                         </div>
                       </div>
@@ -574,14 +560,14 @@ export default function App() {
                         onClick={() => setShowUsageBreakdown(true)}
                         outlined
                         size="small"
-                        style={{ fontSize: '0.75rem' }}
+                        className="usage-details-button"
                       />
                     </div>
                   )}
                 </>
               ) : (
                 <EmptyContent
-                  icon={isRunning ? <ProgressSpinner style={{ width: '45px', height: '45px' }} /> : <i className="pi pi-hourglass" style={{ fontSize: '2.5rem', color: 'var(--text-color-secondary)' }}></i>}
+                  icon={isRunning ? <ProgressSpinner className="processing-spinner" /> :                   <i className="pi pi-hourglass empty-content-icon"></i>}
                   title={isRunning ? 'Processing...' : 'No Processed Content'}
                   subtitle={isRunning ? 'Please wait while we humanize your content.' : 'Processed Content will appear here after a successful processing.'}
                 />
@@ -614,8 +600,7 @@ export default function App() {
           </div>
         }
         modal
-        className="save-dialog"
-        style={{ width: '500px' }}
+        className="save-dialog save-dialog-container"
       >
         <div className="dialog-content">
           <div className="textarea-container">
@@ -625,25 +610,10 @@ export default function App() {
               placeholder="Enter description..."
               maxLength={250}
               rows={4}
-              className="description-textarea"
+              className="description-textarea dialog-textarea theme-responsive"
               disabled={isSaving}
-              style={{
-                width: '100%',
-                padding: '12px',
-                border: '1px solid var(--surface-border)',
-                borderRadius: '6px',
-                fontSize: '14px',
-                fontFamily: 'inherit',
-                resize: 'vertical',
-                minHeight: '100px'
-              }}
             />
-            <div className={`character-count ${description.length > 200 ? 'warning' : ''} ${description.length > 240 ? 'error' : ''}`} style={{
-              textAlign: 'right',
-              marginTop: '8px',
-              fontSize: '12px',
-              color: 'var(--text-color-secondary)'
-            }}>
+            <div className={`character-count theme-responsive ${description.length > 200 ? 'warning' : ''} ${description.length > 240 ? 'error' : ''}`}>
               {description.length}/250
             </div>
           </div>
@@ -673,8 +643,7 @@ export default function App() {
           </div>
         }
         modal
-        className="feedback-dialog"
-        style={{ width: '90vw', maxWidth: '700px' }}
+        className="feedback-dialog feedback-dialog-container"
         closable={!isSubmittingFeedback}
       >
         <UserFeedback
@@ -700,14 +669,13 @@ export default function App() {
         visible={showAIDetectionSidebar}
         onHide={() => setShowAIDetectionSidebar(false)}
         position="right"
-        style={{ width: '98vw', maxWidth: '1600px' }}
-        className="ai-detection-sidebar"
+        className="ai-detection-sidebar ai-detection-sidebar-container"
         modal
         dismissable
         showCloseIcon
         header={
           <div className="sidebar-header">
-            <i className="pi pi-clone" style={{ marginRight: '0.5rem', color: 'var(--primary-color)' }} />
+            <i className="pi pi-clone sidebar-header-icon" />
             <span>AI Detection Comparison</span>
           </div>
         }
