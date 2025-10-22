@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from 'primereact/card';
 import { Divider } from 'primereact/divider';
+import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
 import { ThemeSelector } from './ThemeSelector';
+import AccountDeletion from './AccountDeletion';
 import './SettingsPage.scss';
 
 export const SettingsPage: React.FC = () => {
+  const [showAccountDeletion, setShowAccountDeletion] = useState(false);
+
   return (
     <div className="settings-page">
       <div className="settings-container">
@@ -45,6 +50,21 @@ export const SettingsPage: React.FC = () => {
                   <p className="setting-description">Control your privacy settings and security options</p>
                   <div className="setting-actions">
                     <i className="pi pi-chevron-right" />
+                  </div>
+                </div>
+                <Divider />
+                <div className="setting-item danger-item">
+                  <label className="setting-label">Delete Account</label>
+                  <p className="setting-description">Permanently delete your account and all associated data</p>
+                  <div className="setting-actions">
+                    <Button
+                      label="Delete Account"
+                      icon="pi pi-trash"
+                      severity="danger"
+                      size="small"
+                      outlined
+                      onClick={() => setShowAccountDeletion(true)}
+                    />
                   </div>
                 </div>
               </Card>
@@ -101,6 +121,18 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {/* Account Deletion Dialog */}
+        <Dialog
+          visible={showAccountDeletion}
+          onHide={() => setShowAccountDeletion(false)}
+          header="Account Deletion"
+          style={{ width: '90vw', maxWidth: '900px' }}
+          modal
+          maximizable
+        >
+          <AccountDeletion />
+        </Dialog>
       </div>
     </div>
   );

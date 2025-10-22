@@ -113,6 +113,29 @@
                 font-size: 0.8rem;
               }
             }
+
+            // Special styling for dangerous actions
+            &.danger-item {
+              border-left: 3px solid var(--red-500);
+              background: rgba(239, 68, 68, 0.05);
+              padding: 1rem;
+              margin: 0.5rem -1rem;
+              border-radius: 8px;
+
+              &:hover {
+                background: rgba(239, 68, 68, 0.1);
+                margin: 0.5rem -1rem;
+                padding: 1rem;
+              }
+
+              .setting-label {
+                color: var(--red-600);
+              }
+
+              .setting-description {
+                color: var(--red-500);
+              }
+            }
           }
         }
       }
