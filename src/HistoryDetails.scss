@@ -1,4 +1,4 @@
-/* History Details Component Styles - Enhanced for comprehensive theme responsiveness */
+/* History Details Component Styles - Complete Theme Responsiveness */
 .history-details-page,
 .history-details-error {
   transition: all 0.3s ease;
@@ -10,31 +10,27 @@
     justify-content: center;
     padding: 4rem 2rem;
     text-align: center;
-    background: var(--surface-section);
-    border-radius: var(--border-radius, 12px);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--surface-border);
     margin: 2rem 0;
     transition: all 0.3s ease;
+    
+    // Clean structure without color definitions
+    border-radius: var(--border-radius, 12px);
+    backdrop-filter: blur(10px);
 
-    // Theme family specific error styling
+    // Theme family specific error styling (structure only)
     &.theme-material {
       border-radius: 4px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
     }
     
     &.theme-bootstrap {
       border-radius: 8px;
-      background: var(--surface-ground);
     }
     
     &.theme-fluent {
       border-radius: 2px;
-      border: 2px solid var(--surface-border);
     }
 
     p {
-      color: var(--text-color-secondary);
       font-size: 1.125rem;
       line-height: 1.6;
       margin: 0;
@@ -49,72 +45,50 @@
     transition: all 0.3s ease;
 
     .p-splitter {
-      border: 1px solid var(--surface-border);
       border-radius: var(--border-radius, 12px);
       overflow: hidden;
-      box-shadow: var(--card-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
       backdrop-filter: blur(10px);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
-      // Theme family specific splitter styling
+      // Theme family specific splitter styling (structure only)
       &.theme-lara, &.theme-saga {
         border-radius: 8px;
       }
       
-      &.theme-vela, &.theme-arya {
-        background: rgba(var(--surface-section-rgb, 255, 255, 255), 0.9);
-        border: 1px solid rgba(var(--surface-border-rgb, 226, 232, 240), 0.7);
-      }
-      
       &.theme-material {
         border-radius: 4px;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15), 0 0 12px rgba(0, 0, 0, 0.08);
       }
       
       &.theme-bootstrap {
         border-radius: 6px;
-        border: 1px solid var(--surface-300);
       }
       
       &.theme-fluent {
         border-radius: 2px;
-        border: 2px solid var(--surface-border);
       }
 
       .content-panel {
         display: flex;
         flex-direction: column;
-        background: var(--surface-ground);
-        transition: background-color 0.3s ease;
+        transition: all 0.3s ease;
 
         .panel-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
           padding: 1rem 1.5rem;
-          background: var(--surface-section);
-          border-bottom: 1px solid var(--surface-border);
           transition: all 0.3s ease;
           backdrop-filter: blur(5px);
 
-          // Theme family specific panel header styling
-          .theme-vela &, .theme-arya & {
-            background: rgba(var(--surface-100-rgb, 248, 250, 252), 0.7);
-          }
-          
+          // Theme family specific panel header styling (structure only)
           .theme-material & {
-            background: var(--surface-100);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-          }
-          
-          .theme-bootstrap & {
-            background: var(--surface-200);
-            border-bottom: 1px solid var(--surface-300);
+            border-bottom-width: 1px;
+            border-bottom-style: solid;
           }
           
           .theme-fluent & {
-            background: var(--surface-50);
-            border-bottom: 2px solid var(--surface-border);
+            border-bottom-width: 2px;
+            border-bottom-style: solid;
           }
 
           @media (max-width: 768px) {
@@ -138,38 +112,28 @@
             h3 {
               font-size: 1.125rem;
               font-weight: 600;
-              color: var(--text-color);
               margin: 0;
             }
 
             .word-count {
               font-size: 0.875rem;
-              color: var(--text-color-secondary);
-              background: var(--surface-section);
               padding: 0.25rem 0.75rem;
               border-radius: var(--border-radius, 15px);
               font-weight: 500;
-              border: 1px solid var(--surface-border);
               transition: all 0.3s ease;
               backdrop-filter: blur(5px);
 
-              // Theme family specific badge styling
+              // Theme family specific badge styling (structure only)
               .theme-material & {
                 border-radius: 4px;
-                background: var(--surface-200);
               }
               
               .theme-bootstrap & {
                 border-radius: 6px;
-                background: var(--primary-50);
-                color: var(--primary-600);
-                border: 1px solid var(--primary-200);
               }
               
               .theme-fluent & {
                 border-radius: 2px;
-                background: var(--surface-200);
-                border: 1px solid var(--surface-300);
               }
             }
           }
@@ -185,28 +149,17 @@
           flex: 1;
           padding: 1.5rem;
           overflow-y: auto;
-          background: var(--surface-ground);
           transition: all 0.3s ease;
           backdrop-filter: blur(5px);
 
-          // Theme family specific content styling
-          .theme-vela &, .theme-arya & {
-            background: rgba(var(--surface-ground-rgb, 255, 255, 255), 0.9);
-          }
-          
+          // Theme family specific content styling (structure only)
           .theme-material & {
-            background: var(--surface-0);
             padding: 2rem 1.5rem;
           }
           
-          .theme-bootstrap & {
-            background: var(--surface-50);
-            border: 1px solid rgba(var(--surface-border-rgb, 226, 232, 240), 0.5);
-          }
-          
           .theme-fluent & {
-            background: var(--surface-ground);
-            border-left: 3px solid var(--primary-color);
+            border-left-width: 3px;
+            border-left-style: solid;
           }
 
           @media (max-width: 768px) {
@@ -219,7 +172,6 @@
             white-space: pre-wrap;
             word-wrap: break-word;
             line-height: 1.6;
-            color: var(--text-color);
             font-size: 0.95rem;
             transition: color 0.3s ease;
 
@@ -231,16 +183,7 @@
 
         &.processed-panel {
           .panel-header {
-            background: var(--primary-50);
-
-            h3 {
-              color: var(--primary-color);
-            }
-
-            .word-count {
-              background: var(--primary-100);
-              color: var(--primary-color);
-            }
+            // Structure maintained, colors will be added via theme-responsive styling
           }
         }
       }
@@ -263,7 +206,6 @@
     gap: 1.5rem;
 
     h2 {
-      color: var(--text-color);
       margin: 0;
     }
   }
@@ -275,7 +217,6 @@
     gap: 2rem;
     margin-bottom: 2rem;
     padding-bottom: 1.5rem;
-    border-bottom: 1px solid var(--surface-border);
 
     @media (max-width: 768px) {
       flex-direction: column;
@@ -298,7 +239,6 @@
       h1 {
         font-size: 2rem;
         font-weight: 700;
-        color: var(--text-color);
         margin: 0;
         line-height: 1.2;
         flex-shrink: 0;
@@ -309,7 +249,6 @@
       }
 
       .date-info {
-        color: var(--text-color-secondary);
         font-size: 1rem;
         margin: 0;
         white-space: nowrap;
@@ -323,68 +262,117 @@
   }
 }
 
-/* Dark mode support */
-[data-theme="dark"], .p-dark {
-  .history-details-page,
-  .history-details-error {
-    .content-container .p-splitter {
-      background: var(--surface-900);
-      border-color: var(--surface-700);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+/* ========================================
+   COMPLETE THEME-RESPONSIVE STYLING
+   Comprehensive color integration from scratch
+   ======================================== */
 
-      .content-panel {
+/* Error Container - Complete Theme Integration */
+.history-details-page,
+.history-details-error {
+  .error-container {
+    background: var(--surface-section);
+    border: 1px solid var(--surface-border);
+    box-shadow: var(--card-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
+    
+    p {
+      color: var(--text-color-secondary);
+    }
+  }
+}
+
+/* Content Container - Complete Theme Integration */
+.content-container {
+  .p-splitter {
+    background: var(--surface-ground);
+    border: 1px solid var(--surface-border);
+    box-shadow: var(--card-shadow, 0 4px 12px rgba(0, 0, 0, 0.1));
+    
+    .content-panel {
+      background: var(--surface-0);
+      
+      .panel-header {
+        background: var(--surface-section);
+        border-bottom: 1px solid var(--surface-border);
+        
+        h3 {
+          color: var(--text-color);
+        }
+        
+        .word-count {
+          background: var(--surface-100);
+          color: var(--text-color-secondary);
+          border: 1px solid var(--surface-border);
+        }
+      }
+      
+      .panel-content {
+        background: var(--surface-0);
+        
+        pre {
+          color: var(--text-color);
+        }
+      }
+      
+      // Processed panel highlighting
+      &.processed-panel {
         .panel-header {
-          background: var(--surface-800);
-          border-color: var(--surface-700);
-
-          .header-left .word-count {
-            background: var(--surface-700);
-            color: var(--text-color-secondary);
+          background: color-mix(in srgb, var(--primary-color) 8%, var(--surface-section));
+          
+          h3 {
+            color: var(--primary-color);
+          }
+          
+          .word-count {
+            background: color-mix(in srgb, var(--primary-color) 10%, var(--surface-100));
+            color: var(--primary-color);
+            border-color: color-mix(in srgb, var(--primary-color) 20%, var(--surface-border));
           }
         }
-
-        .panel-content {
-          background: var(--surface-900);
-        }
-
-        &.processed-panel {
-          .panel-header {
-            background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-800));
-
-            .word-count {
-              background: color-mix(in srgb, var(--primary-color) 20%, var(--surface-700));
-              color: var(--primary-color);
-            }
-          }
+        
+        // Fluent theme accent
+        .theme-fluent & .panel-content {
+          border-left-color: var(--primary-color);
         }
       }
     }
   }
+}
 
-  /* Legacy dark mode support */
-  .history-details {
-    .content-container .p-splitter {
-      background: var(--surface-900);
-      border-color: var(--surface-700);
-
-      .content-panel {
-        .panel-header {
-          background: var(--surface-800);
-          border-color: var(--surface-700);
-
-          .header-left .word-count {
-            background: var(--surface-700);
-          }
-        }
-
-        .panel-content {
-          background: var(--surface-900);
-        }
-
-        &.processed-panel .panel-header {
-          background: color-mix(in srgb, var(--primary-color) 15%, var(--surface-800));
-        }
+/* Legacy Structure - Complete Theme Integration */
+.history-details {
+  .error-container {
+    h2 {
+      color: var(--text-color);
+    }
+  }
+  
+  .details-header {
+    border-bottom-color: var(--surface-border);
+    
+    .item-info {
+      h1 {
+        color: var(--text-color);
+      }
+      
+      .date-info {
+        color: var(--text-color-secondary);
       }
     }
   }
+}
+
+/* Universal Theme Transitions */
+.history-details-page,
+.history-details-error,
+.history-details,
+.content-container,
+.p-splitter,
+.content-panel,
+.panel-header,
+.panel-content,
+h1, h2, h3,
+.word-count,
+pre {
+  transition: all 0.3s ease;
 }
