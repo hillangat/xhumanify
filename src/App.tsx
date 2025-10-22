@@ -447,7 +447,7 @@ export default function App() {
 
         <section className='content-section'>
           <div className='raw-content'>
-            <div className='action-bar'>
+            <div className='action-bar theme-responsive'>
               <div className='action-bar-left'>
                 <p><strong>{countWords(prompt)}</strong> Words</p>
               </div>
@@ -495,7 +495,7 @@ export default function App() {
             </form>
           </div>
           <div className='processed-content'>
-            <div className='action-bar'>
+            <div className='action-bar theme-responsive'>
               <div className='action-bar-left'>
                 <p><strong>{animatedWordCount}</strong> Words</p>
               </div>

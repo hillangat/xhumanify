@@ -259,6 +259,13 @@ $padding: 15px;
     border-top-left-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);
 
+    .action-bar {
+      border-top: 1px solid var(--surface-border);
+      border-left: 1px solid var(--surface-border);
+      border-right: 1px solid var(--surface-border);
+      border-top-left-radius: var(--border-radius);
+    }
+
     @media (max-width: 768px) {
       flex: 1;
     }
@@ -305,6 +312,12 @@ $padding: 15px;
     word-wrap: break-word;
     overflow-wrap: break-word;
     word-break: break-all;
+
+    .action-bar {
+      border-top: 1px solid var(--surface-border);
+      border-right: 1px solid var(--surface-border);
+      border-top-right-radius: var(--border-radius);
+    }
 
     @media (max-width: 768px) {
       flex: 1;
@@ -435,9 +448,61 @@ $padding: 15px;
       .p-button {
         transition: all 0.2s ease;
 
-        &:hover:not(:disabled) {
-          transform: translateY(-1px);
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        // Ensure ButtonGroup buttons maintain proper styling
+        &:not(.p-button-outlined):not(.p-button-text):not(.p-button-danger) {
+          background: var(--primary-color) !important;
+          border-color: var(--primary-color) !important;
+          color: var(--primary-color-text, white) !important;
+          
+          &:hover:not(:disabled) {
+            background: color-mix(in srgb, var(--primary-color) 85%, black) !important;
+            border-color: color-mix(in srgb, var(--primary-color) 85%, black) !important;
+            color: var(--primary-color-text, white) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          }
+        }
+        
+        &.p-button-outlined {
+          background: transparent !important;
+          color: var(--primary-color) !important;
+          border-color: var(--primary-color) !important;
+          
+          &:hover:not(:disabled) {
+            background: var(--primary-color) !important;
+            color: var(--primary-color-text, white) !important;
+            border-color: var(--primary-color) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          }
+        }
+        
+        &.p-button-success {
+          background: var(--green-500) !important;
+          border-color: var(--green-500) !important;
+          color: white !important;
+          
+          &:hover:not(:disabled) {
+            background: var(--green-600, color-mix(in srgb, var(--green-500) 85%, black)) !important;
+            border-color: var(--green-600, color-mix(in srgb, var(--green-500) 85%, black)) !important;
+            color: white !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          }
+        }
+        
+        &.p-button-danger {
+          background: var(--red-500) !important;
+          border-color: var(--red-500) !important;
+          color: white !important;
+          
+          &:hover:not(:disabled) {
+            background: var(--red-600, color-mix(in srgb, var(--red-500) 85%, black)) !important;
+            border-color: var(--red-600, color-mix(in srgb, var(--red-500) 85%, black)) !important;
+            color: white !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          }
         }
 
         &.feedback-button {
@@ -647,16 +712,6 @@ $padding: 15px;
 .p-dark,
 [data-theme*="dark"],
 .dark-mode {
-  .usage-summary {
-    background: var(--surface-800) !important;
-    border-color: var(--primary-color) !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
-
-    &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
-    }
-  }
-
   .header-section .user-icon-circle {
     background: var(--surface-900);
     border-color: var(--surface-700);
@@ -826,7 +881,6 @@ textarea,
   transition: all 0.2s ease !important;
   
   &:focus {
-    border-color: var(--primary-color) !important;
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
     outline: none !important;
   }
@@ -870,7 +924,6 @@ textarea,
   transition: all 0.3s ease;
   
   .dark-mode & {
-    background: var(--surface-700);
     border-left-color: var(--primary-color);
     color: var(--text-color);
   }
@@ -1137,17 +1190,15 @@ textarea,
     background: var(--surface-0);
     border: 1px solid var(--surface-border);
     color: var(--text-color);
-    box-shadow: var(--card-shadow);
     transition: all 0.3s ease;
-    
-    // Hover states
-    &:hover {
-      box-shadow: var(--card-shadow-hover);
-    }
     
     // Focus states
     &:focus-within {
-      outline: none;
+      outline: none !important;
+    }
+
+    &:focus {
+      outline: none !important;
     }
     
     // Textarea styling
@@ -1230,41 +1281,102 @@ textarea,
     }
   }
   
-  // Button theming
+  // Button theming with comprehensive hover states
   .copy-button,
   .p-button {
     transition: all 0.3s ease;
     
-    &:not(.p-button-outlined):not(.p-button-text) {
-      background: var(--primary-color);
-      border-color: var(--primary-color);
-      color: var(--primary-color-text);
+    // Primary filled buttons
+    &:not(.p-button-outlined):not(.p-button-text):not(.p-button-danger) {
+      background: var(--primary-color) !important;
+      border-color: var(--primary-color) !important;
+      color: var(--primary-color-text, white) !important;
       
-      &:hover {
-        background: var(--primary-color-hover);
-        border-color: var(--primary-color-hover);
+      &:hover:not(:disabled) {
+        background: color-mix(in srgb, var(--primary-color) 85%, black) !important;
+        border-color: color-mix(in srgb, var(--primary-color) 85%, black) !important;
+        color: var(--primary-color-text, white) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+      
+      &:focus:not(:disabled) {
+        background: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        color: var(--primary-color-text, white) !important;
+        outline: 2px solid color-mix(in srgb, var(--primary-color) 50%, transparent);
+        outline-offset: 2px;
+      }
+    }
+    
+    // Outlined buttons
+    &.p-button-outlined {
+      background: transparent !important;
+      color: var(--primary-color) !important;
+      border-color: var(--primary-color) !important;
+      
+      &:hover:not(:disabled) {
+        background: var(--primary-color) !important;
+        color: var(--primary-color-text, white) !important;
+        border-color: var(--primary-color) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+      
+      &:focus:not(:disabled) {
+        background: transparent !important;
+        color: var(--primary-color) !important;
+        border-color: var(--primary-color) !important;
+        outline: 2px solid color-mix(in srgb, var(--primary-color) 50%, transparent);
+        outline-offset: 2px;
+      }
+    }
+    
+    // Text buttons
+    &.p-button-text {
+      background: transparent !important;
+      color: var(--primary-color) !important;
+      border: none !important;
+      
+      &:hover:not(:disabled) {
+        background: color-mix(in srgb, var(--primary-color) 10%, transparent) !important;
+        color: var(--primary-color) !important;
+        transform: translateY(-1px);
+      }
+      
+      &:focus:not(:disabled) {
+        background: transparent !important;
+        color: var(--primary-color) !important;
+        outline: 2px solid color-mix(in srgb, var(--primary-color) 50%, transparent);
+        outline-offset: 2px;
+      }
+    }
+    
+    // Success buttons (like "Copied" state)
+    &.p-button-success {
+      background: var(--green-500) !important;
+      border-color: var(--green-500) !important;
+      color: white !important;
+      
+      &:hover:not(:disabled) {
+        background: var(--green-600, color-mix(in srgb, var(--green-500) 85%, black)) !important;
+        border-color: var(--green-600, color-mix(in srgb, var(--green-500) 85%, black)) !important;
+        color: white !important;
         transform: translateY(-1px);
       }
     }
     
-    &.p-button-outlined {
-      background: transparent;
-      color: var(--primary-color);
-      border-color: var(--primary-color);
+    // Danger buttons
+    &.p-button-danger {
+      background: var(--red-500) !important;
+      border-color: var(--red-500) !important;
+      color: white !important;
       
-      &:hover {
-        background: var(--primary-color);
-        color: var(--primary-color-text);
-      }
-    }
-    
-    &.p-button-text {
-      background: transparent;
-      color: var(--primary-color);
-      border: none;
-      
-      &:hover {
-        background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+      &:hover:not(:disabled) {
+        background: var(--red-600, color-mix(in srgb, var(--red-500) 85%, black)) !important;
+        border-color: var(--red-600, color-mix(in srgb, var(--red-500) 85%, black)) !important;
+        color: white !important;
+        transform: translateY(-1px);
       }
     }
   }
@@ -1284,11 +1396,6 @@ textarea,
   .content-section {
     .raw-content,
     .processed-content {
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
-      
-      &:hover {
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-      }
       
       textarea {
         &::placeholder {
