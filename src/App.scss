@@ -255,7 +255,8 @@ $padding: 15px;
 
   .raw-content {
     flex: 0 0 50%;
-    border-right: none;
+    border-left: 1px solid var(--surface-border) !important;
+    border-right: 1px solid var(--surface-border) !important;
     border-top-left-radius: var(--border-radius);
     border-bottom-left-radius: var(--border-radius);
 
@@ -275,8 +276,6 @@ $padding: 15px;
       display: flex;
 
       textarea {
-        border-top-left-radius: var(--border-radius);
-        border-bottom-left-radius: var(--border-radius);
         border-right: none;
         outline: none;
         resize: none;
@@ -306,6 +305,7 @@ $padding: 15px;
   }
 
   .processed-content {
+    border-right: 1px solid var(--surface-border);
     border-top-right-radius: var(--border-radius);
     border-bottom-right-radius: var(--border-radius);
     flex: 1 1 50%;
@@ -873,16 +873,14 @@ textarea,
   padding: 8px !important;
   font-size: 16px !important;
   resize: none !important;
-  background: var(--surface-ground) !important;
-  border: 1px solid var(--surface-border) !important;
   padding: 1rem 1.5rem !important;
   color: var(--text-color) !important;
-  border-radius: var(--border-radius) !important;
   transition: all 0.2s ease !important;
   
   &:focus {
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color) 20%, transparent) !important;
+    box-shadow: none !important;
     outline: none !important;
+    border: none !important;
   }
   
   &:disabled {
@@ -1187,7 +1185,7 @@ textarea,
   .processed-content {
     // Base styling with theme responsiveness
     background: var(--surface-0);
-    border: 1px solid var(--surface-border);
+    border-bottom: 1px solid var(--surface-border);
     color: var(--text-color);
     transition: all 0.3s ease;
     
