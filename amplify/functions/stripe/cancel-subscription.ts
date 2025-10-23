@@ -2,7 +2,7 @@ import type { APIGatewayProxyHandler } from 'aws-lambda';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-04-10'
+  apiVersion: '2025-09-30.clover'
 });
 
 export const handler: APIGatewayProxyHandler = async (event) => {
@@ -88,7 +88,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
           id: canceledSubscription.id,
           status: canceledSubscription.status,
           canceled_at: canceledSubscription.canceled_at,
-          current_period_end: canceledSubscription.current_period_end
+          current_period_end: (canceledSubscription as any).current_period_end || null
         },
         message: 'Subscription canceled successfully'
       })
