@@ -5,6 +5,7 @@ import { Sidebar } from 'primereact/sidebar';
 import { Divider } from 'primereact/divider';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { signOut, getCurrentUser } from 'aws-amplify/auth';
+import { useAdminCheck } from './hooks/useAdminCheck';
 import './Header.scss';
 
 export default function Header() {
@@ -13,6 +14,7 @@ export default function Header() {
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
   const userMenuRef = useRef<Menu>(null);
+  const { isAdmin } = useAdminCheck();
 
   useEffect(() => {
     const fetchCurrentUser = async () => {
@@ -167,6 +169,18 @@ export default function Header() {
         navigate('/upgrade');
       }
     },
+    ...(isAdmin ? [
+      {
+        separator: true
+      },
+      {
+        label: 'Admin Dashboard',
+        icon: 'pi pi-shield',
+        command: () => {
+          navigate('/admin');
+        }
+      }
+    ] : []),
     {
       separator: true
     },

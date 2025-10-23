@@ -14,6 +14,8 @@ import TermsOfService from "./components/TermsOfService.tsx";
 import ContactPage from "./components/ContactPage.tsx";
 import UserProfile from "./components/UserProfile.tsx";
 import { SettingsPage } from "./components/SettingsPage.tsx";
+import AdminPage from "./components/AdminPage.tsx";
+import { AdminOnly } from "./hooks/useAdminCheck.tsx";
 import Layout from "./Layout.tsx";
 import { SubscriptionProvider } from "./contexts/SubscriptionContext.tsx";
 import { ThemeProvider } from "./contexts/ThemeContext.tsx";
@@ -23,6 +25,7 @@ import './HistoryDetails.scss';
 import './PricingComponent.scss';
 import './PaymentSuccess.scss';
 import './components/UserProfile.scss';
+import './components/AdminPage.scss';
 import { Amplify } from "aws-amplify";
 import outputs from "./amplify_outputs.json";
 
@@ -77,6 +80,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/terms" element={<TermsOfService />} />
                 <Route path="/contact" element={<ContactPage />} />
+                <Route path="/admin" element={
+                  <AdminOnly>
+                    <AdminPage />
+                  </AdminOnly>
+                } />
               </Routes>
             </Layout>
           </BrowserRouter>
