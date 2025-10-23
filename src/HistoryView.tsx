@@ -152,25 +152,25 @@ export default function HistoryView() {
           label: "Total Items",
           value: totalItems.toString(),
           icon: "pi-file",
-          color: "#3b82f6"
+          color: "success"
         },
         {
           label: "Words Processed",
           value: totalWords.toLocaleString(),
           icon: "pi-book",
-          color: "#10b981"
+          color: "info"
         },
         {
           label: "This Week",
           value: recentItems.toString(),
           icon: "pi-calendar",
-          color: "#f59e0b"
+          color: "warning"
         },
         {
           label: "Success Rate",
           value: "100%",
           icon: "pi-check-circle",
-          color: "#8b5cf6"
+          color: "primary"
         }
       ] : undefined}
       actions={[

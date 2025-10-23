@@ -323,7 +323,7 @@ $padding: 15px;
       flex: 1;
     }
 
-    .content-container {
+    .processed-content-container {
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -577,7 +577,6 @@ $padding: 15px;
 
 /* Enhanced usage summary styling */
 .usage-summary {
-  border-radius: 8px !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
   transition: all 0.2s ease !important;
 
@@ -876,6 +875,7 @@ textarea,
   resize: none !important;
   background: var(--surface-ground) !important;
   border: 1px solid var(--surface-border) !important;
+  padding: 1rem 1.5rem !important;
   color: var(--text-color) !important;
   border-radius: var(--border-radius) !important;
   transition: all 0.2s ease !important;
@@ -920,7 +920,6 @@ textarea,
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-radius: var(--border-radius);
   transition: all 0.3s ease;
   
   .dark-mode & {

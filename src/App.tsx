@@ -460,6 +460,8 @@ export default function App() {
                     icon={copiedRaw ? "pi pi-check" : "pi pi-copy"}
                     onClick={handleCopyRawClick}
                     disabled={!prompt}
+                    tooltip="Copy original text to clipboard"
+                    tooltipOptions={{ position: 'bottom' }}
                   />
                   <Button
                     label=''
@@ -467,6 +469,8 @@ export default function App() {
                     icon="pi pi-times"
                     onClick={handleResetClick}
                     disabled={!prompt || isRunning}
+                    tooltip="Clear all content and reset the form"
+                    tooltipOptions={{ position: 'bottom' }}
                   />
                   <Button
                     label='Humanize'
@@ -477,6 +481,16 @@ export default function App() {
                     disabled={loading || !prompt || isRunning || !canUseService}
                     severity={!canUseService ? 'danger' : undefined}
                     className={!canUseService || (!!prompt && !checkUsageLimit(prompt)) ? 'p-button-danger' : undefined}
+                    tooltip={
+                      !canUseService 
+                        ? "Usage limit reached - upgrade your plan to continue"
+                        : !prompt 
+                        ? "Enter text to humanize"
+                        : isRunning
+                        ? "Processing your content..."
+                        : "Transform AI text into human-like writing"
+                    }
+                    tooltipOptions={{ position: 'bottom' }}
                   />
                 </ButtonGroup>
               </div>
@@ -542,7 +556,7 @@ export default function App() {
                 </ButtonGroup>
               </div>
             </div>
-            <div className='content-container'>
+            <div className='processed-content-container'>
               {answer ? (
                 <>
                   <pre>{answer}</pre>
