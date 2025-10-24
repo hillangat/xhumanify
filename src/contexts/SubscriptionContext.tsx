@@ -189,25 +189,43 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
 
   const trackUsageWithTokens = async (inputText: string, outputText: string, usage: any) => {
     try {
-      // Use billable tokens (excludes system prompt overhead)
-      const billableTokens = usage.totalTokens || 0; // This is now billable tokens only
-      const estimatedWords = usage.estimatedWords || countWords(inputText) + countWords(outputText);
-      const systemPromptTokens = usage.systemPromptTokens || 0;
+      // NEW BILLING SYSTEM: Word-based primary with transparent breakdown
+      const billedWords = usage.billedWords; // Final billing amount from enhanced system
+      const inputWords = usage.inputWords;
+      const outputWords = usage.outputWords;
       
-      // Log transparency info for user
-      console.log('📊 Token Usage Breakdown:', {
-        userInputTokens: usage.inputTokens,
+      // Validation: Ensure we have the new billing data
+      if (!billedWords || !inputWords || !outputWords) {
+        throw new Error('Enhanced billing data missing from humanize response');
+      }
+      
+      // Enhanced logging with new billing structure
+      console.log('📊 New Billing System - Usage Tracking:', {
+        // PRIMARY BILLING DATA
+        billedWords: billedWords,
+        inputWords: inputWords,
+        outputWords: outputWords,
+        totalWords: usage.totalWords,
+        
+        // TRANSPARENCY METRICS
+        inputChars: usage.inputChars,
+        outputChars: usage.outputChars,
+        billingMethod: usage.billingMethod,
+        billingNote: usage.billingNote,
+        
+        // TOKEN METRICS (for monitoring only)
+        inputTokens: usage.inputTokens,
         outputTokens: usage.outputTokens,
-        billableTokens: billableTokens,
-        systemPromptTokens: systemPromptTokens,
-        estimatedWords: estimatedWords,
-        note: 'You are only charged for billable tokens (user input + output)'
+        systemPromptTokens: usage.systemPromptTokens
+      });
+        
+        note: 'User charged for word count: input + output text'
       });
       
-      // Create usage tracking record with billable token data
+      // Create usage tracking record with word-based billing data
       await client.models.UsageTracking.create({
         operation: 'humanify',
-        tokensUsed: estimatedWords, // Store as word equivalent for consistency
+        tokensUsed: billedWords, // Store as billed words for consistency
         success: true,
         timestamp: new Date().toISOString()
       });
@@ -241,7 +259,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
           currentPeriodStart: undefined,
           currentPeriodEnd: undefined,
           cancelAtPeriodEnd: false,
-          usageCount: estimatedWords,
+          usageCount: billedWords,
           usageLimit: 50, // Free tier limit
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
@@ -250,11 +268,15 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       
       // Log usage summary for monitoring
       console.log('📈 Usage Summary:', {
+        billedWords,
+        inputWords,
+        outputWords,
+        totalWords,
         billableTokens,
-        estimatedWords,
-        inputWords: countWords(inputText),
-        outputWords: countWords(outputText),
+        inputChars: usage.inputChars || inputText.length,
+        outputChars: usage.outputChars || 0,
         systemOverhead: systemPromptTokens,
+        billingMethod: usage.billingMethod || 'legacy',
         note: 'System overhead not charged to user'
       });
       

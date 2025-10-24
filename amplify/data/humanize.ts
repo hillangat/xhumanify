@@ -10,6 +10,56 @@ const client = new BedrockRuntimeClient({
   region: "us-east-1" 
 });
 
+// Helper function for accurate word counting
+const countWords = (text: string): number => {
+  if (!text || text.trim().length === 0) return 0;
+  
+  // Remove extra whitespace and split by whitespace
+  const words = text.trim()
+    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+    .split(' ')
+    .filter(word => word.length > 0); // Remove empty strings
+  
+  return words.length;
+};
+
+// Helper function for billing transparency
+const calculateBillingBreakdown = (inputText: string, outputText: string, tokenUsage: any) => {
+  const inputWords = countWords(inputText);
+  const outputWords = countWords(outputText);
+  const totalWords = inputWords + outputWords;
+  
+  const inputChars = inputText.length;
+  const outputChars = outputText.length;
+  const totalChars = inputChars + outputChars;
+  
+  const userInputTokens = Math.max(0, (tokenUsage.input_tokens || 0) - 750); // Subtract system prompt
+  const outputTokens = tokenUsage.output_tokens || 0;
+  const billableTokens = userInputTokens + outputTokens;
+  
+  return {
+    billing: {
+      primaryUnits: totalWords, // Primary billing metric
+      inputWords,
+      outputWords,
+      totalWords,
+      inputChars,
+      outputChars,
+      totalChars,
+      billableTokens,
+      tokenBasedWordEstimate: Math.ceil(billableTokens / 1.3),
+      finalBillingAmount: Math.max(totalWords, Math.ceil(billableTokens / 1.3))
+    },
+    tokens: {
+      userInputTokens,
+      outputTokens,
+      systemPromptTokens: 750,
+      totalBillableTokens: billableTokens,
+      actualTotalTokens: tokenUsage.input_tokens + tokenUsage.output_tokens
+    }
+  };
+};
+
 // ========== ADVANCED HUMANIZATION SYSTEM ==========
 
 // Personality Profile Interface
@@ -391,10 +441,7 @@ The goal is content so human that it passes every AI detection test because it g
   // Calculate user input tokens (exclude system prompt from billing)
   const userInputTokens = Math.max(0, inputTokens - systemPromptTokens);
   
-  // Billable tokens = user input + output (excluding system overhead)
-  const billableTokens = userInputTokens + outputTokens;
-  
-  // Extract result from tool calling response
+  // Extract result from tool calling response first
   let result = '';
   if (data.content && data.content[0]) {
     if (data.content[0].type === 'tool_use' && data.content[0].input) {
@@ -706,18 +753,38 @@ The goal is content so human that it passes every AI detection test because it g
     result = data.content[0].text.trim().replace(/^["'`]|["'`]$/g, '');
   }
 
-  // Return structured data with content and usage info
+  // Calculate comprehensive billing breakdown
+  const billingData = calculateBillingBreakdown(prompt, result, usage);
+  
+  // Return structured data with enhanced billing information
   return JSON.stringify({
     content: result,
     usage: {
-      inputTokens: userInputTokens, // Only user input tokens (system prompt excluded)
-      outputTokens,
-      totalTokens: billableTokens, // Only billable tokens
-      systemPromptTokens, // Track but don't charge for this
-      actualInputTokens: inputTokens, // For internal monitoring
-      actualTotalTokens: totalTokens, // For internal monitoring
-      // Convert billable tokens to estimated words for display (1.3 tokens ≈ 1 word)
-      estimatedWords: Math.ceil(billableTokens / 1.3)
+      // PRIMARY BILLING METRICS (what user gets charged for)
+      billedWords: billingData.billing.finalBillingAmount,
+      inputWords: billingData.billing.inputWords,
+      outputWords: billingData.billing.outputWords,
+      totalWords: billingData.billing.totalWords,
+      
+      // SECONDARY METRICS (for transparency)
+      inputChars: billingData.billing.inputChars,
+      outputChars: billingData.billing.outputChars,
+      totalChars: billingData.billing.totalChars,
+      
+      // TOKEN METRICS (for internal tracking)
+      inputTokens: billingData.tokens.userInputTokens,
+      outputTokens: billingData.tokens.outputTokens,
+      totalTokens: billingData.tokens.totalBillableTokens,
+      systemPromptTokens: billingData.tokens.systemPromptTokens,
+      actualInputTokens: inputTokens, // Raw from Bedrock
+      actualTotalTokens: totalTokens, // Raw from Bedrock
+      
+      // LEGACY COMPATIBILITY
+      estimatedWords: billingData.billing.finalBillingAmount, // For existing frontend code
+      
+      // BILLING TRANSPARENCY
+      billingMethod: 'word-count-primary-token-fallback',
+      billingNote: `Charged for ${billingData.billing.finalBillingAmount} words (${billingData.billing.inputWords} input + ${billingData.billing.outputWords} output). System prompt overhead not charged.`
     }
   });
 };
