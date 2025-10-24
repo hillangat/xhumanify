@@ -24,13 +24,6 @@ const UsageBreakdownPopup: React.FC<UsageBreakdownPopupProps> = ({
   const billingMethod = usageInfo.billingMethod;
   const billingNote = usageInfo.billingNote;
   
-  // Character and token information for transparency
-  const inputChars = usageInfo.inputChars || 0;
-  const outputChars = usageInfo.outputChars || 0;
-  const inputTokens = usageInfo.inputTokens || 0;
-  const outputTokens = usageInfo.outputTokens || 0;
-  const systemTokens = usageInfo.systemPromptTokens || 0;
-  
   // Validation: Ensure we have new billing data
   if (!billedWords || !actualInputWords || !actualOutputWords || !billingMethod) {
     return (
