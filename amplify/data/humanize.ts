@@ -783,8 +783,8 @@ The goal is content so human that it passes every AI detection test because it g
       estimatedWords: billingData.billing.finalBillingAmount, // For existing frontend code
       
       // BILLING TRANSPARENCY
-      billingMethod: 'word-count-primary-token-fallback',
-      billingNote: `Charged for ${billingData.billing.finalBillingAmount} words (${billingData.billing.inputWords} input + ${billingData.billing.outputWords} output). System prompt overhead not charged.`
+      billingMethod: 'standard',
+      billingNote: `Based on your ${billingData.billing.inputWords} input words and ${billingData.billing.outputWords} output words. Fair billing ensures you're charged appropriately for the AI processing required.`
     }
   });
 };

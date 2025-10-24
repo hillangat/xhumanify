@@ -55,7 +55,7 @@ const UsageBreakdownPopup: React.FC<UsageBreakdownPopupProps> = ({
 
   return (
     <Dialog
-      header="New Billing System - Complete Transparency"
+      header="Completely Transparency Billing System"
       visible={visible}
       onHide={onHide}
       footer={
@@ -74,31 +74,53 @@ const UsageBreakdownPopup: React.FC<UsageBreakdownPopupProps> = ({
       <div className="usage-explanation">
         {/* Clear Summary */}
         <div className="summary-section">
-          <h3>📊 New Billing System - Word-Based Transparency</h3>
-          <div className="comparison-grid">
-            <div className="actual-content">
-              <h4>📝 Your Content</h4>
-              <div className="content-stats">
-                <div>Input: <strong>{actualInputWords} words</strong></div>
-                <div>Output: <strong>{actualOutputWords} words</strong></div>
-                <div className="total">Total: <strong>{totalActualWords} words</strong></div>
-                {(inputChars > 0 || outputChars > 0) && (
-                  <div className="char-info">
-                    ({inputChars + outputChars} characters total)
-                  </div>
-                )}
+          <h3>� Billing Breakdown</h3>
+          
+          {/* Simple explanation of what they're being charged */}
+          <div className="billing-summary">
+            <div className="billing-amount">
+              <span className="label">You're being charged for:</span>
+              <span className="amount"><strong>{billedWords} words</strong></span>
+            </div>
+            
+            <div className="content-breakdown">
+              <div className="content-item">
+                <span className="content-label">Your text:</span>
+                <span className="content-value">{actualInputWords} words</span>
+              </div>
+              <div className="content-item">
+                <span className="content-label">AI response:</span>
+                <span className="content-value">{actualOutputWords} words</span>
+              </div>
+              <div className="content-item subtotal">
+                <span className="content-label">Content total:</span>
+                <span className="content-value">{totalActualWords} words</span>
               </div>
             </div>
-            <div className="charged-content">
-              <h4>💰 You're Charged</h4>
-              <div className="charged-amount">
-                <strong>{billedWords} words</strong>
+            
+            {billedWords > totalActualWords && (
+              <div className="processing-explanation">
+                <div className="processing-header">
+                  <i className="pi pi-cog"></i>
+                  <span>Why {billedWords - totalActualWords} additional words?</span>
+                </div>
+                <div className="processing-details">
+                  <p>AI processing requires additional computational "words" beyond your visible content:</p>
+                  <ul>
+                    <li><strong>Context analysis:</strong> Understanding your text's meaning and tone</li>
+                    <li><strong>Style instructions:</strong> Following your humanization preferences</li>
+                    <li><strong>Quality assurance:</strong> Ensuring natural, human-like output</li>
+                  </ul>
+                  <p className="processing-note">
+                    <strong>Total processing cost: {billedWords} words</strong>
+                    <br />
+                    <small>This includes your {totalActualWords} content words + {billedWords - totalActualWords} processing words</small>
+                  </p>
+                </div>
               </div>
-              <div className="billing-method">
-                Method: {billingMethod.replace(/-/g, ' ')}
-              </div>
-            </div>
+            )}
           </div>
+          
           {billingNote && (
             <div className="billing-note">
               <i className="pi pi-info-circle"></i>
@@ -107,102 +129,24 @@ const UsageBreakdownPopup: React.FC<UsageBreakdownPopupProps> = ({
           )}
         </div>
 
-        {/* How The New System Works */}
-        <div className="explanation-section">
-          <h3>🎯 How Our New Billing System Works</h3>
-          <p>
-            We've redesigned our billing to be <strong>transparent and fair</strong>. 
-            You're charged based on the actual words in your content, with AI processing 
-            details available for complete transparency.
-          </p>
-        </div>
-
-        {/* Detailed Breakdown */}
-        <div className="breakdown-section">
-          <h3>📋 Complete Transparency Breakdown</h3>
-          
-          <div className="breakdown-grid">
-            <div className="breakdown-card primary">
-              <h4>📝 Word Count (Primary Billing)</h4>
-              <div className="breakdown-items">
-                <div className="breakdown-item">
-                  <span className="label">Your input:</span>
-                  <span className="value">{actualInputWords} words</span>
-                </div>
-                <div className="breakdown-item">
-                  <span className="label">AI output:</span>
-                  <span className="value">{actualOutputWords} words</span>
-                </div>
-                <div className="breakdown-item total">
-                  <span className="label">Total content:</span>
-                  <span className="value">{totalActualWords} words</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="breakdown-card secondary">
-              <h4>⚡ AI Processing (For Transparency)</h4>
-              <div className="breakdown-items">
-                <div className="breakdown-item">
-                  <span className="label">Input processing:</span>
-                  <span className="value">{inputTokens} tokens</span>
-                </div>
-                <div className="breakdown-item">
-                  <span className="label">Output generation:</span>
-                  <span className="value">{outputTokens} tokens</span>
-                </div>
-                {systemTokens > 0 && (
-                  <div className="breakdown-item free">
-                    <span className="label">System overhead:</span>
-                    <span className="value">{systemTokens} tokens ✅ FREE</span>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="breakdown-card result">
-              <h4>💰 Final Billing</h4>
-              <div className="breakdown-items">
-                <div className="breakdown-item">
-                  <span className="label">Billing method:</span>
-                  <span className="value">Word-based primary</span>
-                </div>
-                <div className="breakdown-item">
-                  <span className="label">Conservative calculation:</span>
-                  <span className="value">Fair & transparent</span>
-                </div>
-                <div className="breakdown-item final">
-                  <span className="label">You pay for:</span>
-                  <span className="value"><strong>{billedWords} words</strong></span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Why This System */}
         <div className="benefits-section">
-          <h3>✨ Why Our New System is Better</h3>
+          <h3>✨ Fair & Transparent Billing</h3>
           <div className="benefits-grid">
             <div className="benefit">
               <i className="pi pi-eye benefit-icon"></i>
               <h4>Transparent</h4>
-              <p>See exactly what you're paying for - actual words in your content</p>
+              <p>See exactly what you pay for - content + processing</p>
             </div>
             <div className="benefit">
               <i className="pi pi-check-circle benefit-icon"></i>
               <h4>Fair</h4>
-              <p>Pay for content, not AI processing overhead</p>
-            </div>
-            <div className="benefit">
-              <i className="pi pi-calculator benefit-icon"></i>
-              <h4>Predictable</h4>
-              <p>Easy to calculate and verify your usage</p>
+              <p>Pay based on actual AI work required</p>
             </div>
             <div className="benefit">
               <i className="pi pi-shield benefit-icon"></i>
-              <h4>Conservative</h4>
-              <p>We use methods that ensure you're never overcharged</p>
+              <h4>Honest</h4>
+              <p>No hidden fees - processing costs included upfront</p>
             </div>
           </div>
         </div>

@@ -564,9 +564,6 @@ export default function App() {
                     <div className="usage-summary theme-responsive">
                       <div>
                         <span className="usage-charged-text">💰 <strong>Usage Charged:</strong> {usageInfo.billedWords} words</span>
-                        <div className="usage-detail-text">
-                          Method: {usageInfo.billingMethod?.replace(/-/g, ' ') || 'New billing system'}
-                        </div>
                         {usageInfo.billingNote && (
                           <div className="usage-billing-note">
                             {usageInfo.billingNote}
