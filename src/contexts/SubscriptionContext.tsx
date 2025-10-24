@@ -187,7 +187,7 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
     }
   };
 
-  const trackUsageWithTokens = async (inputText: string, outputText: string, usage: any) => {
+  const trackUsageWithTokens = async (_inputText: string, _outputText: string, usage: any) => {
     try {
       // NEW BILLING SYSTEM: Word-based primary with transparent breakdown
       const billedWords = usage.billedWords; // Final billing amount from enhanced system
@@ -216,25 +216,35 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
         // TOKEN METRICS (for monitoring only)
         inputTokens: usage.inputTokens,
         outputTokens: usage.outputTokens,
-        systemPromptTokens: usage.systemPromptTokens
-      });
-        
+        systemPromptTokens: usage.systemPromptTokens,
         note: 'User charged for word count: input + output text'
       });
       
-      // Create usage tracking record with word-based billing data
+      // Log current subscription state before update
+      console.log('🔍 USAGE TRACKING - Before Update:');
+      console.log('Current subscription:', subscription);
+      console.log('Current usage count:', subscription?.usageCount || 'N/A');
+      console.log('Words to add:', billedWords);
+      console.log('Calculation will be:', subscription?.usageCount, '+', billedWords, '=', (subscription?.usageCount || 0) + billedWords);
+      
+      // Create usage tracking record with new word-based billing
       await client.models.UsageTracking.create({
         operation: 'humanify',
-        tokensUsed: billedWords, // Store as billed words for consistency
+        tokensUsed: billedWords, // Now represents actual billed words
         success: true,
         timestamp: new Date().toISOString()
       });
       
       // Update or create subscription usage count if subscription exists
       if (subscription) {
-        await client.models.UserSubscription.update({
+        const newUsageCount = subscription.usageCount + billedWords;
+        console.log('🔄 UPDATING SUBSCRIPTION - Sending to GraphQL:');
+        console.log('Subscription ID:', subscription.id);
+        console.log('New usage count being sent:', newUsageCount);
+        
+        const updateResult = await client.models.UserSubscription.update({
           id: subscription.id,
-          usageCount: subscription.usageCount + estimatedWords
+          usageCount: newUsageCount
         }, {
           selectionSet: [
             'id',
@@ -244,6 +254,9 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
             'updatedAt'
           ]
         });
+        
+        console.log('✅ SUBSCRIPTION UPDATE RESULT:', updateResult.data);
+        console.log('Updated usage count from GraphQL:', updateResult.data?.usageCount);
       } else {
         // Get current user for ownership
         const currentUser = await getCurrentUser();
@@ -267,25 +280,30 @@ export const SubscriptionProvider: React.FC<SubscriptionProviderProps> = ({ chil
       }
       
       // Log usage summary for monitoring
-      console.log('📈 Usage Summary:', {
+      console.log('📈 New Billing System - Usage Summary:', {
         billedWords,
         inputWords,
         outputWords,
-        totalWords,
-        billableTokens,
-        inputChars: usage.inputChars || inputText.length,
-        outputChars: usage.outputChars || 0,
-        systemOverhead: systemPromptTokens,
-        billingMethod: usage.billingMethod || 'legacy',
-        note: 'System overhead not charged to user'
+        totalWords: usage.totalWords,
+        inputChars: usage.inputChars,
+        outputChars: usage.outputChars,
+        billingMethod: usage.billingMethod,
+        note: 'New word-based billing system - transparent and user-friendly'
       });
       
       // Refresh local state
+      console.log('🔄 REFRESHING SUBSCRIPTION STATE...');
       await loadSubscription();
+      
+      // Log final state after refresh
+      console.log('🏁 USAGE TRACKING - After Update & Refresh:');
+      console.log('Final subscription state:', subscription);
+      console.log('Final usage count:', subscription?.usageCount || 'N/A');
+      console.log('Expected usage count should be:', (subscription?.usageCount || 0));
     } catch (error) {
-      console.error('Failed to track token usage:', error);
-      // Fallback to old method
-      await trackUsage(inputText, outputText);
+      console.error('Failed to track usage with new billing system:', error);
+      // No fallback - new billing system is required
+      throw error;
     }
   };
 

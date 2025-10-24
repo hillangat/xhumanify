@@ -678,8 +678,6 @@ export default function App() {
           visible={showUsageBreakdown}
           onHide={() => setShowUsageBreakdown(false)}
           usageInfo={usageInfo}
-          inputWords={countWords(prompt)}
-          outputWords={countWords(answer)}
         />
       )}
 

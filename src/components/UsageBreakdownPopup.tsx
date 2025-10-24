@@ -7,16 +7,12 @@ interface UsageBreakdownPopupProps {
   visible: boolean;
   onHide: () => void;
   usageInfo: any;
-  inputWords: number;
-  outputWords: number;
 }
 
 const UsageBreakdownPopup: React.FC<UsageBreakdownPopupProps> = ({
   visible,
   onHide,
-  usageInfo,
-  inputWords,
-  outputWords
+  usageInfo
 }) => {
   // NEW BILLING SYSTEM: Use enhanced billing data exclusively
   const billedWords = usageInfo.billedWords;
@@ -44,33 +40,22 @@ const UsageBreakdownPopup: React.FC<UsageBreakdownPopupProps> = ({
         onHide={onHide}
         modal
         className="usage-breakdown-dialog"
+        footer={
+          <Button label="Close" onClick={onHide} icon="pi pi-times" />
+        }
       >
         <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <i className="pi pi-exclamation-triangle" style={{ fontSize: '2rem', color: 'var(--orange-500)' }}></i>
-          <h3>New Billing System Required</h3>
-          <p>This content was processed with the legacy billing system. Future requests will use our new transparent word-based billing.</p>
-          <Button label="Close" onClick={onHide} />
+          <i className="pi pi-exclamation-triangle" style={{ fontSize: '2rem', color: 'var(--orange-500)', marginBottom: '1rem' }}></i>
+          <h3>Legacy Billing Detected</h3>
+          <p>This content was processed with our previous billing system. All new requests now use our transparent word-based billing for better clarity and fairness.</p>
         </div>
       </Dialog>
     );
   }
-  const outputTokens = usageInfo.outputTokens || 0;
-  const systemTokens = usageInfo.systemPromptTokens || 0;
-  const billableTokens = inputTokens + outputTokens;
-  
-  // Character information (if available)
-  const inputChars = usageInfo.inputChars || 0;
-  const outputChars = usageInfo.outputChars || 0;
-  
-  // Determine if this is using the new enhanced billing
-  const isEnhancedBilling = Boolean(usageInfo.billingMethod);
-  
-  // Calculate token-based estimate for comparison
-  const tokenBasedEstimate = billableTokens > 0 ? Math.ceil(billableTokens / 1.3) : 0;
 
   return (
     <Dialog
-      header="Usage Breakdown Explanation"
+      header="New Billing System - Complete Transparency"
       visible={visible}
       onHide={onHide}
       footer={
@@ -84,15 +69,15 @@ const UsageBreakdownPopup: React.FC<UsageBreakdownPopupProps> = ({
       }
       modal
       className="usage-breakdown-dialog"
-      style={{ width: '90vw', maxWidth: '600px' }}
+      style={{ width: '90vw', maxWidth: '700px' }}
     >
       <div className="usage-explanation">
         {/* Clear Summary */}
         <div className="summary-section">
-          <h3>📊 Billing Summary - {isEnhancedBilling ? 'Enhanced' : 'Legacy'} Method</h3>
+          <h3>📊 New Billing System - Word-Based Transparency</h3>
           <div className="comparison-grid">
             <div className="actual-content">
-              <h4>📝 Your Actual Content</h4>
+              <h4>📝 Your Content</h4>
               <div className="content-stats">
                 <div>Input: <strong>{actualInputWords} words</strong></div>
                 <div>Output: <strong>{actualOutputWords} words</strong></div>
@@ -105,15 +90,13 @@ const UsageBreakdownPopup: React.FC<UsageBreakdownPopupProps> = ({
               </div>
             </div>
             <div className="charged-content">
-              <h4>💰 What You're Charged</h4>
+              <h4>💰 You're Charged</h4>
               <div className="charged-amount">
                 <strong>{billedWords} words</strong>
               </div>
-              {isEnhancedBilling && (
-                <div className="billing-method">
-                  Method: {billingMethod.replace(/-/g, ' ')}
-                </div>
-              )}
+              <div className="billing-method">
+                Method: {billingMethod.replace(/-/g, ' ')}
+              </div>
             </div>
           </div>
           {billingNote && (
@@ -124,154 +107,104 @@ const UsageBreakdownPopup: React.FC<UsageBreakdownPopupProps> = ({
           )}
         </div>
 
-        {/* How We Calculate Your Bill */}
+        {/* How The New System Works */}
         <div className="explanation-section">
-          <h3>� How We Calculate Your Bill</h3>
+          <h3>🎯 How Our New Billing System Works</h3>
           <p>
-            {isEnhancedBilling ? (
-              <>We use a <strong>word-count primary</strong> billing system for maximum transparency. 
-              Your charge is based on the actual words in your input and output, with a token-based 
-              fallback to ensure conservative billing.</>
-            ) : (
-              <>The system charges based on <strong>AI tokens</strong>, not actual word count. 
-              Here's what happens behind the scenes:</>
-            )}
+            We've redesigned our billing to be <strong>transparent and fair</strong>. 
+            You're charged based on the actual words in your content, with AI processing 
+            details available for complete transparency.
           </p>
         </div>
 
         {/* Detailed Breakdown */}
-        <div className="token-section">
-          <h3>⚡ Detailed Usage Breakdown</h3>
+        <div className="breakdown-section">
+          <h3>📋 Complete Transparency Breakdown</h3>
           
-          {isEnhancedBilling ? (
-            // Enhanced billing breakdown
-            <div className="enhanced-breakdown">
-              <div className="breakdown-method">
-                <h4>📊 Primary Method: Word Count</h4>
-                <div className="method-grid">
-                  <div className="method-item">
-                    <span className="method-label">Input words:</span>
-                    <span className="method-value">{actualInputWords}</span>
-                  </div>
-                  <div className="method-item">
-                    <span className="method-label">Output words:</span>
-                    <span className="method-value">{actualOutputWords}</span>
-                  </div>
-                  <div className="method-item total">
-                    <span className="method-label">Word-based total:</span>
-                    <span className="method-value">{totalActualWords}</span>
-                  </div>
+          <div className="breakdown-grid">
+            <div className="breakdown-card primary">
+              <h4>📝 Word Count (Primary Billing)</h4>
+              <div className="breakdown-items">
+                <div className="breakdown-item">
+                  <span className="label">Your input:</span>
+                  <span className="value">{actualInputWords} words</span>
                 </div>
-              </div>
-              
-              <div className="breakdown-method">
-                <h4>🔧 Fallback Method: Token Count</h4>
-                <div className="method-grid">
-                  <div className="method-item">
-                    <span className="method-label">Input tokens:</span>
-                    <span className="method-value">{inputTokens}</span>
-                    <span className="method-note">({actualInputWords} words + processing)</span>
-                  </div>
-                  <div className="method-item">
-                    <span className="method-label">Output tokens:</span>
-                    <span className="method-value">{outputTokens}</span>
-                    <span className="method-note">({actualOutputWords} words from AI)</span>
-                  </div>
-                  {systemTokens > 0 && (
-                    <div className="method-item free">
-                      <span className="method-label">System tokens:</span>
-                      <span className="method-value">{systemTokens}</span>
-                      <span className="method-note">✅ FREE (internal instructions)</span>
-                    </div>
-                  )}
-                  <div className="method-item total">
-                    <span className="method-label">Token-based estimate:</span>
-                    <span className="method-value">{tokenBasedEstimate}</span>
-                    <span className="method-note">({billableTokens} tokens ÷ 1.3)</span>
-                  </div>
+                <div className="breakdown-item">
+                  <span className="label">AI output:</span>
+                  <span className="value">{actualOutputWords} words</span>
                 </div>
-              </div>
-              
-              <div className="final-calculation">
-                <div className="final-item">
-                  <span className="final-label">Conservative billing uses:</span>
-                  <span className="final-value">Higher of {totalActualWords} vs {tokenBasedEstimate} = <strong>{billedWords} words</strong></span>
+                <div className="breakdown-item total">
+                  <span className="label">Total content:</span>
+                  <span className="value">{totalActualWords} words</span>
                 </div>
               </div>
             </div>
-          ) : (
-            // Legacy token breakdown
-            <div className="token-grid">
-              <div className="token-item">
-                <span className="token-label">Input tokens:</span>
-                <span className="token-value">{inputTokens}</span>
-                <span className="token-note">({actualInputWords} words + processing instructions)</span>
-              </div>
-              <div className="token-item">
-                <span className="token-label">Output tokens:</span>
-                <span className="token-value">{outputTokens}</span>
-                <span className="token-note">({actualOutputWords} words from AI)</span>
-              </div>
-              {systemTokens > 0 && (
-                <div className="token-item free">
-                  <span className="token-label">System tokens:</span>
-                  <span className="token-value">{systemTokens}</span>
-                  <span className="token-note">✅ FREE (internal AI instructions)</span>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
 
-        {/* Why This System */}
-        <div className="why-section">
-          <h3>� Why This Billing System?</h3>
-          <div className="reason-list">
-            {isEnhancedBilling ? (
-              <>
-                <div className="reason">
-                  <strong>Word-count primary:</strong> Easy to understand and verify - you see exactly what you're paying for in terms of actual content words.
+            <div className="breakdown-card secondary">
+              <h4>⚡ AI Processing (For Transparency)</h4>
+              <div className="breakdown-items">
+                <div className="breakdown-item">
+                  <span className="label">Input processing:</span>
+                  <span className="value">{inputTokens} tokens</span>
                 </div>
-                <div className="reason">
-                  <strong>Token fallback:</strong> Ensures you're never under-charged for complex processing that requires more AI resources than expected.
+                <div className="breakdown-item">
+                  <span className="label">Output generation:</span>
+                  <span className="value">{outputTokens} tokens</span>
                 </div>
-                <div className="reason">
-                  <strong>Conservative billing:</strong> We use the higher of word-count vs token-estimate to ensure fair pricing.
+                {systemTokens > 0 && (
+                  <div className="breakdown-item free">
+                    <span className="label">System overhead:</span>
+                    <span className="value">{systemTokens} tokens ✅ FREE</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="breakdown-card result">
+              <h4>💰 Final Billing</h4>
+              <div className="breakdown-items">
+                <div className="breakdown-item">
+                  <span className="label">Billing method:</span>
+                  <span className="value">Word-based primary</span>
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="reason">
-                  <strong>Processing overhead:</strong> Your {actualInputWords} words become {inputTokens} tokens because the AI needs extra tokens for understanding context, following instructions (tone, style), and internal processing.
+                <div className="breakdown-item">
+                  <span className="label">Conservative calculation:</span>
+                  <span className="value">Fair & transparent</span>
                 </div>
-                <div className="reason">
-                  <strong>Token vs Word difference:</strong> Tokens are smaller units than words. Common words might be 1 token, complex words might be 2-3 tokens, and punctuation/spaces count as tokens.
+                <div className="breakdown-item final">
+                  <span className="label">You pay for:</span>
+                  <span className="value"><strong>{billedWords} words</strong></span>
                 </div>
-              </>
-            )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* The Good News */}
-        <div className="good-news-section">
-          <h3>✨ What's Great About This System</h3>
-          <ul>
-            {isEnhancedBilling ? (
-              <>
-                <li><strong>Transparent:</strong> Word-based billing is easy to understand and verify</li>
-                <li><strong>Fair:</strong> You're charged for actual content, not just AI processing overhead</li>
-                <li><strong>Conservative:</strong> We use the higher estimate to ensure you're never undercharged</li>
-                <li>System processing ({systemTokens} tokens) is <strong>FREE</strong></li>
-                <li>Multiple billing methods ensure <strong>accuracy and fairness</strong></li>
-              </>
-            ) : (
-              <>
-                <li>System processing ({systemTokens || 0} tokens) is <strong>FREE</strong></li>
-                <li>You only pay for input + output tokens</li>
-                <li>The conversion to "word equivalent" makes billing predictable</li>
-              </>
-            )}
-          </ul>
+        {/* Why This System */}
+        <div className="benefits-section">
+          <h3>✨ Why Our New System is Better</h3>
+          <div className="benefits-grid">
+            <div className="benefit">
+              <i className="pi pi-eye benefit-icon"></i>
+              <h4>Transparent</h4>
+              <p>See exactly what you're paying for - actual words in your content</p>
+            </div>
+            <div className="benefit">
+              <i className="pi pi-check-circle benefit-icon"></i>
+              <h4>Fair</h4>
+              <p>Pay for content, not AI processing overhead</p>
+            </div>
+            <div className="benefit">
+              <i className="pi pi-calculator benefit-icon"></i>
+              <h4>Predictable</h4>
+              <p>Easy to calculate and verify your usage</p>
+            </div>
+            <div className="benefit">
+              <i className="pi pi-shield benefit-icon"></i>
+              <h4>Conservative</h4>
+              <p>We use methods that ensure you're never overcharged</p>
+            </div>
+          </div>
         </div>
       </div>
     </Dialog>
