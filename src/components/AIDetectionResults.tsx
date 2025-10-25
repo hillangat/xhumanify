@@ -95,31 +95,24 @@ const AIDetectionResults: React.FC<AIDetectionResultsProps> = ({
     }
   };
 
-  const getSeverityColor = (severity: string): string => {
+  // Map severity string (critical/high/medium/low) to a CSS class used by SCSS
+  const severityClassFromSeverity = (severity: string): string => {
     switch (severity) {
-      case 'critical': return '#dc3545';
-      case 'high': return '#fd7e14';
-      case 'medium': return '#ffc107';
-      case 'low': return '#20c997';
-      default: return '#6c757d';
+      case 'critical': return 'severity-critical';
+      case 'high': return 'severity-high';
+      case 'medium': return 'severity-medium';
+      case 'low': return 'severity-low';
+      default: return 'severity-low';
     }
   };
 
-  const getScoreColor = (score: number): string => {
-    if (score >= 80) return '#dc3545';
-    if (score >= 60) return '#fd7e14';
-    if (score >= 40) return '#ffc107';
-    if (score >= 20) return '#17a2b8';
-    return '#28a745';
-  };
-
-  const getScoreSeverityColor = (score: number): string => {
-    // For confidence badges - use severity colors based on how concerning the AI detection is
-    if (score >= 80) return '#dc3545';  // Critical - very likely AI
-    if (score >= 60) return '#fd7e14';  // High - likely AI  
-    if (score >= 40) return '#ffc107';  // Medium - possibly AI
-    if (score >= 20) return '#20c997';  // Low - unlikely AI
-    return '#28a745';                   // Very low - likely human
+  // Map overall score to a severity class
+  const scoreSeverityClassFromScore = (score: number): string => {
+    if (score >= 80) return 'severity-critical';
+    if (score >= 60) return 'severity-high';
+    if (score >= 40) return 'severity-medium';
+    if (score >= 20) return 'severity-low';
+    return 'severity-low';
   };
 
   const getScoreLabel = (score: number): string => {
@@ -148,22 +141,26 @@ const AIDetectionResults: React.FC<AIDetectionResultsProps> = ({
         
         <div className="score-content">
           <div className="overall-score">
-            <div 
-              className="score-circle"
-              style={{ borderColor: getScoreSeverityColor(analysisResult.overallScore) }}
-            >
-              <span className="score-number" style={{ color: getScoreColor(analysisResult.overallScore) }}>
-                {analysisResult.overallScore}%
-              </span>
-              <span className="score-label">{getScoreLabel(analysisResult.overallScore)}</span>
-            </div>
-            
-            <div className="confidence-badge">
-              <Badge
-                value={`${analysisResult.confidence.replace('_', ' ').toUpperCase()} CONFIDENCE`}
-                style={{ backgroundColor: getScoreSeverityColor(analysisResult.overallScore) }}
-              />
-            </div>
+            {(() => {
+              const scoreClass = scoreSeverityClassFromScore(analysisResult.overallScore);
+              return (
+                <>
+                  <div className={`score-circle ${scoreClass}`}>
+                    <span className={`score-number ${scoreClass}`}>
+                      {analysisResult.overallScore}%
+                    </span>
+                    <span className="score-label">{getScoreLabel(analysisResult.overallScore)}</span>
+                  </div>
+
+                  <div className="confidence-badge">
+                    <Badge
+                      value={`${analysisResult.confidence.replace('_', ' ').toUpperCase()} CONFIDENCE`}
+                      className={scoreClass}
+                    />
+                  </div>
+                </>
+              );
+            })()}
           </div>
           
           <div className="score-summary">
@@ -182,17 +179,25 @@ const AIDetectionResults: React.FC<AIDetectionResultsProps> = ({
         </div>
         
         <div className="metrics-grid">
-          {Object.entries(analysisResult.metrics).map(([key, value]) => (
-            <div key={key} className="metric-item">
-              <label>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</label>
-              <ProgressBar 
-                value={value} 
-                style={{ height: '22px' }}
-                color={value > 70 ? '#28a745' : value > 50 ? '#ffc107' : '#dc3545'}
-              />
-              <span className="metric-value">{value}%</span>
-            </div>
-          ))}
+          {Object.entries(analysisResult.metrics).map(([key, value]) => {
+            const getProgressClass = (val: number): string => {
+              if (val > 70) return 'progress-good';
+              if (val > 50) return 'progress-medium';
+              return 'progress-poor';
+            };
+            
+            return (
+              <div key={key} className="metric-item">
+                <label>{key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</label>
+                <ProgressBar 
+                  value={value} 
+                  className={getProgressClass(value)}
+                  style={{ height: '22px' }}
+                />
+                <span className="metric-value">{value}%</span>
+              </div>
+            );
+          })}
         </div>
       </Card>
 
@@ -250,16 +255,10 @@ const AIDetectionResults: React.FC<AIDetectionResultsProps> = ({
                 collapsed
                 header={
                   <div className="panel-header">
-                    <span 
-                      className="flag-type"
-                      style={{ color: getSeverityColor(flag.severity) }}
-                    >
+                    <span className={`flag-type ${severityClassFromSeverity(flag.severity)}`}>
                       {flag.type.replace(/_/g, ' ').toUpperCase()}
                     </span>
-                    <span 
-                      className="flag-confidence"
-                      style={{ backgroundColor: getSeverityColor(flag.severity) }}
-                    >
+                    <span className={`flag-confidence ${severityClassFromSeverity(flag.severity)}`}>
                       {flag.confidence}%
                     </span>
                   </div>
@@ -274,7 +273,7 @@ const AIDetectionResults: React.FC<AIDetectionResultsProps> = ({
                     />
                     <Badge 
                       value={`${flag.confidence}%`}
-                      style={{ backgroundColor: getSeverityColor(flag.severity) }}
+                      className={severityClassFromSeverity(flag.severity)}
                     />
                   </div>
                   <span className="flag-text">"{flag.text}"</span>
@@ -289,14 +288,14 @@ const AIDetectionResults: React.FC<AIDetectionResultsProps> = ({
             ))
           ) : (
             <div className="no-flags-message">
-              <div className="success-icon">
-                <i className="pi pi-check-circle" style={{ fontSize: '2rem', color: '#28a745' }}></i>
-              </div>
-              <h5 style={{ color: '#28a745', margin: '1rem 0 0.5rem 0' }}>No AI Patterns Detected</h5>
-              <p style={{ color: '#6c757d', margin: '0' }}>
-                The analysis found no concerning AI-generated patterns in this content. 
-                The text appears to demonstrate natural human writing characteristics.
-              </p>
+                <div className="success-icon">
+                  <i className="pi pi-check-circle"></i>
+                </div>
+                <h5>No AI Patterns Detected</h5>
+                <p>
+                  The analysis found no concerning AI-generated patterns in this content. 
+                  The text appears to demonstrate natural human writing characteristics.
+                </p>
             </div>
           )}
         </div>

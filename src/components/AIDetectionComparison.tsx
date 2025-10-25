@@ -361,45 +361,16 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
           <div className="input-container">
             <Splitter style={{ height: '600px' }}>
               <SplitterPanel className="input-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-                <div className="panel-header" style={{ 
-                  padding: '16px 20px 12px', 
-                  borderBottom: '1px solid var(--surface-border)', 
-                  background: 'var(--surface-50)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start'
-                }}>
-                  <div className="header-main" style={{ flex: 1 }}>
-                    <h4 style={{ 
-                      margin: '0 0 8px 0', 
-                      fontSize: '1.1rem', 
-                      fontWeight: '600', 
-                      color: 'var(--primary-color)',
-                      letterSpacing: '-0.02em'
-                    }}>Original Text</h4>
-                    <div className="header-stats" style={{
-                      display: 'flex',
-                      gap: '16px',
-                      alignItems: 'center'
-                    }}>
-                      <span className="word-count" style={{
-                        fontSize: '0.85rem',
-                        fontWeight: '500',
-                        color: 'var(--text-color)',
-                        background: 'var(--primary-50)',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        border: '1px solid var(--primary-200)'
-                      }}>{rawText.trim() ? rawText.trim().split(/\s+/).length : 0} words</span>
-                      <span className="text-stats" style={{
-                        fontSize: '0.8rem',
-                        color: 'var(--text-color-secondary)',
-                        fontWeight: '400'
-                      }}>Characters: {rawText.length.toLocaleString()}</span>
+                <div className="panel-header original-header">
+                  <div className="header-main">
+                    <h4 className="panel-title original-title">Original Text</h4>
+                    <div className="header-stats">
+                      <span className="word-count original-word-count">{rawText.trim() ? rawText.trim().split(/\s+/).length : 0} words</span>
+                      <span className="text-stats">Characters: {rawText.length.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
-                <div className="panel-content" style={{ flex: 1, padding: '16px 20px' }}>
+                <div className="panel-content">
                   <InputTextarea
                     value={rawText}
                     onChange={(e) => onRawTextChange?.(e.target.value)}
@@ -413,45 +384,16 @@ const AIDetectionComparison: React.FC<AIDetectionComparisonProps> = ({
               </SplitterPanel>
               
               <SplitterPanel className="input-panel processed-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-                <div className="panel-header" style={{ 
-                  padding: '16px 20px 12px', 
-                  borderBottom: '1px solid var(--surface-border)', 
-                  background: 'var(--surface-50)',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start'
-                }}>
-                  <div className="header-main" style={{ flex: 1 }}>
-                    <h4 style={{ 
-                      margin: '0 0 8px 0', 
-                      fontSize: '1.1rem', 
-                      fontWeight: '600', 
-                      color: 'var(--green-600)',
-                      letterSpacing: '-0.02em'
-                    }}>Humanized Text</h4>
-                    <div className="header-stats" style={{
-                      display: 'flex',
-                      gap: '16px',
-                      alignItems: 'center'
-                    }}>
-                      <span className="word-count" style={{
-                        fontSize: '0.85rem',
-                        fontWeight: '500',
-                        color: 'var(--text-color)',
-                        background: 'var(--green-50)',
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        border: '1px solid var(--green-200)'
-                      }}>{processedText.trim() ? processedText.trim().split(/\s+/).length : 0} words</span>
-                      <span className="text-stats" style={{
-                        fontSize: '0.8rem',
-                        color: 'var(--text-color-secondary)',
-                        fontWeight: '400'
-                      }}>Characters: {processedText.length.toLocaleString()}</span>
+                <div className="panel-header humanized-header">
+                  <div className="header-main">
+                    <h4 className="panel-title humanized-title">Humanized Text</h4>
+                    <div className="header-stats">
+                      <span className="word-count humanized-word-count">{processedText.trim() ? processedText.trim().split(/\s+/).length : 0} words</span>
+                      <span className="text-stats">Characters: {processedText.length.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
-                <div className="panel-content" style={{ flex: 1, padding: '16px 20px' }}>
+                <div className="panel-content">
                   <InputTextarea
                     value={processedText}
                     onChange={(e) => onProcessedTextChange?.(e.target.value)}
