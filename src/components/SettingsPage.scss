@@ -66,17 +66,25 @@
 
           .setting-item {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
             padding: 0.75rem 0;
             transition: background-color 0.2s ease;
             cursor: pointer;
             border-radius: 6px;
-            position: relative;
+            gap: 1rem;
 
             &:hover {
               background: var(--surface-hover);
               padding: 0.75rem;
               margin: 0 -0.75rem;
+            }
+
+            .setting-content {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              min-width: 0; // Allows text to wrap properly
             }
 
             .setting-label {
@@ -91,13 +99,11 @@
               margin: 0;
               font-size: 0.9rem;
               line-height: 1.4;
+              word-wrap: break-word;
             }
 
             .setting-actions {
-              position: absolute;
-              right: 0;
-              top: 50%;
-              transform: translateY(-50%);
+              flex-shrink: 0;
               display: flex;
               align-items: center;
               gap: 0.5rem;
@@ -121,6 +127,7 @@
               padding: 1rem;
               margin: 0.5rem -1rem;
               border-radius: 8px;
+              align-items: center; // Center the button vertically
 
               &:hover {
                 background: rgba(239, 68, 68, 0.1);
@@ -128,12 +135,14 @@
                 padding: 1rem;
               }
 
-              .setting-label {
-                color: var(--red-600);
-              }
+              .setting-content {
+                .setting-label {
+                  color: var(--red-600);
+                }
 
-              .setting-description {
-                color: var(--red-500);
+                .setting-description {
+                  color: var(--red-500);
+                }
               }
             }
           }

@@ -119,7 +119,7 @@ export const ThemeSelector: React.FC = () => {
           <div 
             className="color-swatch"
             style={{ 
-              background: `linear-gradient(135deg, var(--primary-color, ${getThemeColor(option.theme)}), var(--surface-100, #f8f9fa))` 
+              background: `linear-gradient(135deg, ${getThemeColor(option.theme)}, ${isDarkMode ? '#374151' : '#f8fafc'})` 
             }}
           />
         </div>
@@ -128,7 +128,12 @@ export const ThemeSelector: React.FC = () => {
   };
 
   const getThemeColor = (theme: ThemeConfig): string => {
-    // Map theme colors to CSS colors for preview
+    // Use the actual color from theme config if available
+    if (theme.color) {
+      return theme.color;
+    }
+
+    // Fallback to color mapping for themes without explicit color
     const colorMap: Record<string, string> = {
       'teal': '#14B8A6',
       'blue': '#3B82F6',
@@ -233,7 +238,7 @@ export const ThemeSelector: React.FC = () => {
               <div 
                 className="theme-preview-large"
                 style={{ 
-                  background: `linear-gradient(135deg, ${getThemeColor(currentTheme)}, ${isDarkMode ? '#1f2937' : '#f8f9fa'})` 
+                  background: `linear-gradient(135deg, var(--primary-color), var(--surface-ground))` 
                 }}
               />
               <div className="theme-meta">
